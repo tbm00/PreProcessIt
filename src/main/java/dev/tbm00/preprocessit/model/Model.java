@@ -179,11 +179,15 @@ public class Model {
             String[] inputLines = inputText.split("\\r?\\n"); // Handles both \n and \r\n
             for (String inputLine : inputLines) {
                 newOutput += inputLine.toUpperCase();
+
+                // WIP
+
                 /* do {
                     // do command on from current dblLnkLst node's string
                     // traverse forwards in DoublyLinkedList<String> dblLnkLst 
                 }
                 while (next node isnt null>); */
+                // OR for(String cmd : dblLnkLst){}
             }
             setOutputText(newOutput);
         }

@@ -1,12 +1,12 @@
 templateEntries:
   '1':
-    name: "monitor"
+    name: "MONITOR"
     attributes: "company model size resolution refreshRate responseTime panelTech"
     commands:
       - "ex1"
       - "ex2"
   '2':
-    name: "gpu"
+    name: "GPU"
     attributes: "company model ramCapacity ramSpeed"
     commands:
       - "ex4"
