@@ -67,10 +67,8 @@ public class View extends JFrame {
 
         // Initialize title
         titleLabel = new JLabel();
-        String titleHtml = "<html><div style='text-align: right;'>" +
-                           "<b>PreProcessIt</b> v0.0.5-beta, <br/>" +
-                           "<a href=''>README</a>, <i>made by @tbm00</i>" +
-                           "</div></html>";
+        String titleHtml = "<html><b>PreProcessIt</b> v0.0.5-beta, <br/>" +
+                           "<a href='' style=color: blue; text-decoration: underline;>README</a>, <i>made by @tbm00</i></html>";                 
         titleLabel.setText(titleHtml);
         //titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         titleLabel.setHorizontalAlignment(SwingConstants.RIGHT);
@@ -96,7 +94,7 @@ public class View extends JFrame {
 
         // Initialize main buttons/panel
         mainButtonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 0));
-        inputTemplatesButton = new JButton("Load Additional Config");
+        inputTemplatesButton = new JButton("Load Alternative Config");
         templateSelector = new JComboBox<>(new String[]{"*NO TEMPLATES LOADED*"});
         processDataButton = new JButton("Process Data");
         mainButtonPanel.add(inputTemplatesButton);
@@ -164,6 +162,10 @@ public class View extends JFrame {
 
     public JButton getInputDataButton() {
         return inputDataButton;
+    }
+
+    public JButton getPasteDataButton() {
+        return pasteDataButton;
     }
 
     public JButton getProcessDataButton() {

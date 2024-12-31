@@ -178,7 +178,7 @@ public class Model {
             String newOutput = "";
             String[] inputLines = inputText.split("\\r?\\n"); // Handles both \n and \r\n
             for (String inputLine : inputLines) {
-                newOutput += inputLine.toUpperCase();
+                newOutput += (inputLine.toUpperCase() + "\n");
 
                 // WIP
 

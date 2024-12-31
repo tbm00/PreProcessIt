@@ -63,6 +63,14 @@ public class Controller {
                 handleLoadInputData();
             }
         });
+        
+        // Listener for Paste Input button
+        view.getPasteDataButton().addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                handlePasteData();
+            }
+        });
 
         // Listener for Process Data button
         view.getProcessDataButton().addActionListener(new ActionListener() {
@@ -129,11 +137,12 @@ public class Controller {
     private void handleLoadTemplates() {
         JFileChooser fc = new JFileChooser(model.getAppDirectory());
 
-        fc.setFileFilter(new FileNameExtensionFilter("", "yml"));
+        fc.setFileFilter(new FileNameExtensionFilter(".YML", "yml"));
         int fileChoice = fc.showOpenDialog(view);
         if (fileChoice == JFileChooser.APPROVE_OPTION) {
             File templateFile = fc.getSelectedFile();
-            if (!templateFile.getName().endsWith(".yml")) return;
+            String filename = templateFile.getName().toLowerCase();
+            if (!filename.endsWith(".yml")) return;
 
             // Read/load YAML file/config
             model.loadConfig(templateFile);
@@ -161,11 +170,15 @@ public class Controller {
     private void handleLoadInputData() {
         JFileChooser fc = new JFileChooser(model.getAppDirectory());
 
-        fc.setFileFilter(new FileNameExtensionFilter("", "csv","txt"));
+        fc.setFileFilter(new FileNameExtensionFilter(".CSV or .TXT", "csv","txt"));
         int choice = fc.showOpenDialog(view);
         if(choice == JFileChooser.APPROVE_OPTION) {
             File dataFile = fc.getSelectedFile();
-            if (!dataFile.getName().endsWith(".yml")) return;
+            String filename = dataFile.getName().toLowerCase();
+            String type = "";
+            if (filename.endsWith(".csv")) type = "CSV";
+            else if (filename.endsWith(".txt")) type = "TXT";
+            else return;
 
             try {
                 List<String> lines = Files.readAllLines(dataFile.toPath());
@@ -198,9 +211,29 @@ public class Controller {
     // Save output to CSV or TXT
     private void handleSaveOutput() {
         String output = view.getOutputTextArea().getText();
-        StringSelection stringSelection = new StringSelection(output);
-        Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-        clipboard.setContents(stringSelection, null);
+
+        // Show a save dialog with CSV/TXT filters
+        JFileChooser fc = new JFileChooser(model.getAppDirectory());
+        fc.setFileFilter(new FileNameExtensionFilter(".CSV or .TXT", "csv","txt"));
+        int choice = fc.showSaveDialog(view);
+
+        if (choice == JFileChooser.APPROVE_OPTION) {
+            File outFile = fc.getSelectedFile();
+            
+            // Optionally, auto-append .txt if no extension was provided, or prompt user.
+            // For simplicity, just check if it ends with csv or txt
+            String filename = outFile.getName().toLowerCase();
+            String type = "";
+            if (filename.endsWith(".csv")) type = "CSV";
+            else if (filename.endsWith(".txt")) type = "TXT";
+            else return;
+
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(outFile))) {
+                writer.write(output);
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(view, "Failed to save file " + e.getMessage());
+            }
+        }
     }
 
     // Clear input & output data
@@ -210,12 +243,30 @@ public class Controller {
         view.getOutputTextArea().setText("");
     }
 
+    private void handlePasteData() {
+        try {
+            Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+            Transferable contents = clipboard.getContents(null);
+            
+            if (contents != null && contents.isDataFlavorSupported(DataFlavor.stringFlavor)) {
+                String clipboardText = (String) contents.getTransferData(DataFlavor.stringFlavor);
+                // Overwrite existing contents
+                view.getInputTextArea().setText(clipboardText);
+    
+                // Also update the Model
+                model.setInputText(view.getInputTextArea().getText());
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(view, "Error pasting from clipboard: " + e.getMessage());
+        }
+    }
+
     // Handle clicks on the README link
     private void handleReadmeClick() {
         try {
             Desktop desktop = Desktop.getDesktop();
             desktop.browse(new URI(README_URL));
-            view.getTitleLabel().setText("<html><b>PreProcessIt</b> v0.0.5-beta,  " +
+            view.getTitleLabel().setText("<html><b>PreProcessIt</b> v0.0.5-beta, <br/>" +
                                          "<a href='' style='color: purple; text-decoration: underline;'>README</a>, <i>made by @tbm00</i></html>");
         } catch (Exception e) {
             JOptionPane.showMessageDialog(view, "Failed to open README link: " + e.getMessage());
