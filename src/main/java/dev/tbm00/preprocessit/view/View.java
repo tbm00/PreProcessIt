@@ -59,7 +59,7 @@ public class View extends JFrame {
     private void initializeHeaderPanel() {
         headerPanel = new JPanel();
         headerPanel.setLayout(new BoxLayout(headerPanel, BoxLayout.Y_AXIS));
-        headerPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
+        headerPanel.setBorder(new EmptyBorder(5, 0, 5, 0));
         
         textPanel = new JPanel();
         textPanel.setLayout(new BoxLayout(textPanel, BoxLayout.X_AXIS));
