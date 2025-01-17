@@ -18,7 +18,7 @@ import org.yaml.snakeyaml.Yaml;
  * Model handles the data & state of the application
  */
 public class Model {
-    private String appDirectory;
+    private final String appDirectory;
     private List<Template> templates;
     private Template selectedTemplate;
     private String inputText;
@@ -42,6 +42,7 @@ public class Model {
         
         try {
             if (configFile.exists() && configFile.length()>3) {
+                System.out.println("Found config.yml in " + appDirectory);
                 return configFile;
             }
 
@@ -49,7 +50,7 @@ public class Model {
             // Assuming resources are on the classpath, so we use getResourceAsStream
             InputStream resourceStream = getClass().getResourceAsStream("/config.yml");
             if (resourceStream == null) {
-                System.out.println("Could not find config.yml in resources!");
+                System.out.println("Could not find default config.yml in program's resources!");
                 return null; 
             }
 
@@ -65,6 +66,7 @@ public class Model {
             // Copy file from resources to local config
             Files.copy(resourceStream, destinationPath, StandardCopyOption.REPLACE_EXISTING);
             resourceStream.close();
+            System.out.println("Created config.yml in " + appDirectory);
 
             return configFile;
         } catch (Exception e) {
@@ -73,10 +75,9 @@ public class Model {
         }
     }
 
-    @SuppressWarnings("unchecked")
     public void loadConfig(File givenYaml) {
         if (givenYaml == null) {
-            System.out.println("No config file provided to load.");
+            System.out.println("No config file provided to load");
             return;
         }
         
@@ -88,7 +89,7 @@ public class Model {
             Map<String, Object> templateEntries = (Map<String, Object>) data.get("templateEntries");
 
             if (templateEntries == null) {
-                System.out.println("No 'templateEntries' found in config.");
+                System.out.println("No 'templateEntries' found in config");
                 return;
             }
 
@@ -126,7 +127,7 @@ public class Model {
                 templates.add(template);
             }
 
-            System.out.println("Loaded " + templates.size() + " template(s) from config.");
+            System.out.println("Loaded " + templates.size() + " template(s) from config");
 
         } catch (Exception e) {
             System.out.println("Error loading config in " + appDirectory + ": " + e.getMessage());
