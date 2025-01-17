@@ -11,7 +11,7 @@ Created by tbm00.
 ## Default Config
 
 ```
-# PreProcessIt v0.0.5-beta by @tbm00
+# PreProcessIt v0.0.6-beta by @tbm00
 # https://github.com/tbm00/PreProcessIt
 
 templateEntries:

@@ -12,34 +12,34 @@ public class View extends JFrame {
     /**
      * Header (top 10%)
      */
-    private JPanel headerPanel;                                 // holds: headerTop + headerBottom
-    private JSplitPane headerTop;                           // holds: textPanel + controlPanel
-    private JPanel textPanel;                           // holds: titleLabel + subLabel
+    private JPanel headerPanel;											// holds: headerTop + headerBottom
+    private JSplitPane headerTop;                   // holds: textPanel + controlPanel
+    private JPanel textPanel;                       // holds: titleLabel + subLabel
     private JLabel titleLabel;                      // Label for title text
     private JLabel subLabel;                        // Label for instruction text
-    private JPanel controlPanel;                        // holds: buttonsContainer
+    private JPanel controlPanel;                    // holds: buttonsContainer
     private JPanel buttonsContainer;                // holds: control buttons
-    private JButton inputTemplatesButton;       // Button for inputting config as YML
-    private JComboBox<String> templateSelector; // Dropdown for selecting config template
-    private JButton processDataButton;          // Button for triggering data process
-    private JPanel toolPanel;                               // holds: tool buttons
-    private JButton inputDataButton;                    // Button for inputting data as CSV or TXT
-    private JButton pasteDataButton;                    // Button for pasting data from clipboard
-    private JButton copyOutputButton;                   // Button for copying data to clipboard
-    private JButton saveOutputButton;                   // Button for outputting data as CSV or TXT
-    private JButton clearButton;                        // Button for clearing input & output
+    private JButton inputTemplatesButton;       		// Button for inputting config as YML
+    private JComboBox<String> templateSelector; 		// Dropdown for selecting config template
+    private JButton processDataButton;          		// Button for triggering data process
+    private JPanel toolPanel;                       // holds: tool buttons
+    private JButton inputDataButton;                // Button for inputting data as CSV or TXT
+    private JButton pasteDataButton;                // Button for pasting data from clipboard
+    private JButton copyOutputButton;               // Button for copying data to clipboard
+    private JButton saveOutputButton;               // Button for outputting data as CSV or TXT
+    private JButton clearButton;                    // Button for clearing input & output
 
 
     /**
      * IO (center 90%)
      */
-    private JSplitPane ioSplitPane;                     // SplitPanel for IO
+    private JSplitPane ioSplitPane;									// SplitPanel for IO
     private JScrollPane inputScrollPane;            // scroll panel (left)
-    private JTextArea inputTextArea;            // input text screen (left)
-    private LineNumber inputLineNumber;         // line number component (left)
+    private JTextArea inputTextArea;            		// input text screen (left)
+    private LineNumber inputLineNumber;         		// line number component (left)
     private JScrollPane outputScrollPane;           // scroll panel (right)
-    private JTextArea outputTextArea;           // input text screen (right)
-    private LineNumber outputLineNumber;        // line number component (right)
+    private JTextArea outputTextArea;           		// input text screen (right)
+    private LineNumber outputLineNumber;        		// line number component (right)
 
 
     public View() {
@@ -85,7 +85,7 @@ public class View extends JFrame {
 
         // Initialize title label with right alignment inside textPanel
         titleLabel = new JLabel();
-        String titleHtml = "<html><b>PreProcessIt</b> v0.0.5-beta, <br/>" +
+        String titleHtml = "<html><b>PreProcessIt</b> v0.0.6-beta, <br/>" +
                 "<a href='' style=color: blue; text-decoration: underline;>README</a>, <i>made by @tbm00</i></html>";
         titleLabel.setText(titleHtml);
         titleLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
