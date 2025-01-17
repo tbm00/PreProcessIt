@@ -9,34 +9,38 @@ import java.awt.*;
  * View is responsible for UI components
  */
 public class View extends JFrame {
-    // Top Panel (Control, top 10%)
-    private JPanel headerPanel;                 // textPanel + Main&IO buttons
-    private JPanel textPanel;                   // Title + Subtitle
-    private JLabel titleLabel;                  // Label for title text
-    private JLabel subLabel;                    // Label for instruction text
-    private JPanel mainButtonPanel;             // Panel for main buttons
-    private JPanel ioButtonPanel;               // Panel for IO buttons
-    private JButton inputTemplatesButton;       // Input config templates from yml
-    private JComboBox<String> templateSelector; // Dropdown of templates
-    private JButton inputDataButton;            // Input data as CSV or TXT
-    private JButton pasteDataButton;            // Paste input from clipboard
-    private JButton processDataButton;          // Triggers processing
-    private JButton copyOutputButton;           // Copy output to clipboard
-    private JButton saveOutputButton;           // Save output to CSV or TXT
-    private JButton clearButton;                // Clears input/output
+    /**
+     * Header (top 10%)
+     */
+    private JPanel headerPanel;                                 // headerTop + headerBottom
+        private JSplitPane headerTop;                           // textPanel + controlPanel
+            private JPanel textPanel;                           // titleLabel + subLabel
+                private JLabel titleLabel;                      // Label for title text
+                private JLabel subLabel;                        // Label for instruction text
+            private JPanel controlPanel;                        // buttonsContainer
+                private JPanel buttonsContainer;                // Panel for main buttons
+                    private JButton inputTemplatesButton;       // Input config templates from yml
+                    private JComboBox<String> templateSelector; // Dropdown of templates
+                    private JButton pasteDataButton;            // Paste input from clipboard
+        private JPanel headerBottom;                            // Panel for IO buttons
+            private JButton inputDataButton;                    // Input data as CSV or TXT
+            private JButton processDataButton;                  // Triggers processing
+            private JButton copyOutputButton;                   // Copy output to clipboard
+            private JButton saveOutputButton;                   // Save output to CSV or TXT
+            private JButton clearButton;                        // Clears input/output
 
-    // Split Pane (lower 90%)
-    private JSplitPane splitPane;               // SplitPanel for IO
 
-    // Left Pane - Input
-    private JTextArea inputTextArea;
-    private LineNumber inputLineNumber;
-    private JScrollPane inputScrollPane;
+    /**
+     * IO (center 90%)
+     */
+    private JSplitPane ioSplitPane;                     // SplitPanel for IO
+        private JScrollPane inputScrollPane;            // scroll panel (left)
+            private JTextArea inputTextArea;            // input text screen (left)
+            private LineNumber inputLineNumber;         // line number component (left)
+        private JScrollPane outputScrollPane;           // scroll panel (right)
+            private JTextArea outputTextArea;           // input text screen (right)
+            private LineNumber outputLineNumber;        // line number component (right)
 
-    // Right Pane - Output
-    private JTextArea outputTextArea;
-    private LineNumber outputLineNumber;
-    private JScrollPane outputScrollPane;
 
     public View() {
         super("PreProcessIt");
@@ -44,90 +48,118 @@ public class View extends JFrame {
         setSize(1200, 800);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
-        
-        // Create top control panel (10% of frame height)
-        initializeHeaderPanel();
-        // Add Control Panel to JFrame
+
+        // Initialize and add the header panel
+        initializeHeader();
         add(headerPanel, BorderLayout.NORTH);
 
-        // Create SplitPane for Input (left) and Output (right) (90% of frame height)
+        // Initialize and add the IO split pane
+        // (inputArea:left, outputArea:right)
         initializeIOPane();
-        // Add IO SplitPane to JFrame
-        add(splitPane, BorderLayout.CENTER);
+        add(ioSplitPane, BorderLayout.CENTER);
     }
 
-    private void initializeHeaderPanel() {
+    private void initializeHeader() {
         headerPanel = new JPanel();
-        headerPanel.setLayout(new BoxLayout(headerPanel, BoxLayout.Y_AXIS));
-        headerPanel.setBorder(new EmptyBorder(5, 0, 5, 0));
-        
-        textPanel = new JPanel();
-        textPanel.setLayout(new BoxLayout(textPanel, BoxLayout.X_AXIS));
-        textPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
+        headerPanel.setLayout(new BorderLayout());
 
-        // Initialize title
+        initializeToolPanel();
+        headerPanel.add(headerBottom, BorderLayout.SOUTH);
+
+        initializeTextPanel();
+        initializeControlPanel();
+        headerTop = new JSplitPane(
+                JSplitPane.HORIZONTAL_SPLIT,
+                textPanel,
+                controlPanel
+        );
+        headerTop.setResizeWeight(0.3);
+        headerTop.setDividerSize(0);
+        headerPanel.add(headerTop, BorderLayout.CENTER);
+    }
+
+    private void initializeTextPanel() {
+        // Initialize textPanel on the left
+        textPanel = new JPanel();
+        textPanel.setLayout(new BoxLayout(textPanel, BoxLayout.Y_AXIS));
+        textPanel.setBorder(new EmptyBorder(5, 5, 5, 0));
+
+        // Initialize title label with right alignment inside textPanel
         titleLabel = new JLabel();
         String titleHtml = "<html><b>PreProcessIt</b> v0.0.5-beta, <br/>" +
-                           "<a href='' style=color: blue; text-decoration: underline;>README</a>, <i>made by @tbm00</i></html>";                 
+                "<a href='' style=color: blue; text-decoration: underline;>README</a>, <i>made by @tbm00</i></html>";
         titleLabel.setText(titleHtml);
-        //titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        titleLabel.setHorizontalAlignment(SwingConstants.RIGHT);
         titleLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        titleLabel.setHorizontalAlignment(SwingConstants.RIGHT);
 
-        // Initialize instrustions (subtitle)
+        // Initialize subtitle label with right alignment inside textPanel
         subLabel = new JLabel();
         String subHtml = "<html><div style='text-align: left;'>" +
-                         "<b>0th:</b> Load Additional Config<br/>" +
-                         "<b>1st:</b> Select Template<br/>" +
-                         "<b>2nd:</b> Load/Paste Input Data <br/>" +
-                         "<b>3rd:</b> Process Data <br/>" +
-                         "<b>4th:</b> Save/Copy Output Data" +
-                         "</div></html>";
+                "<b>0th:</b> Load Alternative Config<br/>" +
+                "<b>1st:</b> Select Template<br/>" +
+                "<b>2nd:</b> Load/Paste Input Data <br/>" +
+                "<b>3rd:</b> Process Data <br/>" +
+                "<b>4th:</b> Save/Copy Output Data" +
+                "</div></html>";
         subLabel.setText(subHtml);
-        //subLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        subLabel.setHorizontalAlignment(SwingConstants.LEFT);
+        subLabel.setHorizontalAlignment(SwingConstants.RIGHT);
 
-        // Add text labels to textPanel
+        // Add labels to textPanel
         textPanel.add(titleLabel);
-        textPanel.add(Box.createRigidArea(new Dimension(25, 0)));
         textPanel.add(subLabel);
+    }
 
-        // Initialize main buttons/panel
-        mainButtonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 0));
+    private void initializeControlPanel() {
+        // Initialize main control buttons panel
+        buttonsContainer = new JPanel();
+        buttonsContainer.setLayout(new BoxLayout(buttonsContainer, BoxLayout.X_AXIS));
+
         inputTemplatesButton = new JButton("Load Alternative Config");
         templateSelector = new JComboBox<>(new String[]{"*NO TEMPLATES LOADED*"});
+        Dimension preferredSize = templateSelector.getPreferredSize();
+        templateSelector.setMaximumSize(preferredSize);
         processDataButton = new JButton("Process Data");
-        mainButtonPanel.add(inputTemplatesButton);
-        mainButtonPanel.add(templateSelector);
-        mainButtonPanel.add(processDataButton);
-        //mainButtonPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        // Initialize IO buttons/panel
-        ioButtonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 0));
+        buttonsContainer.add(inputTemplatesButton);
+        buttonsContainer.add(templateSelector);
+        buttonsContainer.add(processDataButton);
+
+        buttonsContainer.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        // Create buttonContainer on the right with vertical BoxLayout
+        controlPanel = new JPanel();
+        //controlPanel.setLayout(new BoxLayout(controlPanel, BoxLayout.Y_AXIS));
+        //controlPanel.add(buttonsContainer);
+
+        controlPanel.setLayout(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridx = 0; // Center horizontally
+        gbc.gridy = 0; // Center vertically
+        gbc.anchor = GridBagConstraints.CENTER; // Ensure centered alignment;
+
+        JPanel buttonContainer = new JPanel();
+        buttonContainer.setLayout(new BoxLayout(buttonContainer, BoxLayout.Y_AXIS));
+        buttonContainer.add(buttonsContainer);
+
+        controlPanel.add(buttonContainer, gbc);
+    }
+
+    private void initializeToolPanel() {
+        // Initialize IO buttons panel with left-aligned contents
+        headerBottom = new JPanel();
+        headerBottom.setLayout(new GridLayout(1,5));
+
         inputDataButton = new JButton("Load Input");
         pasteDataButton = new JButton("Paste Input");
         clearButton = new JButton("*CLEAR*");
         copyOutputButton = new JButton("Copy Output");
         saveOutputButton = new JButton("Save Output");
-        ioButtonPanel.add(inputDataButton);
-        ioButtonPanel.add(pasteDataButton);
-        ioButtonPanel.add(clearButton);
-        ioButtonPanel.add(copyOutputButton);
-        ioButtonPanel.add(saveOutputButton);
-        //ioButtonPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        
-        // Add main buttons, seperators, & textPanel to headerPanel
-        headerPanel.add(textPanel);
-        headerPanel.add(Box.createRigidArea(new Dimension(0, 5)));
-        JSeparator separator = new JSeparator(SwingConstants.HORIZONTAL);
-        separator.setMaximumSize(new Dimension(Integer.MAX_VALUE, 1)); // Span full width, height 1px
-        separator.setForeground(Color.GRAY);
-        separator.setBackground(Color.GRAY);
-        headerPanel.add(separator);
-        headerPanel.add(Box.createRigidArea(new Dimension(0, 5)));
-        headerPanel.add(mainButtonPanel);
-        headerPanel.add(Box.createRigidArea(new Dimension(0, 5)));
-        headerPanel.add(ioButtonPanel);
+
+        headerBottom.add(inputDataButton);
+        headerBottom.add(pasteDataButton);
+        headerBottom.add(clearButton);
+        headerBottom.add(copyOutputButton);
+        headerBottom.add(saveOutputButton);
     }
 
     private void initializeIOPane() {
@@ -144,12 +176,12 @@ public class View extends JFrame {
         outputScrollPane = new JScrollPane(outputTextArea);
         outputScrollPane.setRowHeaderView(outputLineNumber);
 
-        splitPane = new JSplitPane(
+        ioSplitPane = new JSplitPane(
             JSplitPane.HORIZONTAL_SPLIT,
             inputScrollPane,
             outputScrollPane
         );
-        splitPane.setResizeWeight(0.5);
+        ioSplitPane.setResizeWeight(0.5);
     }
 
     public JButton getInputTemplatesButton() {
