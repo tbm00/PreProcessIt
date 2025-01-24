@@ -1,13 +1,17 @@
 componentEntries:
-  '1':
-    name: "MONITOR"
-    attributes: "company model size resolution refreshRate responseTime panelTech"
-    commands:
-      - "ex1"
-      - "ex2"
-  '2':
-    name: "GPU"
-    attributes: "company model ramCapacity ramSpeed"
-    commands:
-      - "ex4"
-      - "ex3"
+  MONITOR:
+    attributeEntries:
+      NITS:
+        qualifierEntries:
+          - "FRONT IS-A INTEGER"
+          - "END CONTAINS N|NITS|n|nits|Nits"
+      REFRESH_RATE:
+        qualifierEntries:
+          - "FRONT IS-A DOUBLE|INTEGER"
+          - "END CONTAINS MS|ms|milliseconds"
+  GPU:
+    attributeEntries:
+      RAM_SIZE:
+        qualifierEntries:
+          - "FRONT IS-A INTEGER"
+          - "END CONTAINS GB|Gb|gb|NULL"

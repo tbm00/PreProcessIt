@@ -34,8 +34,8 @@ public class Controller {
         this.view = view;
         updateDropdown();
 
-        String selected = (String) view.getComponentSelector().getSelectedItem();
-        model.setComponentByString(selected);
+        String componentName = (String) view.getComponentSelector().getSelectedItem();
+        model.setSelectedComponent(componentName);
         initListeners();
     }
 
@@ -135,17 +135,17 @@ public class Controller {
 
     // Load components from file YML
     private void handleLoadComponents() {
-        JFileChooser fc = new JFileChooser(model.getAppDirectory());
+        JFileChooser fc = new JFileChooser(model.getConfigHandler().getAppDirectory());
 
         fc.setFileFilter(new FileNameExtensionFilter(".YML", "yml"));
         int fileChoice = fc.showOpenDialog(view);
         if (fileChoice == JFileChooser.APPROVE_OPTION) {
-            File componentFile = fc.getSelectedFile();
-            String filename = componentFile.getName().toLowerCase();
+            File configFile = fc.getSelectedFile();
+            String filename = configFile.getName().toLowerCase();
             if (!filename.endsWith(".yml")) return;
 
             // Read/load YAML file/config
-            model.loadConfig(componentFile);
+            model.getConfigHandler().loadConfig(configFile);
             updateDropdown();
         }
     }
@@ -153,7 +153,7 @@ public class Controller {
     public void updateDropdown() {
         // Add each components name to view
         List<Component> componentList = model.getComponents();
-        if (componentList.isEmpty() || componentList==null) return;
+        if (componentList==null || componentList.isEmpty() ) return;
         view.getComponentSelector().removeAllItems();
         for(Component t : componentList) {
             view.getComponentSelector().addItem(t.getName());
@@ -162,13 +162,13 @@ public class Controller {
 
     // Process the data in the Model
     private void handleComponentSelection() {
-        String selected = (String) view.getComponentSelector().getSelectedItem();
-        model.setComponentByString(selected);
+        String componentString = (String) view.getComponentSelector().getSelectedItem();
+        model.setSelectedComponent(componentString);
     }
 
     // Load input from CSV or TXT
     private void handleLoadInputData() {
-        JFileChooser fc = new JFileChooser(model.getAppDirectory());
+        JFileChooser fc = new JFileChooser(model.getConfigHandler().getAppDirectory());
 
         fc.setFileFilter(new FileNameExtensionFilter(".CSV or .TXT", "csv","txt"));
         int choice = fc.showOpenDialog(view);
@@ -194,7 +194,7 @@ public class Controller {
     // Process the data in the Model
     private void handleProcessData() {
         // Use selectedComponent in the model to process the data
-        model.processData();
+        model.getProcessHandler().processData();
 
         // Update view with new data
         view.getOutputTextArea().setText(model.getOutputText());
@@ -213,7 +213,7 @@ public class Controller {
         String output = view.getOutputTextArea().getText();
 
         // Show a save dialog with CSV/TXT filters
-        JFileChooser fc = new JFileChooser(model.getAppDirectory());
+        JFileChooser fc = new JFileChooser(model.getConfigHandler().getAppDirectory());
         fc.setFileFilter(new FileNameExtensionFilter(".CSV or .TXT", "csv","txt"));
         int choice = fc.showSaveDialog(view);
 

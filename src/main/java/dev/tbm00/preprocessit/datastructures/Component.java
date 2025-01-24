@@ -3,18 +3,26 @@ package dev.tbm00.preprocessit.datastructures;
 import java.util.ArrayList;
 
 /**
- * Component for commands
+ * Components hold attributes
  */
 public class Component {
-    
+    private int id;
     private String name;
-    private ArrayList<String> attributes;
-    private DoublyLinkedList<String> commands;
+    private ArrayList<Attribute> attributes;
 
-    public Component() {
-        this.name = "";
-        this.attributes = new ArrayList<>();
-        this.commands = new DoublyLinkedList<>();
+    public Component(int id, String name, ArrayList<Attribute> attributes) {
+        this.id = id;
+        this.name = name;
+        this.attributes = attributes;
+        //System.out.println("component: " + id + " " + name + " " + attributes);
+    }
+
+    public int getID() {
+        return id;
+    }
+
+    public void setID(int id) {
+        this.id = id;
     }
 
     public String getName() {
@@ -25,19 +33,11 @@ public class Component {
         this.name = name;
     }
 
-    public ArrayList<String> getAttributes() {
+    public ArrayList<Attribute> getAttributes() {
         return attributes;
     }
 
-    public void setAttributes(ArrayList<String> attributes) {
+    public void setAttributes(ArrayList<Attribute> attributes) {
         this.attributes = attributes;
-    }
-
-    public DoublyLinkedList<String> getCommands() {
-        return commands;
-    }
-
-    public void setCommands(DoublyLinkedList<String> commands) {
-        this.commands = commands;
     }
 }
