@@ -1,16 +1,17 @@
-package dev.tbm00.preprocessit.model;
+package dev.tbm00.preprocessit.datastructures;
 
 import java.util.ArrayList;
 
 /**
- * Template for commands
+ * Component for commands
  */
-public class Template {
+public class Component {
+    
     private String name;
     private ArrayList<String> attributes;
     private DoublyLinkedList<String> commands;
 
-    public Template() {
+    public Component() {
         this.name = "";
         this.attributes = new ArrayList<>();
         this.commands = new DoublyLinkedList<>();

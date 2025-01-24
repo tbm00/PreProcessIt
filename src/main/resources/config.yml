@@ -1,4 +1,4 @@
-templateEntries:
+componentEntries:
   '1':
     name: "MONITOR"
     attributes: "company model size resolution refreshRate responseTime panelTech"

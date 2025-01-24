@@ -19,8 +19,8 @@ public class View extends JFrame {
     private JLabel subLabel;                        // Label for instruction text
     private JPanel controlPanel;                    // holds: buttonsContainer
     private JPanel buttonsContainer;                // holds: control buttons
-    private JButton inputTemplatesButton;       		// Button for inputting config as YML
-    private JComboBox<String> templateSelector; 		// Dropdown for selecting config template
+    private JButton inputComponentsButton;       		// Button for inputting config as YML
+    private JComboBox<String> componentSelector; 		// Dropdown for selecting config component
     private JButton processDataButton;          		// Button for triggering data process
     private JPanel toolPanel;                       // holds: tool buttons
     private JButton inputDataButton;                // Button for inputting data as CSV or TXT
@@ -95,7 +95,7 @@ public class View extends JFrame {
         subLabel = new JLabel();
         String subHtml = "<html><div style='text-align: left;'>" +
                 "<b>0th:</b> Load Alternative Config<br/>" +
-                "<b>1st:</b> Select Template<br/>" +
+                "<b>1st:</b> Select Component<br/>" +
                 "<b>2nd:</b> Load/Paste Input Data <br/>" +
                 "<b>3rd:</b> Process Data <br/>" +
                 "<b>4th:</b> Save/Copy Output Data" +
@@ -116,14 +116,14 @@ public class View extends JFrame {
         buttonsContainer = new JPanel();
         buttonsContainer.setLayout(new BoxLayout(buttonsContainer, BoxLayout.X_AXIS));
 
-        inputTemplatesButton = new JButton("Load Alternative Config");
-        templateSelector = new JComboBox<>(new String[]{"*NO TEMPLATES LOADED*"});
-        Dimension preferredSize = templateSelector.getPreferredSize();
-        templateSelector.setMaximumSize(preferredSize);
+        inputComponentsButton = new JButton("Load Alternative Config");
+        componentSelector = new JComboBox<>(new String[]{"*NO TEMPLATES LOADED*"});
+        Dimension preferredSize = componentSelector.getPreferredSize();
+        componentSelector.setMaximumSize(preferredSize);
         processDataButton = new JButton("Process Data");
 
-        buttonsContainer.add(inputTemplatesButton);
-        buttonsContainer.add(templateSelector);
+        buttonsContainer.add(inputComponentsButton);
+        buttonsContainer.add(componentSelector);
         buttonsContainer.add(processDataButton);
 
         buttonsContainer.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -174,12 +174,12 @@ public class View extends JFrame {
         ioSplitPane.setResizeWeight(0.5);
     }
 
-    public JButton getInputTemplatesButton() {
-        return inputTemplatesButton;
+    public JButton getInputComponentsButton() {
+        return inputComponentsButton;
     }
 
-    public JComboBox<String> getTemplateSelector() {
-        return templateSelector;
+    public JComboBox<String> getComponentSelector() {
+        return componentSelector;
     }
 
     public JButton getInputDataButton() {

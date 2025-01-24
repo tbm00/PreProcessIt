@@ -15,8 +15,8 @@ import java.net.URI;
 import java.nio.file.Files;
 import java.util.List;
 
+import dev.tbm00.preprocessit.datastructures.Component;
 import dev.tbm00.preprocessit.model.Model;
-import dev.tbm00.preprocessit.model.Template;
 import dev.tbm00.preprocessit.view.View;
 
 /**
@@ -34,25 +34,25 @@ public class Controller {
         this.view = view;
         updateDropdown();
 
-        String selected = (String) view.getTemplateSelector().getSelectedItem();
-        model.setTemplateByString(selected);
+        String selected = (String) view.getComponentSelector().getSelectedItem();
+        model.setComponentByString(selected);
         initListeners();
     }
 
     private void initListeners() {
-        // Listener for Load Templates button
-        view.getInputTemplatesButton().addActionListener(new ActionListener() {
+        // Listener for Load Components button
+        view.getInputComponentsButton().addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                handleLoadTemplates();
+                handleLoadComponents();
             }
         });
 
-        // Listener for Template Selection dropdown
-        view.getTemplateSelector().addActionListener(new ActionListener() {
+        // Listener for Component Selection dropdown
+        view.getComponentSelector().addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                handleTemplateSelection();
+                handleComponentSelection();
             }
         });
 
@@ -133,37 +133,37 @@ public class Controller {
         });
     }
 
-    // Load templates from file YML
-    private void handleLoadTemplates() {
+    // Load components from file YML
+    private void handleLoadComponents() {
         JFileChooser fc = new JFileChooser(model.getAppDirectory());
 
         fc.setFileFilter(new FileNameExtensionFilter(".YML", "yml"));
         int fileChoice = fc.showOpenDialog(view);
         if (fileChoice == JFileChooser.APPROVE_OPTION) {
-            File templateFile = fc.getSelectedFile();
-            String filename = templateFile.getName().toLowerCase();
+            File componentFile = fc.getSelectedFile();
+            String filename = componentFile.getName().toLowerCase();
             if (!filename.endsWith(".yml")) return;
 
             // Read/load YAML file/config
-            model.loadConfig(templateFile);
+            model.loadConfig(componentFile);
             updateDropdown();
         }
     }
 
     public void updateDropdown() {
-        // Add each templates name to view
-        List<Template> templateList = model.getTemplates();
-        if (templateList.isEmpty() || templateList==null) return;
-        view.getTemplateSelector().removeAllItems();
-        for(Template t : templateList) {
-            view.getTemplateSelector().addItem(t.getName());
+        // Add each components name to view
+        List<Component> componentList = model.getComponents();
+        if (componentList.isEmpty() || componentList==null) return;
+        view.getComponentSelector().removeAllItems();
+        for(Component t : componentList) {
+            view.getComponentSelector().addItem(t.getName());
         }
     }
 
     // Process the data in the Model
-    private void handleTemplateSelection() {
-        String selected = (String) view.getTemplateSelector().getSelectedItem();
-        model.setTemplateByString(selected);
+    private void handleComponentSelection() {
+        String selected = (String) view.getComponentSelector().getSelectedItem();
+        model.setComponentByString(selected);
     }
 
     // Load input from CSV or TXT
@@ -193,7 +193,7 @@ public class Controller {
 
     // Process the data in the Model
     private void handleProcessData() {
-        // Use selectedTemplate in the model to process the data
+        // Use selectedComponent in the model to process the data
         model.processData();
 
         // Update view with new data

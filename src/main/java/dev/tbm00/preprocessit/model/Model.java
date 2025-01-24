@@ -14,20 +14,23 @@ import java.util.Map;
 
 import org.yaml.snakeyaml.Yaml;
 
+import dev.tbm00.preprocessit.datastructures.Component;
+import dev.tbm00.preprocessit.datastructures.DoublyLinkedList;
+
 /**
  * Model handles the data & state of the application
  */
 public class Model {
     private final String appDirectory;
-    private List<Template> templates;
-    private Template selectedTemplate;
+    private List<Component> components;
+    private Component selectedComponent;
     private String inputText;
     private String outputText;
 
     public Model() {
         appDirectory = System.getProperty("user.home") + "/Documents/PreProcessIt";
-        templates = null;
-        selectedTemplate = null;
+        components = null;
+        selectedComponent = null;
         inputText = "";
         outputText = "";
 
@@ -35,6 +38,27 @@ public class Model {
         loadConfig(config);
     }
 
+    // Processes the input data
+    public void processData() {
+        if (selectedComponent != null && selectedComponent.getCommands()!=null) {
+            DoublyLinkedList<String> dblLnkLst = selectedComponent.getCommands();
+            String newOutput = "";
+            String[] inputLines = inputText.split("\\r?\\n"); // Handles both \n and \r\n
+            for (String inputLine : inputLines) {
+                newOutput += (inputLine.toUpperCase() + "\n");
+
+                // WIP
+
+                /* do {
+                    // do command on from current dblLnkLst node's string
+                    // traverse forwards in DoublyLinkedList<String> dblLnkLst 
+                }
+                while (next node isnt null>); */
+                // OR for(String cmd : dblLnkLst){}
+            }
+            setOutputText(newOutput);
+        }
+    }
 
     private File getOrCreateConfig() {
         Path destinationPath = Paths.get(appDirectory, "config.yml");
@@ -85,49 +109,49 @@ public class Model {
             Yaml yaml = new Yaml();
             Map<String, Object> data = yaml.load(fis);
 
-            // Top level key: "templateEntries"
-            Map<String, Object> templateEntries = (Map<String, Object>) data.get("templateEntries");
+            // Top level key: "componentEntries"
+            Map<String, Object> componentEntries = (Map<String, Object>) data.get("componentEntries");
 
-            if (templateEntries == null) {
-                System.out.println("No 'templateEntries' found in config");
+            if (componentEntries == null) {
+                System.out.println("No 'componentEntries' found in config");
                 return;
             }
 
-            // Initialize templates list
-            templates = new ArrayList<>();
+            // Initialize components list
+            components = new ArrayList<>();
 
-            // Iterate over each entry in templateEntries
-            for (Map.Entry<String, Object> templateEntry : templateEntries.entrySet()) {
-                Map<String, Object> templateMap = (Map<String, Object>) templateEntry.getValue();
-                Template template = new Template();
+            // Iterate over each entry in componentEntries
+            for (Map.Entry<String, Object> componentEntry : componentEntries.entrySet()) {
+                Map<String, Object> componentMap = (Map<String, Object>) componentEntry.getValue();
+                Component component = new Component();
 
                 // Extract & save entry's name
-                String name = (String) templateMap.get("name");
-                template.setName(name);
+                String name = (String) componentMap.get("name");
+                component.setName(name);
 
                 // Extract & save entry's attributes as ArrayList<String>
-                String attrString = (String) templateMap.get("attributes");
+                String attrString = (String) componentMap.get("attributes");
                 if (attrString != null && !attrString.trim().isEmpty()) {
                     String[] attrArray = attrString.split("\\s+");
                     ArrayList<String> attrList = new ArrayList<>(Arrays.asList(attrArray));
-                    template.setAttributes(attrList);
+                    component.setAttributes(attrList);
                 }
 
                 // Extract & save entry's commands as DoublyLinkedList<String>
-                List<String> commandsList = (List<String>) templateMap.get("commands");
+                List<String> commandsList = (List<String>) componentMap.get("commands");
                 if (commandsList != null && !commandsList.isEmpty()) {
                     DoublyLinkedList<String> commandLinkedList = new DoublyLinkedList<>();
                     for (String cmd : commandsList) {
                         commandLinkedList.addLast(cmd);
                     }
-                    template.setCommands(commandLinkedList);
+                    component.setCommands(commandLinkedList);
                 }
 
-                // Add to template list
-                templates.add(template);
+                // Add to component list
+                components.add(component);
             }
 
-            System.out.println("Loaded " + templates.size() + " template(s) from config");
+            System.out.println("Loaded " + components.size() + " component(s) from config");
 
         } catch (Exception e) {
             System.out.println("Error loading config in " + appDirectory + ": " + e.getMessage());
@@ -138,22 +162,22 @@ public class Model {
         return appDirectory;
     }
 
-    public List<Template> getTemplates() {
-        return templates;
+    public List<Component> getComponents() {
+        return components;
     }
 
-    public Template getSelectedTemplate() {
-        return selectedTemplate;
+    public Component getSelectedComponent() {
+        return selectedComponent;
     }
 
-    public void setTemplateByString(String templateString) {
-        for (Template t : templates) {
-            if (t.getName().equalsIgnoreCase(templateString)) {
-                this.selectedTemplate = t;
+    public void setComponentByString(String componentString) {
+        for (Component t : components) {
+            if (t.getName().equalsIgnoreCase(componentString)) {
+                this.selectedComponent = t;
                 return;
             }
         }
-        this.selectedTemplate = null;
+        this.selectedComponent = null;
     }
 
     public String getInputText() {
@@ -172,29 +196,6 @@ public class Model {
         this.outputText = outputText;
     }
 
-    // Processes the input data
-    public void processData() {
-        if (selectedTemplate != null && selectedTemplate.getCommands()!=null) {
-            DoublyLinkedList<String> dblLnkLst = selectedTemplate.getCommands();
-            String newOutput = "";
-            String[] inputLines = inputText.split("\\r?\\n"); // Handles both \n and \r\n
-            for (String inputLine : inputLines) {
-                newOutput += (inputLine.toUpperCase() + "\n");
-
-                // WIP
-
-                /* do {
-                    // do command on from current dblLnkLst node's string
-                    // traverse forwards in DoublyLinkedList<String> dblLnkLst 
-                }
-                while (next node isnt null>); */
-                // OR for(String cmd : dblLnkLst){}
-            }
-            setOutputText(newOutput);
-        }
-    }
-
-    // Clear the input and output
     public void clearData() {
         this.inputText = "";
         this.outputText = "";

@@ -1,4 +1,4 @@
-package dev.tbm00.preprocessit.model;
+package dev.tbm00.preprocessit.datastructures;
 
 public class Node<T> {
     private T data;
