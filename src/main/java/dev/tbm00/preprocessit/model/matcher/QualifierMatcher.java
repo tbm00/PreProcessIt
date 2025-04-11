@@ -5,5 +5,5 @@ public interface QualifierMatcher {
     boolean match(String token, String previousToken, String nextToken);
     
     // Extracts or transforms the token into a standardized attribute value based on the qualifier.
-    String extract(String token);
+    String standardize(String token);
 }

@@ -89,7 +89,7 @@ public class ProcessHandler {
                         // Check if the current token (with context) matches the qualifier rule.
                         if (matcher.match(token.getValue(), prev, next)) {
                             // Standardize the value.
-                            String standardizedValue = matcher.extract(token.getValue());
+                            String standardizedValue = matcher.standardize(token.getValue());
                             standardizedAttributes.put(attribute.getName(), standardizedValue);
     
                             // Remove the matched part from the token.

@@ -1,4 +1,4 @@
-componentEntries: # just an idea of how the config might be set up
+componentEntries: # just an idea of how components might be set up
   MONITOR:
     attributeOrder: ["SIZE", "RESOLUTION", "GLARE", "OUTPUT", "BODY", "BRIGHTNESS", "RESPONSE_TIME", "REFRESH_RATE"]
     attributeEntries:
@@ -13,12 +13,13 @@ componentEntries: # just an idea of how the config might be set up
       BODY:
         qualifierEntries: []
       BRIGHTNESS:
-        qualifierEntries:
-          - "FRONT IS-A INTEGER"
-          - "END CONTAINS N|NITS|n|nits|Nits"
-      RESPONSE_TIME:
         qualifierEntries: []
+      RESPONSE_TIME: 
+        qualifierEntries: # (qualifier(LOCATION OPERATION VALUE) -> action(if qualifies, if doesnt qualify))
+          - "END CONTAINS MS|milliseconds" -> Continue,ExitToNextWordIteration
+          - "REST IS-A DOUBLE|INTEGER" -> Continue,AppendNearbyCharactersFromNextOrPriorWordAndRetry(max of 6 appends before breaking and going to next word iteration)
+          - "REST INBETWEEN_EXC 0,50" -> Ship("REST".append(MS))&ExitToNextWordIteration,AppendNearbyCharactersFromNextOrPriorWordAndRetry(max of 6 appends before breaking and going to next word iteration)
       REFRESH_RATE:
-        qualifierEntries:
-          - "FRONT IS-A DOUBLE|INTEGER"
-          - "END CONTAINS MS|ms|milliseconds"
+        qualifierEntries: # (qualifier(LOCATION OPERATION VALUE) -> action(if qualifies, if doesnt qualify))
+          - "END CONTAINS HZ|hz|Hz" -> ConfirmAttribute&Continue,ExitToNextWordIteration
+          - "REST INBETWEEN_EXC 59,361" -> Ship("REST".append(HZ))&ExitToNextWordIteration,AppendNearbyCharactersFromNextOrPriorWordAndRetry(max of 6 appends before breaking and going to next word iteration)

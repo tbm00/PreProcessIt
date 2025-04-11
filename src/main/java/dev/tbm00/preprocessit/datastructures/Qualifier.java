@@ -3,7 +3,7 @@ package dev.tbm00.preprocessit.datastructures;
 import dev.tbm00.preprocessit.model.matcher.QualifierMatcher;
 
 /**
- * Qualifiers hold location, condition, and values
+ * Qualifiers hold location, condition, values, and matcher
  * 
  * Feel free to change what this holds to better fit the goal.
  * (this implementation is just an idea of how it might work)

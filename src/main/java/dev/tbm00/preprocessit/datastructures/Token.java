@@ -13,6 +13,11 @@ public class Token {
         this.processed = false;
     }
 
+    @Override
+    public String toString() {
+        return value;
+    }
+
     /**
      * Returns the current token value.
      * @return the token value.
@@ -58,9 +63,34 @@ public class Token {
             value = value.replaceFirst(java.util.regex.Pattern.quote(matchedPart), "");
         }
     }
-    
-    @Override
-    public String toString() {
-        return value;
+
+    /**
+     * Merges the current token's value with another token's value.
+     * This method appends the value of the other token to this token.
+     *
+     * @param other the neighbor token to merge with.
+     */
+    public void mergeWith(Token other) {
+        if (other != null) {
+            this.value = this.value + other.getValue();
+        }
+    }
+
+    /**
+     * Splits this token into two tokens at the provided index.
+     * The current token's value will be updated to contain only the first part.
+     * A new Token containing the remainder is returned.
+     * 
+     * @param index the index at which to split.
+     * @return a new Token containing the second part of the split.
+     */
+    public Token splitAt(int index) {
+        if (index <= 0 || index >= value.length()) {
+            throw new IllegalArgumentException("Index is out of bounds for token splitting.");
+        }
+        String firstPart = value.substring(0, index);
+        String secondPart = value.substring(index);
+        this.value = firstPart;
+        return new Token(secondPart);
     }
 }
