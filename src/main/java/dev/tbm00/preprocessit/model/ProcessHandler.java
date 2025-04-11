@@ -87,7 +87,7 @@ public class ProcessHandler {
                         String next = (current.getNext() != null) ? current.getNext().getData().getValue() : "";
     
                         // Check if the current token (with context) matches the qualifier rule.
-                        if (matcher.match(token.getValue(), prev, next)) {
+                        if (matcher.process(token.getValue(), prev, next, qualifier.getValue(), qualifier.getLocation(), qualifier.getQualifiedActions(), qualifier.getUnqualifiedActions())) {
                             // Standardize the value.
                             String standardizedValue = matcher.standardize(token.getValue());
                             standardizedAttributes.put(attribute.getName(), standardizedValue);

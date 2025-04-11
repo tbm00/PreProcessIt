@@ -1,25 +1,30 @@
-componentEntries: # just an idea of how components might be set up
+componentEntries:
   MONITOR:
     attributeOrder: ["SIZE", "RESOLUTION", "GLARE", "OUTPUT", "BODY", "BRIGHTNESS", "RESPONSE_TIME", "REFRESH_RATE"]
     attributeEntries:
-      SIZE:
-        qualifierEntries: []
-      RESOLUTION:
-        qualifierEntries: []
-      GLARE:
-        qualifierEntries: []
-      OUTPUT:
-        qualifierEntries: []
-      BODY:
-        qualifierEntries: []
-      BRIGHTNESS:
-        qualifierEntries: []
-      RESPONSE_TIME: 
-        qualifierEntries: # (qualifier(LOCATION OPERATION VALUE) -> action(if qualifies, if doesnt qualify))
-          - "END CONTAINS MS|milliseconds" -> Continue,ExitToNextWordIteration
-          - "REST IS-A DOUBLE|INTEGER" -> Continue,AppendNearbyCharactersFromNextOrPriorWordAndRetry(max of 6 appends before breaking and going to next word iteration)
-          - "REST INBETWEEN_EXC 0,50" -> Ship("REST".append(MS))&ExitToNextWordIteration,AppendNearbyCharactersFromNextOrPriorWordAndRetry(max of 6 appends before breaking and going to next word iteration)
-      REFRESH_RATE:
-        qualifierEntries: # (qualifier(LOCATION OPERATION VALUE) -> action(if qualifies, if doesnt qualify))
-          - "END CONTAINS HZ|hz|Hz" -> ConfirmAttribute&Continue,ExitToNextWordIteration
-          - "REST INBETWEEN_EXC 59,361" -> Ship("REST".append(HZ))&ExitToNextWordIteration,AppendNearbyCharactersFromNextOrPriorWordAndRetry(max of 6 appends before breaking and going to next word iteration)
+      RESPONSE_TIME:
+        1:
+          location: "END"
+          condition: "CONTAINS"
+          value: "MS|milliseconds"
+          qualifiedActions:
+            - "Continue"
+          unqualifiedActions:
+            - "ExitToNextWordIteration"
+        2: 
+          location: "REST"
+          condition: "IS-A"
+          value: "DOUBLE|INTEGER"
+          qualifiedActions:
+            - "Continue"
+          unqualifiedActions:
+            - "AppendNearbyCharactersFromNextOrPriorWordAndRetry(max of 6 appends before breaking and going to next word iteration)"
+        3:
+          location: "REST"
+          condition: "INBETWEEN_EXC"
+          value: "0,50"
+          qualifiedActions:
+            - "Ship(\"REST\".append(MS))"
+            - "ExitToNextWordIteration"
+          unqualifiedActions:
+            - "AppendNearbyCharactersFromNextOrPriorWordAndRetry(max of 6 appends before breaking and going to next word iteration)"

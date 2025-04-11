@@ -111,29 +111,64 @@ public class ConfigHandler {
                     for (Map.Entry<String, Object> attributeEntry : attributeEntries.entrySet()) {
                         String attributeName = attributeEntry.getKey();
                         ArrayList<Qualifier> qualifiers = new ArrayList<>();
-
+                    
                         Map<String, Object> attributeMap = (Map<String, Object>) attributeEntry.getValue();
                         Object rawQualifierEntries = attributeMap.get("qualifierEntries");
                         if (rawQualifierEntries == null) {
                             StaticUtil.log("No 'qualifierEntries' found in " + componentName + "'s " + attributeName + "'s config definition");
-                        } else if (rawQualifierEntries instanceof List) { // Iterate over each qualifierEntry
+                        } else if (rawQualifierEntries instanceof Map) {
+                            // qualifier entries defined as a map with numeric keys.
+                            Map<String, Object> qualifierEntries = (Map<String, Object>) rawQualifierEntries;
+                            for (Map.Entry<String, Object> entry : qualifierEntries.entrySet()) {
+                                int qualifierID;
+                                try {
+                                    qualifierID = Integer.parseInt(entry.getKey());
+                                } catch (NumberFormatException e) {
+                                    StaticUtil.log("Invalid qualifier key (should be a number): " + entry.getKey());
+                                    continue;
+                                }
+                                if (entry.getValue() instanceof Map) {
+                                    Map<String, Object> qualMap = (Map<String, Object>) entry.getValue();
+                                    String qualifierLocation = (String) qualMap.get("location");
+                                    String qualifierCondition = (String) qualMap.get("condition");
+                                    String qualifierValue = (String) qualMap.get("value");
+                    
+                                    // Read the action arrays from the maps. They are expected to be lists of Strings.
+                                    List<String> qualifiedActionList = (List<String>) qualMap.get("qualifiedActions");
+                                    List<String> unqualifiedActionList = (List<String>) qualMap.get("unqualifiedActions");
+                    
+                                    String[] qualifiedActions = qualifiedActionList != null ?
+                                            qualifiedActionList.toArray(new String[0]) : new String[0];
+                                    String[] unqualifiedActions = unqualifiedActionList != null ?
+                                            unqualifiedActionList.toArray(new String[0]) : new String[0];
+                    
+                                    // Create the qualifier with the new actions arrays.
+                                    Qualifier qualifier = new Qualifier(qualifierID, qualifierLocation, qualifierCondition, qualifierValue, qualifiedActions, unqualifiedActions);
+                                    qualifiers.add(qualifier);
+                                } else {
+                                    StaticUtil.log("Invalid qualifier entry format for key: " + entry.getKey());
+                                }
+                            }
+                        } else if (rawQualifierEntries instanceof List) {
+                            // Optional: Support legacy list-based format if needed.
                             List<String> qualifierEntries = (List<String>) rawQualifierEntries;
                             int qualifierID = 0;
                             for (String qualifierEntry : qualifierEntries) {
-                                // qualifierEntry format is "LOCATION CONDITION VALUE"
+                                // Expected format: "LOCATION CONDITION VALUE"
                                 String[] parts = qualifierEntry.split(" ", 3);
                                 if (parts.length >= 3) {
                                     String qualifierLocation = parts[0];
                                     String qualifierCondition = parts[1];
                                     String qualifierValue = parts[2];
-                                    Qualifier qualifier = new Qualifier(qualifierID++, qualifierLocation, qualifierCondition, qualifierValue);
+                                    // Since no actions were defined in this format, defaults may be used:
+                                    Qualifier qualifier = new Qualifier(qualifierID++, qualifierLocation, qualifierCondition, qualifierValue, new String[0], new String[0]);
                                     qualifiers.add(qualifier);
                                 } else {
                                     StaticUtil.log("Invalid qualifier entry format: " + qualifierEntry);
                                 }
                             }
                         }
-
+                    
                         // Add local attribute into component's attributes
                         Attribute attribute = new Attribute(attributes.size(), attributeName, qualifiers);
                         attributes.add(attribute);

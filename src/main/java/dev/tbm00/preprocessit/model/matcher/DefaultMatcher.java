@@ -1,25 +1,22 @@
 package dev.tbm00.preprocessit.model.matcher;
 
 public class DefaultMatcher implements QualifierMatcher {
-    private String[] validLocations;
-    private String[] validValues;
 
-    public DefaultMatcher(String location, String value) {
-        this.validLocations = location.split("\\|");
-        this.validValues = value.split("\\|");
-    }
+    public DefaultMatcher() {}
 
     @Override
-    public boolean match(String token, String previousToken, String nextToken) {
+    public boolean process(String token, String previousToken, String nextToken, String locations, String values, String[] qualifiedActions, String[] unqualifiedActions) {
+        String[] validLocations = locations.split("\\|");
+        String[] validValues = values.split("\\|");
+
         for (String location : validLocations) {
             for (String value : validValues) {
-                // if match, return true
+                // if match, trigger qualifiedActions and return true
             }
         }
-        // If no match, work with next node to find a match and return true when found
-        // else work with prior node to find match and return true when found
-        // else return false
-        return false;
+
+        // else trigger unqualifiedActions and return true
+        return true;
     }
 
     @Override

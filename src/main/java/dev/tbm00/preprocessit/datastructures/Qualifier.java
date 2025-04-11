@@ -15,13 +15,17 @@ public class Qualifier {
     private String location;
     private String condition;
     private String value;
+    private String[] qualifiedActions;
+    private String[] unqualifiedActions;
     private QualifierMatcher matcher;
 
-    public Qualifier(int id, String location, String condition, String value) {
+    public Qualifier(int id, String location, String condition, String value, String[] qualifiedActions, String[] unqualifiedActions) {
         this.id = id;
         this.location = location;
         this.condition = condition;
         this.value = value;
+        this.qualifiedActions = qualifiedActions;
+        this.unqualifiedActions = unqualifiedActions;
         //StaticUtil.log("qualifier: " + id + " " + location + " " + condition + " " + value);
     }
 
@@ -55,6 +59,22 @@ public class Qualifier {
 
     public void setValue(String value) {
         this.value = value;
+    }
+
+    public String[] getQualifiedActions() {
+        return qualifiedActions;
+    }
+
+    public void setQualifiedActions(String[] qualifiedActions) {
+        this.qualifiedActions = qualifiedActions;
+    }
+
+    public String[] getUnqualifiedActions() {
+        return unqualifiedActions;
+    }
+
+    public void setUnqualifiedActions(String[] unqualifiedActions) {
+        this.unqualifiedActions = unqualifiedActions;
     }
 
     public QualifierMatcher getMatcher() {
