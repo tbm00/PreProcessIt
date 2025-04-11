@@ -1,5 +1,7 @@
 package dev.tbm00.preprocessit.datastructures;
 
+import dev.tbm00.preprocessit.StaticUtil;
+
 public class DoublyLinkedList<T> {
     private Node<T> head;
     private Node<T> tail;
@@ -42,7 +44,7 @@ public class DoublyLinkedList<T> {
     // Remove a node from the end of the list
     public T removeLast() {
         if (tail == null) {
-            System.out.println("List is empty");
+            StaticUtil.log("List is empty");
             return null;
         }
         T data = tail.getData();
@@ -60,7 +62,7 @@ public class DoublyLinkedList<T> {
     // Remove a node from the beginning of the list
     public T removeFirst() {
         if (head == null) {
-            System.out.println("List is empty");
+            StaticUtil.log("List is empty");
             return null;
         }
         T data = head.getData();
@@ -86,29 +88,41 @@ public class DoublyLinkedList<T> {
     }
 
     // Display the list from head to tail
-    public void displayForward() {
+    public String getForwards() {
         Node<T> current = head;
+        String output = "";
         while (current != null) {
-            System.out.print(current.getData());
+            output = output + (current.getData());
             if (current.getNext() != null) {
-                System.out.print(" <-> ");
+                output = output + ",";
             }
             current = current.getNext();
         }
-        System.out.println();
+        return output;
     }
 
     // Display the list from tail to head
-    public void displayBackward() {
+    public String getBackwards() {
         Node<T> current = tail;
+        String output = "";
         while (current != null) {
-            System.out.print(current.getData());
+            output = output + (current.getData());
             if (current.getBack() != null) {
-                System.out.print(" <-> ");
+                output = output + ",";
             }
             current = current.getBack();
         }
-        System.out.println();
+        return output;
+    }
+
+    // Get the head node of the list.
+    public Node<T> getHead() {
+        return head;
+    }
+
+    // Get the tail node of the list.
+    public Node<T> getTail() {
+        return tail;
     }
 }
 

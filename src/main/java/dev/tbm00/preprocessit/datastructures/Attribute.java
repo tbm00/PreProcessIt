@@ -14,7 +14,7 @@ public class Attribute {
         this.id = id;
         this.name = name;
         this.qualifiers = qualifiers;
-        //System.out.println("attribute: " + id + " " + name + " " + qualifiers);
+        //StaticUtil.log("attribute: " + id + " " + name + " " + qualifiers);
     }
 
     public int getID() {

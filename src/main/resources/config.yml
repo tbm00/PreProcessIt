@@ -1,17 +1,24 @@
-componentEntries:
+componentEntries: # just an idea of how the config might be set up
   MONITOR:
+    attributeOrder: ["SIZE", "RESOLUTION", "GLARE", "OUTPUT", "BODY", "BRIGHTNESS", "RESPONSE_TIME", "REFRESH_RATE"]
     attributeEntries:
-      NITS:
+      SIZE:
+        qualifierEntries: []
+      RESOLUTION:
+        qualifierEntries: []
+      GLARE:
+        qualifierEntries: []
+      OUTPUT:
+        qualifierEntries: []
+      BODY:
+        qualifierEntries: []
+      BRIGHTNESS:
         qualifierEntries:
           - "FRONT IS-A INTEGER"
           - "END CONTAINS N|NITS|n|nits|Nits"
+      RESPONSE_TIME:
+        qualifierEntries: []
       REFRESH_RATE:
         qualifierEntries:
           - "FRONT IS-A DOUBLE|INTEGER"
           - "END CONTAINS MS|ms|milliseconds"
-  GPU:
-    attributeEntries:
-      RAM_SIZE:
-        qualifierEntries:
-          - "FRONT IS-A INTEGER"
-          - "END CONTAINS GB|Gb|gb|NULL"

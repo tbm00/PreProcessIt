@@ -1,20 +1,28 @@
 package dev.tbm00.preprocessit.datastructures;
 
+import dev.tbm00.preprocessit.model.matcher.QualifierMatcher;
+
 /**
  * Qualifiers hold location, condition, and values
+ * 
+ * Feel free to change what this holds to better fit the goal.
+ * (this implementation is just an idea of how it might work)
+ * 
+ * Each Compoment-attribute-qualifer is defined in a config.yml
  */
 public class Qualifier {
     private int id;
     private String location;
     private String condition;
     private String value;
+    private QualifierMatcher matcher;
 
     public Qualifier(int id, String location, String condition, String value) {
         this.id = id;
         this.location = location;
         this.condition = condition;
         this.value = value;
-        //System.out.println("qualifier: " + id + " " + location + " " + condition + " " + value);
+        //StaticUtil.log("qualifier: " + id + " " + location + " " + condition + " " + value);
     }
 
     public int getID() {
@@ -47,5 +55,9 @@ public class Qualifier {
 
     public void setValue(String value) {
         this.value = value;
+    }
+
+    public QualifierMatcher getMatcher() {
+        return matcher;
     }
 }
