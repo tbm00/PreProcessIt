@@ -2,6 +2,12 @@ componentEntries:
   MONITOR:
     attributeOrder: ["SIZE", "RESOLUTION", "GLARE", "OUTPUT", "BODY", "BRIGHTNESS", "RESPONSE_TIME", "REFRESH_RATE"]
     attributeEntries:
+      SIZE: []
+      RESOLUTION: []
+      GLARE: []
+      OUTPUT: []
+      BODY: []
+      BRIGHTNESS: []
       RESPONSE_TIME:
         1:
           word: TOKEN
@@ -18,6 +24,25 @@ componentEntries:
           value: "0,50"
           qualifiedActions:
             - TOKEN_APPEND_END("ms")
+            - TOKEN_SHIP
+          unqualifiedActions:
+            - TRY_NEIGHBORS("6")
+      REFRESH_RATE:
+        1:
+          word: TOKEN
+          condition: CONTAINS
+          value: "HZ|hertz"
+          qualifiedActions:
+            - TOKEN_TRIM_MATCH
+            - CONTINUE
+          unqualifiedActions:
+            - EXIT_TO_NEXT_ITERATION
+        2: 
+          word: TOKEN
+          condition: IN_BETWEEN_EXCLUSIVE
+          value: "59,361"
+          qualifiedActions:
+            - TOKEN_APPEND_END("hz")
             - TOKEN_SHIP
           unqualifiedActions:
             - TRY_NEIGHBORS("6")

@@ -21,9 +21,9 @@ public class MatcherFactory {
          * IN_BETWEEN_EXCLUSIVE
          * EQUALS_VALUE
          * EQUALS_STRING (ALREADY DONE)
-         * EQUALS_STRING_IGNORE_CASE
          * CONTAINS
-         * CONTAINS_IGNORE_CASE
+         * START_CONTAINS
+         * END_CONTAINS
          * IS_TYPE
          * NOT_IN_BETWEEN_INCLUSIVE
          * NOT_IN_BETWEEN_EXCLUSIVE
@@ -31,11 +31,9 @@ public class MatcherFactory {
          * NOT_EQUALS_STRING
          * NOT_EQUALS_STRING_IGNORE_CASE
          * NOT_CONTAINS
-         * NOT_CONTAINS_IGNORE_CASE
+         * NOT_START_CONTAINS
+         * NOT_END_CONTAINS
          * NOT_IS_TYPE
-         * TOKEN_APPEND_END
-         * TOKEN_APPEND_START
-         * TOKEN_APPEND_AT
          */
         
         return null;
