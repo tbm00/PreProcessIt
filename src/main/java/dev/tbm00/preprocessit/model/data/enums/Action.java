@@ -1,0 +1,14 @@
+package dev.tbm00.preprocessit.model.data.enums;
+
+public enum Action {
+    TRY_NEIGHBORS,
+    TOKEN_SHIP,
+    EXIT_TO_NEXT_ATTRIBUTE_ITERATION,
+    EXIT_TO_NEXT_TOKEN_ITERATION,
+    CONTINUE,
+    TOKEN_TRIM_MATCH,
+    TOKEN_KEEP_MATCH,
+    TOKEN_APPEND_END,
+    TOKEN_APPEND_START,
+    TOKEN_APPEND_AT
+}

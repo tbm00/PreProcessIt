@@ -1,4 +1,4 @@
-package dev.tbm00.preprocessit.data;
+package dev.tbm00.preprocessit.model.data;
 
 import dev.tbm00.preprocessit.StaticUtil;
 
@@ -79,7 +79,7 @@ public class DoublyLinkedList<T> {
             tail = newNode;
         } else {
             newNode.setNext(head);
-            head.setBack(newNode);
+            head.setPrior(newNode);
             head = newNode;
         }
         size++;
@@ -93,7 +93,7 @@ public class DoublyLinkedList<T> {
             tail = newNode;
         } else {
             tail.setNext(newNode);
-            newNode.setBack(tail);
+            newNode.setPrior(tail);
             tail = newNode;
         }
         size++;
@@ -110,14 +110,14 @@ public class DoublyLinkedList<T> {
             throw new IllegalArgumentException("Reference node cannot be null");
         }
         Node<T> newNode = new Node<>(data);
-        newNode.setBack(node.getBack());
+        newNode.setPrior(node.getPrior());
         newNode.setNext(node);
-        if (node.getBack() != null) {
-            node.getBack().setNext(newNode);
+        if (node.getPrior() != null) {
+            node.getPrior().setNext(newNode);
         } else {
             head = newNode;
         }
-        node.setBack(newNode);
+        node.setPrior(newNode);
         size++;
         return newNode;
     }
@@ -134,9 +134,9 @@ public class DoublyLinkedList<T> {
         }
         Node<T> newNode = new Node<>(data);
         newNode.setNext(node.getNext());
-        newNode.setBack(node);
+        newNode.setPrior(node);
         if (node.getNext() != null) {
-            node.getNext().setBack(newNode);
+            node.getNext().setPrior(newNode);
         } else {
             tail = newNode;
         }
@@ -156,7 +156,7 @@ public class DoublyLinkedList<T> {
             head = null;
             tail = null;
         } else {
-            tail = tail.getBack();
+            tail = tail.getPrior();
             tail.setNext(null);
         }
         size--;
@@ -175,7 +175,7 @@ public class DoublyLinkedList<T> {
             tail = null;
         } else {
             head = head.getNext();
-            head.setBack(null);
+            head.setPrior(null);
         }
         size--;
         return data;
@@ -194,15 +194,15 @@ public class DoublyLinkedList<T> {
             tail = null;
         } else if (node == head) { // Removing the head.
             head = head.getNext();
-            head.setBack(null);
+            head.setPrior(null);
         } else if (node == tail) { // Removing the tail.
-            tail = tail.getBack();
+            tail = tail.getPrior();
             tail.setNext(null);
         } else { // Removing from the middle.
-            Node<T> previous = node.getBack();
+            Node<T> previous = node.getPrior();
             Node<T> next = node.getNext();
             previous.setNext(next);
-            next.setBack(previous);
+            next.setPrior(previous);
         }
         size--;
     }
@@ -227,10 +227,10 @@ public class DoublyLinkedList<T> {
         StringBuilder output = new StringBuilder();
         while (current != null) {
             output.append(current.getData());
-            if (current.getBack() != null) {
+            if (current.getPrior() != null) {
                 output.append(",");
             }
-            current = current.getBack();
+            current = current.getPrior();
         }
         return output.toString();
     }
@@ -258,8 +258,8 @@ public class DoublyLinkedList<T> {
      * @param node the node whose value will be merged with the previous node.
      */
     public void mergeWithPrevious(Node<T> node) {
-        if (node != null && node.getBack() != null) {
-            Node<T> previousNode = node.getBack();
+        if (node != null && node.getPrior() != null) {
+            Node<T> previousNode = node.getPrior();
             // Merge token value (previous token appends the current token's value)
             ((Token)previousNode.getData()).mergeWith((Token)node.getData());
             // Remove the current node from the linked list.

@@ -1,4 +1,4 @@
-package dev.tbm00.preprocessit.data;
+package dev.tbm00.preprocessit.model.data;
 
 public class Node<T> {
     private T data;
@@ -27,11 +27,11 @@ public class Node<T> {
         this.next = next;
     }
 
-    public Node<T> getBack() {
+    public Node<T> getPrior() {
         return back;
     }
 
-    public void setBack(Node<T> back) {
+    public void setPrior(Node<T> back) {
         this.back = back;
     }
 }

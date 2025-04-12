@@ -2,7 +2,7 @@ package dev.tbm00.preprocessit.model;
 
 import java.util.List;
 
-import dev.tbm00.preprocessit.data.Component;
+import dev.tbm00.preprocessit.model.data.Component;
 
 import java.util.ArrayList;
 

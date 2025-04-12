@@ -1,4 +1,4 @@
-package dev.tbm00.preprocessit.data;
+package dev.tbm00.preprocessit.model.data;
 
 public class Token {
     private String value;

@@ -4,20 +4,20 @@ componentEntries:
     attributeEntries:
       RESPONSE_TIME:
         1:
-          location: END
+          word: TOKEN
           condition: CONTAINS
           value: "MS|milliseconds"
           qualifiedActions:
-            - TRIM_TOKEN
+            - TOKEN_TRIM_MATCH
             - CONTINUE
           unqualifiedActions:
-            - EXIT_TO_NEXT_TOKEN_ITERATION
+            - EXIT_TO_NEXT_ITERATION
         2: 
-          location: WHOLE
+          word: TOKEN
           condition: IN_BETWEEN_EXCLUSIVE
           value: "0,50"
           qualifiedActions:
-            - APPEND_END("ms")
-            - SHIP
+            - TOKEN_APPEND_END("ms")
+            - TOKEN_SHIP
           unqualifiedActions:
-            - TRY_NEIGHBORS(6)
+            - TRY_NEIGHBORS("6")

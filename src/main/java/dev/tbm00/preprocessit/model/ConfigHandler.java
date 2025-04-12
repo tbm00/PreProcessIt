@@ -14,12 +14,13 @@ import java.util.Map;
 import org.yaml.snakeyaml.Yaml;
 
 import dev.tbm00.preprocessit.StaticUtil;
-import dev.tbm00.preprocessit.data.Attribute;
-import dev.tbm00.preprocessit.data.Component;
-import dev.tbm00.preprocessit.data.Qualifier;
-import dev.tbm00.preprocessit.data.enums.Action;
-import dev.tbm00.preprocessit.data.enums.Condition;
-import dev.tbm00.preprocessit.data.enums.Location;
+import dev.tbm00.preprocessit.model.data.Attribute;
+import dev.tbm00.preprocessit.model.data.Component;
+import dev.tbm00.preprocessit.model.data.Qualifier;
+import dev.tbm00.preprocessit.model.data.enums.Action;
+import dev.tbm00.preprocessit.model.data.enums.ActionSpec;
+import dev.tbm00.preprocessit.model.data.enums.Condition;
+import dev.tbm00.preprocessit.model.data.enums.Word;
 
 public class ConfigHandler {
     private final Model model;
@@ -136,26 +137,19 @@ public class ConfigHandler {
                                 if (entry.getValue() instanceof Map) {
                                     Map<String, Object> qualMap = (Map<String, Object>) entry.getValue();
                                     
-                                    // Process locations: convert into ENUMs
-                                    String qualifierLocationStr = (String) qualMap.get("location");
-                                    Location[] locations = null;
-                                    if (qualifierLocationStr != null) {
-                                        List<Location> locationList = new ArrayList<>();
-                                        String[] locationStrings = qualifierLocationStr.split(",");
-
-                                        // Iterate over each configured location
-                                        for (String locStr : locationStrings) {
-                                            try {
-                                                locationList.add(Location.valueOf(locStr.trim().toUpperCase()));
-                                                StaticUtil.log("---- Location Loaded: " + componentName + "'s " + attributeName + "'s " + locStr);
-                                            } catch (IllegalArgumentException ex) {
-                                                StaticUtil.log("---- Location Not Loaded: " + componentName + "'s " + attributeName + "'s " + locStr + " (no applicable enum)");
-                                                continue qualifierLoop;
-                                            }
+                                    // Process word: convert into ENUM
+                                    String qualifierWordStr = (String) qualMap.get("word");
+                                    Word word = null;
+                                    if (qualifierWordStr != null) {
+                                        try {
+                                            word = Word.valueOf(qualifierWordStr.trim().replace("-", "_").toUpperCase());
+                                            StaticUtil.log("---- Word Loaded: " + componentName + "'s " + attributeName + "'s " + qualifierWordStr);
+                                        } catch (IllegalArgumentException ex) {
+                                            StaticUtil.log("---- Word Not Loaded: " + componentName + "'s " + attributeName + "'s " + qualifierWordStr + " (no applicable ENUM)");
+                                            continue qualifierLoop;
                                         }
-                                        locations = locationList.toArray(new Location[0]);
                                     } else {
-                                        StaticUtil.log("---- Locations Not Loaded: " + componentName + "'s " + attributeName + " (no locations found)");
+                                        StaticUtil.log("---- Words Not Loaded: " + componentName + "'s " + attributeName + " (no words found)");
                                         continue qualifierLoop;
                                     }
                     
@@ -167,7 +161,7 @@ public class ConfigHandler {
                                             condition = Condition.valueOf(qualifierConditionStr.trim().replace("-", "_").toUpperCase());
                                             StaticUtil.log("---- Condition Loaded: " + componentName + "'s " + attributeName + "'s " + qualifierConditionStr);
                                         } catch (IllegalArgumentException ex) {
-                                            StaticUtil.log("---- Condition Not Loaded: " + componentName + "'s " + attributeName + "'s " + qualifierConditionStr + " (no applicable enum)");
+                                            StaticUtil.log("---- Condition Not Loaded: " + componentName + "'s " + attributeName + "'s " + qualifierConditionStr + " (no applicable ENUM)");
                                             continue qualifierLoop;
                                         }
                                     } else {
@@ -186,16 +180,16 @@ public class ConfigHandler {
                     
                                     // Process qualifiedActions: convert into ENUMs
                                     List<String> qualifiedActionList = (List<String>) qualMap.get("qualifiedActions");
-                                    List<Action> qualifiedActionsList = new ArrayList<>();
+                                    List<ActionSpec> qualifiedActionsList = new ArrayList<>();
                                     if (qualifiedActionList != null) {
                                         // Iterate over each configured qualified action
                                         for (String actionStr : qualifiedActionList) {
-                                            try {
-                                                Action action = Action.valueOf(actionStr.trim().replace("-", "_").toUpperCase());
-                                                qualifiedActionsList.add(action);
-                                                StaticUtil.log("---- Qualified Action Loaded: " + componentName + "'s " + attributeName + "'s " + actionStr);
-                                            } catch (IllegalArgumentException e) {
-                                                StaticUtil.log("---- Qualified Action Not Loaded: " + componentName + "'s " + attributeName + "'s " + actionStr + " (no applicable enum)");
+                                            ActionSpec spec = parseAction(actionStr);
+                                            if (spec != null) {
+                                                qualifiedActionsList.add(spec);
+                                                StaticUtil.log("---- Qualified Action Loaded: " + spec);
+                                            } else {
+                                                StaticUtil.log("---- Qualified Action Not Loaded: " + actionStr + " for qualifier key: " + entry.getKey());
                                                 continue qualifierLoop;
                                             }
                                         }
@@ -203,20 +197,20 @@ public class ConfigHandler {
                                         StaticUtil.log("---- Qualified Actions Not Loaded: " + componentName + "'s " + attributeName + " (no qualified actions found)");
                                         continue qualifierLoop;
                                     }
-                                    Action[] qualifiedActions = qualifiedActionsList.toArray(new Action[0]);
+                                    ActionSpec[] qualifiedActions = qualifiedActionsList.toArray(new ActionSpec[0]);
                     
                                     // Process unqualifiedActions: convert into ENUMs
                                     List<String> unqualifiedActionList = (List<String>) qualMap.get("unqualifiedActions");
-                                    List<Action> unqualifiedActionsList = new ArrayList<>();
+                                    List<ActionSpec> unqualifiedActionsList = new ArrayList<>();
                                     if (unqualifiedActionList != null) {
                                         // Iterate over each configured unqualified action
                                         for (String actionStr : unqualifiedActionList) {
-                                            try {
-                                                Action action = Action.valueOf(actionStr.trim().replace("-", "_").toUpperCase());
-                                                unqualifiedActionsList.add(action);
-                                                StaticUtil.log("---- Unqualified Action Loaded: " + componentName + "'s " + attributeName + "'s " + actionStr);
-                                            } catch (IllegalArgumentException e) {
-                                                StaticUtil.log("---- Unqualified Action Not Loaded: " + componentName + "'s " + attributeName + "'s " + actionStr + " (no applicable enum)");
+                                            ActionSpec spec = parseAction(actionStr);
+                                            if (spec != null) {
+                                                unqualifiedActionsList.add(spec);
+                                                StaticUtil.log("---- Unqualified Action Loaded: " + spec);
+                                            } else {
+                                                StaticUtil.log("---- Unqualified Action Not Loaded: " + actionStr + " for qualifier key: " + entry.getKey());
                                                 continue qualifierLoop;
                                             }
                                         }
@@ -224,10 +218,10 @@ public class ConfigHandler {
                                         StaticUtil.log("---- Unqualified Actions Not Loaded: " + componentName + "'s " + attributeName + " (no unqualified actions found)");
                                         continue qualifierLoop;
                                     }
-                                    Action[] unqualifiedActions = unqualifiedActionsList.toArray(new Action[0]);
+                                    ActionSpec[] unqualifiedActions = unqualifiedActionsList.toArray(new ActionSpec[0]);
                     
                                     // Add the local qualifier into the local attribute
-                                    Qualifier qualifier = new Qualifier(qualifierID, locations, condition, qualifierValue, qualifiedActions, unqualifiedActions);
+                                    Qualifier qualifier = new Qualifier(qualifierID, word, condition, qualifierValue, qualifiedActions, unqualifiedActions);
                                     qualifiers.add(qualifier);
                                     StaticUtil.log("--- Qualifier Loaded: " + componentName + "'s " + attributeName + "'s " + entry.getKey());
                                 } else {
@@ -256,6 +250,36 @@ public class ConfigHandler {
             }
         } catch (Exception e) {
             StaticUtil.log("Error loading config file in " + appDirectory + ": " + e.getMessage());
+        }
+    }
+
+    private ActionSpec parseAction(String actionStr) {
+        actionStr = actionStr.trim();
+
+        if (actionStr.contains("(") && actionStr.endsWith(")")) {
+            int startIndex = actionStr.indexOf('(');
+            String actionName = actionStr.substring(0, startIndex).trim().replace("-", "_").toUpperCase();
+            String param = actionStr.substring(startIndex + 1, actionStr.length() - 1).trim();
+
+            if ((param.startsWith("\"") && param.endsWith("\"")) || (param.startsWith("'") && param.endsWith("'"))) {
+                param = param.substring(1, param.length() - 1);
+            }
+
+            try {
+                Action action = Action.valueOf(actionName);
+                return new ActionSpec(action, param);
+            } catch (IllegalArgumentException e) {
+                StaticUtil.log("----- Invalid Action Enum: " + actionStr);
+                return null;
+            }
+        } else {
+            try {
+                Action action = Action.valueOf(actionStr.replace("-", "_").toUpperCase());
+                return new ActionSpec(action, null);
+            } catch (IllegalArgumentException e) {
+                StaticUtil.log("----- Invalid Action Enum: " + actionStr);
+                return null;
+            }
         }
     }
 
