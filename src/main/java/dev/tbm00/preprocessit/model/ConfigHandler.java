@@ -14,8 +14,8 @@ import java.util.Map;
 import org.yaml.snakeyaml.Yaml;
 
 import dev.tbm00.preprocessit.StaticUtil;
-import dev.tbm00.preprocessit.model.data.Attribute;
 import dev.tbm00.preprocessit.model.data.Component;
+import dev.tbm00.preprocessit.model.data.Attribute;
 import dev.tbm00.preprocessit.model.data.Qualifier;
 import dev.tbm00.preprocessit.model.data.enums.Action;
 import dev.tbm00.preprocessit.model.data.enums.ActionSpec;

@@ -4,17 +4,17 @@ import java.util.List;
 import java.util.Map;
 
 import dev.tbm00.preprocessit.StaticUtil;
-import dev.tbm00.preprocessit.model.actioneer.ActioneerFactory;
-import dev.tbm00.preprocessit.model.actioneer.ActioneerInterface;
-import dev.tbm00.preprocessit.model.data.Attribute;
 import dev.tbm00.preprocessit.model.data.Component;
-import dev.tbm00.preprocessit.model.data.DoublyLinkedList;
-import dev.tbm00.preprocessit.model.data.Node;
+import dev.tbm00.preprocessit.model.data.Attribute;
 import dev.tbm00.preprocessit.model.data.Qualifier;
 import dev.tbm00.preprocessit.model.data.Token;
+import dev.tbm00.preprocessit.model.data.Node;
+import dev.tbm00.preprocessit.model.data.DoublyLinkedList;
 import dev.tbm00.preprocessit.model.data.enums.Action;
 import dev.tbm00.preprocessit.model.data.enums.ActionSpec;
 import dev.tbm00.preprocessit.model.data.enums.Word;
+import dev.tbm00.preprocessit.model.actioneer.ActioneerFactory;
+import dev.tbm00.preprocessit.model.actioneer.ActioneerInterface;
 import dev.tbm00.preprocessit.model.matcher.MatcherInterface;
 
 public class ProcessHandler {
@@ -64,7 +64,12 @@ public class ProcessHandler {
 
                 if (token.getValue().isEmpty()) {
                     current = current.getNext();
-                    continue;
+                    continue token_iteration;
+                }
+
+                if (token.isProcessed()) {
+                    current = current.getNext();
+                    continue token_iteration;
                 }
     
                 boolean tokenMatched = false;
@@ -113,6 +118,7 @@ public class ProcessHandler {
                         for (ActionSpec actionSpec : actionSpecs) {
                             if (actionSpec.getAction().equals(Action.TOKEN_SHIP)) {
                                 outputAttributes.put(attribute.getName(), token.getValue());
+                                current.getData().setProcessed(true);
                                 current = current.getNext();
                                 continue token_iteration;
                             } else if (actionSpec.getAction().equals(Action.EXIT_TO_NEXT_TOKEN_ITERATION)) {

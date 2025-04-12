@@ -1,9 +1,9 @@
 package dev.tbm00.preprocessit.model.data;
 
-import dev.tbm00.preprocessit.model.matcher.MatcherInterface;
 import dev.tbm00.preprocessit.model.data.enums.ActionSpec;
 import dev.tbm00.preprocessit.model.data.enums.Condition;
 import dev.tbm00.preprocessit.model.data.enums.Word;
+import dev.tbm00.preprocessit.model.matcher.MatcherInterface;
 import dev.tbm00.preprocessit.model.matcher.MatcherFactory;
 
 /**
