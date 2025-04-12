@@ -29,6 +29,8 @@ public class MatcherFactory {
             return new EndContainsMatcher(values);
         } else if (Condition.IS_TYPE.equals(condition)) {
             return new IsTypeMatcher(values);
+        } else if (Condition.IS_EMPTY.equals(condition)) {
+            return new IsEmptyMatcher();
         } else if (Condition.NOT_IN_BETWEEN_INCLUSIVE.equals(condition)) {
             return new NotInBetweenInclusiveMatcher(values);
         } else if (Condition.NOT_IN_BETWEEN_EXCLUSIVE.equals(condition)) {
@@ -45,6 +47,8 @@ public class MatcherFactory {
             return new NotEndContainsMatcher(values);
         } else if (Condition.NOT_IS_TYPE.equals(condition)) {
             return new NotIsTypeMatcher(values);
+        } else if (Condition.NOT_IS_EMPTY.equals(condition)) {
+            return new NotIsEmptyMatcher();
         }
         return null;
     }

@@ -12,8 +12,10 @@ public class ActioneerFactory {
     static {
         EXECUTOR_MAP.put(Action.TRIM_MATCH_ALL, new TrimMatchAllActioneer());
         EXECUTOR_MAP.put(Action.TRIM_MATCH_FIRST, new TrimMatchFirstActioneer());
-        EXECUTOR_MAP.put(Action.TRIM_MATCH_FROM_START, new TrimMatchFromStartActioneer());
-        EXECUTOR_MAP.put(Action.TRIM_MATCH_FROM_END, new TrimMatchFromEndActioneer());
+        EXECUTOR_MAP.put(Action.TRIM_MATCH_START, new TrimMatchStartActioneer());
+        EXECUTOR_MAP.put(Action.TRIM_MATCH_END, new TrimMatchEndActioneer());
+        EXECUTOR_MAP.put(Action.REMOVE_MATCH_FROM_LEFT_NEIGHBOR, new TrimMatchEndActioneer());
+        EXECUTOR_MAP.put(Action.REMOVE_MATCH_FROM_RIGHT_NEIGHBOR, new TrimMatchStartActioneer());
         EXECUTOR_MAP.put(Action.KEEP_MATCH, new KeepMatchActioneer());
         EXECUTOR_MAP.put(Action.APPEND, new AppendActioneer());
         EXECUTOR_MAP.put(Action.PREPEND, new PrependActioneer());

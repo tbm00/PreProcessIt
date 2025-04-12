@@ -20,7 +20,8 @@ import dev.tbm00.preprocessit.model.matcher.MatcherInterface;
 public class ProcessHandler {
     private final Model model;
     private Map<String, String> outputAttributes = new HashMap<>();
-    private String working_word;
+    private String working_word = null;
+    private int skipNextQualifier = 0;
 
     public ProcessHandler(Model model) {
         this.model = model;
@@ -28,163 +29,165 @@ public class ProcessHandler {
 
     public void processData() {
         Component selectedComponent = model.getSelectedComponent();
-        String inputText = model.getInputText();
-        working_word = null;
-    
-        // If the component or its attributes are null, nothing to do
-        if (selectedComponent == null || selectedComponent.getAttributes() == null) {
-            return;
-        }
-    
-        StringBuilder newOutput = new StringBuilder();
+        if (selectedComponent == null || selectedComponent.getAttributes() == null) return;
 
-        // Split input text into lines
+        StringBuilder newOutput = new StringBuilder();
+        String inputText = model.getInputText();
         String[] inputLines = inputText.split("\\r?\\n");
     
         for (String inputLine : inputLines) {
-            // Tokenize the current line on whitespace
-            // Each token is wrapped in a Token object
+            // Tokenize the current line (each token wrapped in a Token object)
             String[] tokenStrings = inputLine.split("\\s+");
-    
-            // Create a doubly linked list of tokens
             DoublyLinkedList<Token> tokenList = new DoublyLinkedList<>();
             for (String tokenStr : tokenStrings) {
                 tokenList.addLast(new Token(tokenStr));
             }
     
-            // A map to hold values for attributes for the current line
+            // Clear outputAttributes map and prepare a builder for unmatched tokens
             outputAttributes.clear();
-
-            // Builder for any tokens or parts that did not match.
             StringBuilder leftoverBuilder = new StringBuilder();
-    
-            // Iterate over tokens using the doubly linked list
-            // (Assumes that your DoublyLinkedList provides a method getHead() to get the first node)
-            Node<Token> current = tokenList.getHead();
-            token_iteration:
-            while (current != null) {
-                Token token = current.getData();
-                StaticUtil.log("Starting token:" + token.getValue());
 
-                if (token.getValue().isEmpty()) {
-                    current = current.getNext();
-                    StaticUtil.log(" -- early return: token.getValue().isEmpty()");
-                    continue token_iteration;
-                }
+            attribute_loop:
+            for (Attribute attribute : selectedComponent.getAttributes()) {
+                if (outputAttributes.containsKey(attribute.getName())) continue attribute_loop;
+                
+                // Go through each token in the token list to find a match for this attribute.
+                Node<Token> current = tokenList.getHead();
+                token_loop:
+                while (current != null) {
+                    Token token = current.getData();
+                    
+                    // Only try tokens that have not been processed and are not empty.
+                    if (!token.isProcessed() && !token.getValue().isEmpty()) {
+                        String initialWord = token.getValue();
+                        working_word = initialWord;
+                        
+                        // For each qualifier in the attribute, check if it matches the token.
+                        qualifier_loop:
+                        for (Qualifier qualifier : attribute.getQualifiers()) {
+                            if (skipNextQualifier>0) {
+                                skipNextQualifier--;
+                                continue qualifier_loop;
+                            }
 
-                if (token.isProcessed()) {
-                    current = current.getNext();
-                    StaticUtil.log(" -- early return: token.isProcessed()");
-                    continue token_iteration;
-                }
-    
-                boolean tokenMatched = false;
-    
-                // Process each attribute from the selected component.
-                attribute_iteration:
-                for (Attribute attribute : selectedComponent.getAttributes()) {
-                    // Make sure the attribute's list of qualifiers is not null.
-                    if (attribute.getQualifiers() == null) {
-                        StaticUtil.log(" -- early return: attribute.getQualifiers() == null");
-                        continue attribute_iteration;
-                    }
-    
-                    // If we already extracted a value for this attribute on this line, skip it.
-                    if (outputAttributes.containsKey(attribute.getName())) {
-                        StaticUtil.log(" -- early return: outputAttributes.containsKey(attribute.getName())");
-                        continue attribute_iteration;
-                    }
-    
-                    // Iterate through the qualifiers for this attribute.
-                    String intitial_word = current.getData().getValue();
-                    working_word = intitial_word;
-                    qualifier_iteration:
-                    for (Qualifier qualifier : attribute.getQualifiers()) {
-                        // Retrieve the pre-built matcher from the qualifier.
-                        MatcherInterface matcher = qualifier.getMatcher();
+                            MatcherInterface matcher = qualifier.getMatcher();
 
-                        if (qualifier.getWord().equals(Word.INITIAL_TOKEN_COPY)) {
-                            StaticUtil.log("set working_word: intitial_word");
-                            working_word = intitial_word;
-                        }
+                            if (qualifier.getWord().equals(Word.INITIAL_TOKEN_COPY)) {
+                                working_word = initialWord;
+                            } else if (qualifier.getWord().equals(Word.LEFT_NEIGHBOR)) {
+                                if (current.getPrior()==null) continue token_loop;
+                                working_word = current.getPrior().getData().getValue();
+                            } else if (qualifier.getWord().equals(Word.RIGHT_NEIGHBOR)) {
+                                if (current.getNext()==null) continue token_loop;
+                                working_word = current.getNext().getData().getValue();
+                            }
+                            
+                            // Check match & get actions
+                            String matchedString = matcher.match(working_word);
+                            ActionSpec[] actionSpecs;
+                            if (!matchedString.isEmpty()) {
+                                StaticUtil.log("! MATCHED !: " + matchedString);
+                                actionSpecs = qualifier.getQualifiedActions();
+                            } else {
+                                actionSpecs = qualifier.getUnqualifiedActions();
+                            }
 
-                        // Check if the current word String matches the qualifier rule.
-                        StaticUtil.log("working_word_1: " + working_word);
-                        String matchedString = matcher.match(working_word);
-                        if (!matchedString.isEmpty()) StaticUtil.log("! MATCHED !: " + matchedString);
-                        else StaticUtil.log("! not matched !: " + matchedString);
-                        ActionSpec[] actionSpecs;
-
-                        if (!matchedString.isEmpty()) {
-                            actionSpecs = qualifier.getQualifiedActions();
-                            tokenMatched = true;
-                        } else {
-                            actionSpecs = qualifier.getUnqualifiedActions();
-                        }
-
-                        /*if (qualifier.getWord().equals(Word.MATCHED_TOKEN)) {
-                            working_word = matchedString;
-                        } else {
-                            working_word = current.getData().getValue();
-                        }*/
-
-                        for (ActionSpec actionSpec : actionSpecs) {
-                            if (actionSpec.getAction().equals(Action.SHIP)) {
-                                StaticUtil.log("! SHIPPED !: " + working_word);
-                                outputAttributes.put(attribute.getName(), working_word);
-                                current.getData().setProcessed(true);
-                                current = current.getNext();
-                                continue token_iteration;
-                            } else if (actionSpec.getAction().equals(Action.EXIT_TO_NEXT_TOKEN_ITERATION)) {
-                                current = current.getNext();
-                                continue token_iteration;
-                            } else if (actionSpec.getAction().equals(Action.EXIT_TO_NEXT_ATTRIBUTE_ITERATION)) {
-                                continue attribute_iteration;
-                            } else if (actionSpec.getAction().equals(Action.CONTINUE)) {
-                                continue qualifier_iteration;
-                            } else if (actionSpec.getAction().equals(Action.TRY_NEIGHBORS)) {
-                                Integer distance = Integer.valueOf(actionSpec.getParameter());
-                                if (distance==null || distance<0) distance = 1;
-                                for (int i = 1; i<=distance; i++) {
-                                    StaticUtil.log("Trying neighbors: " + i);
-                                    if (tryNeighbors(current, working_word, i, matcher, attribute.getName())) {
-                                        continue token_iteration;
+                            // Execute actions
+                            boolean tokenShipped = false;
+                            for (ActionSpec actionSpec : actionSpecs) {
+                                if (actionSpec.getAction().equals(Action.SHIP)) {
+                                    StaticUtil.log("! SHIPPED !: " + working_word);
+                                    outputAttributes.put(attribute.getName(), working_word);
+                                    token.setProcessed(true);
+                                    current = current.getNext();
+                                    tokenShipped = true;
+                                    break;
+                                } else if (actionSpec.getAction().equals(Action.EXIT_TO_NEXT_TOKEN_ITERATION)) {
+                                    current = current.getNext();
+                                    continue token_loop;
+                                } else if (actionSpec.getAction().equals(Action.EXIT_TO_NEXT_ATTRIBUTE_ITERATION)) {
+                                    continue attribute_loop;
+                                } else if (actionSpec.getAction().equals(Action.CONTINUE)) {
+                                    continue qualifier_loop;
+                                } else if (actionSpec.getAction().equals(Action.CONTINUE_AND_SKIP_NEXT_QUALIFIER)) {
+                                    Integer amount = Integer.valueOf(actionSpec.getParameter());
+                                    if (amount==null || amount<0) amount = 1;
+                                    StaticUtil.log("Skipping next qualifiers: " + amount);
+                                    skipNextQualifier = amount;
+                                    continue qualifier_loop;
+                                } else if (actionSpec.getAction().equals(Action.TRY_NEIGHBORS)) {
+                                    Integer distance = Integer.valueOf(actionSpec.getParameter());
+                                    if (distance==null || distance<0) distance = 1;
+                                    StaticUtil.log("Trying neighbors: " + distance);
+                                    if (tryNeighbors(current, working_word, distance, matcher, attribute.getName())) {
+                                        continue token_loop;
+                                    }
+                                } else if (actionSpec.getAction().equals(Action.REMOVE_MATCH_FROM_LEFT_NEIGHBOR)) {
+                                    if (current.getPrior()==null) continue token_loop;
+                                    ActioneerInterface actioneer = ActioneerFactory.getActioneer(actionSpec.getAction());
+                                    if (actioneer != null) {
+                                        current.getPrior().getData().setValue(actioneer.execute(working_word, actionSpec, matchedString));
+                                        StaticUtil.log("removed match from left neigbor, left neightbor now: " + working_word);
+                                        continue qualifier_loop;
+                                    } else {
+                                        StaticUtil.log("No executor found for action: " + actionSpec);
+                                        continue attribute_loop;
+                                    }
+                                } else if (actionSpec.getAction().equals(Action.REMOVE_MATCH_FROM_RIGHT_NEIGHBOR)) {
+                                    if (current.getNext()==null) continue token_loop;
+                                    ActioneerInterface actioneer = ActioneerFactory.getActioneer(actionSpec.getAction());
+                                    if (actioneer != null) {
+                                        current.getNext().getData().setValue(working_word);
+                                        StaticUtil.log("removed match from right neigbor, right neightbor now: " + working_word);
+                                        continue qualifier_loop;
+                                    } else {
+                                        StaticUtil.log("No executor found for action: " + actionSpec);
+                                        continue attribute_loop;
+                                    }
+                                } else {
+                                    ActioneerInterface actioneer = ActioneerFactory.getActioneer(actionSpec.getAction());
+                                    if (actioneer != null) {
+                                        working_word = actioneer.execute(working_word, actionSpec, matchedString);
+                                        StaticUtil.log("working_word_2: " + working_word);
+                                    } else {
+                                        StaticUtil.log("No executor found for action: " + actionSpec);
+                                        continue attribute_loop;
                                     }
                                 }
-                            } else {
-                                ActioneerInterface actioneer = ActioneerFactory.getActioneer(actionSpec.getAction());
-                                if (actioneer != null) {
-                                    working_word = actioneer.execute(working_word, actionSpec, matchedString);
-                                    StaticUtil.log("working_word_2: " + working_word);
-                                } else {
-                                    StaticUtil.log("No executor found for action: " + actionSpec);
-                                }
+                            }
+                            
+                            // Exit qualifier loop since we shipped the token
+                            if (tokenShipped) {
+                                break; // Exit qualifier loop; attribute has been assigned.
                             }
                         }
                     }
-                    if (tokenMatched) {
+                    // Exit token loop since the current attribute was shipped
+                    if (outputAttributes.containsKey(attribute.getName())) {
                         break;
                     }
+                    current = current.getNext();
                 }
-                // If no qualifier successfully matched this token, consider it leftover
-                if (!tokenMatched) {
+            }
+
+            // Add leftovers
+            Node<Token> current = tokenList.getHead();
+            while (current != null) {
+                Token token = current.getData();
+                if (!token.isProcessed()) {
                     leftoverBuilder.append(token.getValue()).append(" ");
                 }
                 current = current.getNext();
             }
-    
-            // Define the order of attributes in the output line (adjust as necessary)
+
+            // Format the output attribute line
             List<String> attributeOrder = selectedComponent.getAttributeOrder();
             StringBuilder formattedLine = new StringBuilder();
-    
-            // Append outputAttributes in the defined order
             for (String attrName : attributeOrder) {
                 String value = outputAttributes.getOrDefault(attrName, "");
                 formattedLine.append(value).append(",");
             }
-            // Append any leftover text
             formattedLine.append(leftoverBuilder.toString().trim());
-    
             newOutput.append(formattedLine.toString()).append("\n");
         }
     
@@ -198,17 +201,19 @@ public class ProcessHandler {
      * 
      * @param current The current node containing the token, use to get neighbors.
      * @param working_word The current node's string to work on.
-     * @param charDistance The number of characters to try from the neighbor.
+     * @param maxDistance The max number of characters to try from the neighbor.
      * @param matcher The matcher used to verify whether the combined token now qualifies.
      * @param attributeName The name of the attribute that might get added.
      * @return true if a match is found by borrowing from a neighbor; false otherwise.
      */
-    private boolean tryNeighbors(Node<Token> current, String working_word, int charDistance, MatcherInterface matcher, String attributeName) {
-        if (tryLeftNeighbor(current, working_word, charDistance, matcher, attributeName)) {
-            return true;
-        }
-        if (tryRightNeighbor(current, working_word, charDistance, matcher, attributeName)) {
-            return true;
+    private boolean tryNeighbors(Node<Token> current, String working_word, int maxDistance, MatcherInterface matcher, String attributeName) {
+        for (int distance = 1; distance <= maxDistance; distance++) {
+            if (tryLeftNeighbor(current, working_word, distance, matcher, attributeName)) {
+                return true;
+            }
+            if (tryRightNeighbor(current, working_word, distance, matcher, attributeName)) {
+                return true;
+            }
         }
         return false;
     }
@@ -220,19 +225,21 @@ public class ProcessHandler {
             if (leftValue.isEmpty()) {
                 return false;
             }
-            // Grab up to 'charDistance' characters from the end of the left token
-            int startIndex = Math.max(0, leftValue.length() - charDistance);
-            String neighborPart = leftValue.substring(startIndex);
+            // Borrow up to charDistance characters from the end of the left token.
+            int effectiveDistance = Math.min(charDistance, leftValue.length());
+            String neighborPart = leftValue.substring(leftValue.length() - effectiveDistance);
             String candidate = neighborPart + working_word;
             String matchResult = matcher.match(candidate);
             if (!matchResult.isEmpty()) {
-                // Consume the used portion from the left token
-                String remaining = leftValue.substring(0, startIndex);
+                // Remove the used portion from the left token.
+                String remaining = leftValue.substring(0, leftValue.length() - effectiveDistance);
                 leftNode.getData().setValue(remaining);
                 if (remaining.isEmpty()) {
                     leftNode.getData().setProcessed(true);
                 }
-
+                // Update the current token with the merged candidate and mark as processed.
+                current.getData().setValue(candidate);
+                current.getData().setProcessed(true);
                 outputAttributes.put(attributeName, candidate);
                 return true;
             }
@@ -247,19 +254,21 @@ public class ProcessHandler {
             if (rightValue.isEmpty()) {
                 return false;
             }
-            // Get up to 'charDistance' characters from the beginning of the right token
-            int lengthToTake = Math.min(charDistance, rightValue.length());
-            String neighborPart = rightValue.substring(0, lengthToTake);
-            String candidate = current.getData().getValue() + neighborPart;
+            // Borrow up to charDistance characters from the beginning of the right token.
+            int effectiveDistance = Math.min(charDistance, rightValue.length());
+            String neighborPart = rightValue.substring(0, effectiveDistance);
+            String candidate = working_word + neighborPart;
             String matchResult = matcher.match(candidate);
             if (!matchResult.isEmpty()) {
-                // Consume the used portion from the right token
-                String remaining = rightValue.substring(lengthToTake);
+                // Remove the used portion from the right token.
+                String remaining = rightValue.substring(effectiveDistance);
                 rightNode.getData().setValue(remaining);
                 if (remaining.isEmpty()) {
                     rightNode.getData().setProcessed(true);
                 }
-
+                // Update the current token with the merged candidate and mark as processed.
+                current.getData().setValue(candidate);
+                current.getData().setProcessed(true);
                 outputAttributes.put(attributeName, candidate);
                 return true;
             }

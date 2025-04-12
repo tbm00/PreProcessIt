@@ -13,6 +13,7 @@ public enum Condition {
     START_CONTAINS,
     END_CONTAINS,
     IS_TYPE,
+    IS_EMPTY,
     NOT_IN_BETWEEN_INCLUSIVE,
     NOT_IN_BETWEEN_EXCLUSIVE,
     NOT_EQUALS_VALUE,
@@ -21,4 +22,5 @@ public enum Condition {
     NOT_START_CONTAINS,
     NOT_END_CONTAINS,
     NOT_IS_TYPE,
+    NOT_IS_EMPTY
 }

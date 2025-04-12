@@ -279,7 +279,7 @@ public class ConfigHandler {
         } else {
             try {
                 Action action = Action.valueOf(actionStr.replace("-", "_").toUpperCase());
-                return new ActionSpec(action, null);
+                return new ActionSpec(action, "1");
             } catch (IllegalArgumentException e) {
                 StaticUtil.log(" Invalid Action Enum: " + actionStr);
                 return null;
