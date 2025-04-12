@@ -7,15 +7,19 @@ public class NotContainsMatcher implements MatcherInterface {
         values.toUpperCase();
         this.substrings = values.split("\\|");
     }
-    
+
     @Override
     public String match(String word) {
-        String lowerWord = word.toUpperCase();
+        String upperWord = word.toUpperCase();
+
         for (String s : substrings) {
-            if (lowerWord.contains(s)) {
+            String upperCandidate = s.toUpperCase();
+            int idx = upperWord.indexOf(upperCandidate);
+            if (idx != -1) {
                 return "";
             }
         }
+        
         return word;
     }
 }

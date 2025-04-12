@@ -7,15 +7,19 @@ public class StartContainsMatcher implements MatcherInterface {
         values.toUpperCase();
         this.substrings = values.split("\\|");
     }
-    
+
     @Override
     public String match(String word) {
-        String lowerWord = word.toUpperCase();
+        String upperWord = word.toUpperCase();
+
         for (String s : substrings) {
-            if (lowerWord.startsWith(s)) {
-                return s;
+            String upperCandidate = s.toUpperCase();
+            if (upperWord.startsWith(upperCandidate)) {
+                int len = s.length();
+                return word.substring(0, len);
             }
         }
+        
         return "";
     }
 }

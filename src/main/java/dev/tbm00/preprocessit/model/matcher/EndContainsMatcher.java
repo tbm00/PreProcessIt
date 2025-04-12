@@ -7,15 +7,19 @@ public class EndContainsMatcher implements MatcherInterface {
         values.toUpperCase();
         this.substrings = values.split("\\|");
     }
-    
+
     @Override
     public String match(String word) {
-        String lowerWord = word.toUpperCase();
+        String upperWord = word.toUpperCase();
+
         for (String s : substrings) {
-            if (lowerWord.endsWith(s)) {
-                return s;
+            String upperCandidate = s.toUpperCase();
+            if (upperWord.endsWith(upperCandidate)) {
+                int len = s.length();
+                return word.substring(word.length()-len);
             }
         }
+        
         return "";
     }
 }

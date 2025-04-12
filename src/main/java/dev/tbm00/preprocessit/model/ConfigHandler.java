@@ -8,6 +8,7 @@ import java.nio.file.Paths;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -102,13 +103,13 @@ public class ConfigHandler {
 
                     List<String> attributeOrder = (List<String>) componentMap.get("attributeOrder");
                     if (attributeOrder == null) {
-                        StaticUtil.log("   Component Not Loaded: " + componentName + " (no attributeOrder found)");
+                        StaticUtil.log("- - - - Component Not Loaded: " + componentName + " (no attributeOrder found)");
                         continue componentLoop;
                     }
 
                     Map<String, Object> attributeEntries = (Map<String, Object>) componentMap.get("attributeEntries");
                     if (attributeEntries == null) {
-                        StaticUtil.log("   Component Not Loaded: " + componentName + " (no attributeEntries found)");
+                        StaticUtil.log("- - - - Component Not Loaded: " + componentName + " (no attributeEntries found)");
                         continue componentLoop;
                     }
                     
@@ -124,21 +125,23 @@ public class ConfigHandler {
                         if (rawQualifierEntries != null && rawQualifierEntries instanceof Map) {
                             Map<String, Object> qualifierEntries = (Map<String, Object>) rawQualifierEntries;
 
-                            
-
-                            qualifierLoop: // Iterate over each qualifier entry configuration (mapped with numeric keys)
-                            for (Map.Entry<String, Object> entry : qualifierEntries.entrySet()) {
-                                int qualifierID;
+                            // Create sorted list of qualifer keys
+                            List<Integer> sortedKeys = new ArrayList<>();
+                            for (String key : qualifierEntries.keySet()) {
                                 try {
-                                    qualifierID = Integer.parseInt(entry.getKey().toString());
-                                } catch (Exception e) {
-                                    StaticUtil.log("       Qualifier Not Loaded: " + componentName + "'s " + attributeName + "'s " + entry.getKey() + " (invalid qualifier key, should be a number)");
-                                    continue attributeLoop;
+                                    sortedKeys.add(Integer.valueOf(key));
+                                } catch (NumberFormatException e) {
+                                    StaticUtil.log("- - Qualifier key not numeric: " + key + ", skipping this qualifier.");
                                 }
+                            }
+                            Collections.sort(sortedKeys);
 
-
-                                if (entry.getValue() instanceof Map) {
-                                    Map<String, Object> qualMap = (Map<String, Object>) entry.getValue();
+                            // Iterate over sorted qualifiers
+                            for (Integer sortedKey : sortedKeys) {
+                                String keyAsString = sortedKey.toString();
+                                Object rawQualifier = qualifierEntries.get(keyAsString);
+                                if (rawQualifier instanceof Map) {
+                                    Map<String, Object> qualMap = (Map<String, Object>) rawQualifier;
                                     
                                     // Process word: convert into ENUM
                                     String qualifierWordStr = (String) qualMap.get("word");
@@ -146,98 +149,96 @@ public class ConfigHandler {
                                     if (qualifierWordStr != null) {
                                         try {
                                             word = Word.valueOf(qualifierWordStr.trim().replace("-", "_").toUpperCase());
-                                            StaticUtil.log("         Word Loaded: " + componentName + "'s " + attributeName + "'s " + qualifierWordStr);
+                                            StaticUtil.log("- Word Loaded: " + componentName + "'s " + attributeName + "'s " + qualifierWordStr);
                                         } catch (IllegalArgumentException ex) {
-                                            StaticUtil.log("         Word Not Loaded: " + componentName + "'s " + attributeName + "'s " + qualifierWordStr + " (no applicable ENUM)");
-                                            continue qualifierLoop;
+                                            StaticUtil.log("- Word Not Loaded: " + componentName + "'s " + attributeName + "'s " + qualifierWordStr + " (no applicable ENUM)");
+                                            continue attributeLoop;
                                         }
                                     } else {
-                                        StaticUtil.log("         Words Not Loaded: " + componentName + "'s " + attributeName + " (no words found)");
-                                        continue qualifierLoop;
+                                        StaticUtil.log("- Words Not Loaded: " + componentName + "'s " + attributeName + " (no words found)");
+                                        continue attributeLoop;
                                     }
-                    
+                                    
                                     // Process condition: convert into ENUM
                                     String qualifierConditionStr = (String) qualMap.get("condition");
                                     Condition condition = null;
                                     if (qualifierConditionStr != null) {
                                         try {
                                             condition = Condition.valueOf(qualifierConditionStr.trim().replace("-", "_").toUpperCase());
-                                            StaticUtil.log("         Condition Loaded: " + componentName + "'s " + attributeName + "'s " + qualifierConditionStr);
+                                            StaticUtil.log("- Condition Loaded: " + componentName + "'s " + attributeName + "'s " + qualifierConditionStr);
                                         } catch (IllegalArgumentException ex) {
-                                            StaticUtil.log("         Condition Not Loaded: " + componentName + "'s " + attributeName + "'s " + qualifierConditionStr + " (no applicable ENUM)");
-                                            continue qualifierLoop;
+                                            StaticUtil.log("- Condition Not Loaded: " + componentName + "'s " + attributeName + "'s " + qualifierConditionStr + " (no applicable ENUM)");
+                                            continue attributeLoop;
                                         }
                                     } else {
-                                        StaticUtil.log("         Condition Not Loaded: " + componentName + "'s " + attributeName + " (no condition found)");
-                                        continue qualifierLoop;
+                                        StaticUtil.log("- Condition Not Loaded: " + componentName + "'s " + attributeName + " (no condition found)");
+                                        continue attributeLoop;
                                     }
-                    
-                                    // Process value: leave as String
+                                    
+                                    // Process value
                                     String qualifierValue = (String) qualMap.get("value");
                                     if (qualifierValue != null) {
-                                        StaticUtil.log("         Value Loaded: " + componentName + "'s " + attributeName + "'s " + qualifierValue);
+                                        StaticUtil.log("- Value Loaded: " + componentName + "'s " + attributeName + "'s " + qualifierValue);
                                     } else {
-                                        StaticUtil.log("         Value Not Loaded: " + componentName + "'s " + attributeName + " (no value found)");
-                                        continue qualifierLoop;
+                                        StaticUtil.log("- Value Not Loaded: " + componentName + "'s " + attributeName + " (no value found)");
+                                        continue attributeLoop;
                                     }
-                    
+                                    
                                     // Process qualifiedActions: convert into ENUMs
                                     List<String> qualifiedActionList = (List<String>) qualMap.get("qualifiedActions");
                                     List<ActionSpec> qualifiedActionsList = new ArrayList<>();
                                     if (qualifiedActionList != null) {
-                                        // Iterate over each configured qualified action
                                         for (String actionStr : qualifiedActionList) {
                                             ActionSpec spec = parseAction(actionStr);
                                             if (spec != null) {
                                                 qualifiedActionsList.add(spec);
-                                                StaticUtil.log("         Qualified Action Loaded: " + spec);
+                                                StaticUtil.log("- Qualified Action Loaded: " + spec);
                                             } else {
-                                                StaticUtil.log("         Qualified Action Not Loaded: " + actionStr + " for qualifier key: " + entry.getKey());
-                                                continue qualifierLoop;
+                                                StaticUtil.log("- Qualified Action Not Loaded: " + actionStr + " for qualifier key: " + keyAsString);
+                                                continue attributeLoop;
                                             }
                                         }
                                     } else {
-                                        StaticUtil.log("         Qualified Actions Not Loaded: " + componentName + "'s " + attributeName + " (no qualified actions found)");
-                                        continue qualifierLoop;
+                                        StaticUtil.log("- Qualified Actions Not Loaded: " + componentName + "'s " + attributeName + " (no qualified actions found)");
+                                        continue attributeLoop;
                                     }
                                     ActionSpec[] qualifiedActions = qualifiedActionsList.toArray(new ActionSpec[0]);
-                    
+                                    
                                     // Process unqualifiedActions: convert into ENUMs
                                     List<String> unqualifiedActionList = (List<String>) qualMap.get("unqualifiedActions");
                                     List<ActionSpec> unqualifiedActionsList = new ArrayList<>();
                                     if (unqualifiedActionList != null) {
-                                        // Iterate over each configured unqualified action
                                         for (String actionStr : unqualifiedActionList) {
                                             ActionSpec spec = parseAction(actionStr);
                                             if (spec != null) {
                                                 unqualifiedActionsList.add(spec);
-                                                StaticUtil.log("         Unqualified Action Loaded: " + spec);
+                                                StaticUtil.log("- Unqualified Action Loaded: " + spec);
                                             } else {
-                                                StaticUtil.log("         Unqualified Action Not Loaded: " + actionStr + " for qualifier key: " + entry.getKey());
-                                                continue qualifierLoop;
+                                                StaticUtil.log("- Unqualified Action Not Loaded: " + actionStr + " for qualifier key: " + keyAsString);
+                                                continue attributeLoop;
                                             }
                                         }
                                     } else {
-                                        StaticUtil.log("         Unqualified Actions Not Loaded: " + componentName + "'s " + attributeName + " (no unqualified actions found)");
-                                        continue qualifierLoop;
+                                        StaticUtil.log("- Unqualified Actions Not Loaded: " + componentName + "'s " + attributeName + " (no unqualified actions found)");
+                                        continue attributeLoop;
                                     }
                                     ActionSpec[] unqualifiedActions = unqualifiedActionsList.toArray(new ActionSpec[0]);
-                    
-                                    // Add the local qualifier into the local attribute
-                                    Qualifier qualifier = new Qualifier(qualifierID, word, condition, qualifierValue, qualifiedActions, unqualifiedActions);
+                                    
+                                    // Create and add the qualifier
+                                    Qualifier qualifier = new Qualifier(sortedKey, word, condition, qualifierValue, qualifiedActions, unqualifiedActions);
                                     qualifiers.add(qualifier);
-                                    StaticUtil.log("       Qualifier Loaded: " + componentName + "'s " + attributeName + "'s " + entry.getKey());
+                                    StaticUtil.log("- - Qualifier Loaded: " + componentName + "'s " + attributeName + "'s " + keyAsString);
                                 } else {
-                                    StaticUtil.log("       Qualifier Not Loaded: " + componentName + "'s " + attributeName + "'s " + entry.getKey() + " (invalid qualifier entry format)");
+                                    StaticUtil.log("- - Qualifier Not Loaded: " + componentName + "'s " + attributeName + "'s " + keyAsString + " (invalid qualifier entry format)");
                                 }
                             }
 
                             // Add the local attribute into the local component
                             Attribute attribute = new Attribute(attributes.size(), attributeName, qualifiers);
                             attributes.add(attribute);
-                            StaticUtil.log("     Attribute Loaded: " + componentName + "'s " + attributeName);
+                            StaticUtil.log("- - - Attribute Loaded: " + componentName + "'s " + attributeName);
                         } else {
-                            StaticUtil.log("     Attribute Not Loaded: " + componentName + "'s " + attributeName + " (no qualifiers found)");
+                            StaticUtil.log("- - - Attribute Not Loaded: " + componentName + "'s " + attributeName + " (no qualifiers found)");
                             continue componentLoop;
                         }
                     }
@@ -245,7 +246,7 @@ public class ConfigHandler {
                     // Add local component into model's components
                     Component component = new Component(componentID++, componentName, attributes, attributeOrder);
                     model.addComponent(component);
-                    StaticUtil.log("   Component Loaded: " + componentName + " " + attributeOrder);
+                    StaticUtil.log("- - - - Component Loaded: " + componentName + " " + attributeOrder);
                 }
                 StaticUtil.log("Loaded " + model.getComponents().size() + " componentEntries from config");
             } else {
@@ -272,7 +273,7 @@ public class ConfigHandler {
                 Action action = Action.valueOf(actionName);
                 return new ActionSpec(action, param);
             } catch (IllegalArgumentException e) {
-                StaticUtil.log("           Invalid Action Enum: " + actionStr);
+                StaticUtil.log(" Invalid Action Enum: " + actionStr);
                 return null;
             }
         } else {
@@ -280,7 +281,7 @@ public class ConfigHandler {
                 Action action = Action.valueOf(actionStr.replace("-", "_").toUpperCase());
                 return new ActionSpec(action, null);
             } catch (IllegalArgumentException e) {
-                StaticUtil.log("           Invalid Action Enum: " + actionStr);
+                StaticUtil.log(" Invalid Action Enum: " + actionStr);
                 return null;
             }
         }

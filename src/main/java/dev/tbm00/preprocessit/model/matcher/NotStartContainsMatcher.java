@@ -10,12 +10,15 @@ public class NotStartContainsMatcher implements MatcherInterface {
     
     @Override
     public String match(String word) {
-        String lowerWord = word.toUpperCase();
+        String upperWord = word.toUpperCase();
+
         for (String s : substrings) {
-            if (lowerWord.startsWith(s)) {
+            String upperCandidate = s.toUpperCase();
+            if (upperWord.startsWith(upperCandidate)) {
                 return "";
             }
         }
+        
         return word;
     }
 }

@@ -20,6 +20,7 @@ import dev.tbm00.preprocessit.model.matcher.MatcherInterface;
 public class ProcessHandler {
     private final Model model;
     private Map<String, String> outputAttributes = new HashMap<>();
+    private String working_word;
 
     public ProcessHandler(Model model) {
         this.model = model;
@@ -28,6 +29,7 @@ public class ProcessHandler {
     public void processData() {
         Component selectedComponent = model.getSelectedComponent();
         String inputText = model.getInputText();
+        working_word = null;
     
         // If the component or its attributes are null, nothing to do
         if (selectedComponent == null || selectedComponent.getAttributes() == null) {
@@ -62,17 +64,17 @@ public class ProcessHandler {
             token_iteration:
             while (current != null) {
                 Token token = current.getData();
-                StaticUtil.log(token);
+                StaticUtil.log("Starting token:" + token.getValue());
 
                 if (token.getValue().isEmpty()) {
                     current = current.getNext();
-                    StaticUtil.log("");
+                    StaticUtil.log(" -- early return: token.getValue().isEmpty()");
                     continue token_iteration;
                 }
 
                 if (token.isProcessed()) {
                     current = current.getNext();
-                    StaticUtil.log("");
+                    StaticUtil.log(" -- early return: token.isProcessed()");
                     continue token_iteration;
                 }
     
@@ -81,36 +83,36 @@ public class ProcessHandler {
                 // Process each attribute from the selected component.
                 attribute_iteration:
                 for (Attribute attribute : selectedComponent.getAttributes()) {
-                    StaticUtil.log(attribute.getName());
                     // Make sure the attribute's list of qualifiers is not null.
                     if (attribute.getQualifiers() == null) {
+                        StaticUtil.log(" -- early return: attribute.getQualifiers() == null");
                         continue attribute_iteration;
                     }
     
                     // If we already extracted a value for this attribute on this line, skip it.
                     if (outputAttributes.containsKey(attribute.getName())) {
-                        continue;
+                        StaticUtil.log(" -- early return: outputAttributes.containsKey(attribute.getName())");
+                        continue attribute_iteration;
                     }
     
                     // Iterate through the qualifiers for this attribute.
                     String intitial_word = current.getData().getValue();
+                    working_word = intitial_word;
                     qualifier_iteration:
                     for (Qualifier qualifier : attribute.getQualifiers()) {
-                        StaticUtil.log(qualifier.getID());
-
                         // Retrieve the pre-built matcher from the qualifier.
                         MatcherInterface matcher = qualifier.getMatcher();
 
-                        String wordToMatch;
                         if (qualifier.getWord().equals(Word.INITIAL_TOKEN_COPY)) {
-                            wordToMatch = intitial_word;
-                        } else {
-                            wordToMatch = current.getData().getValue();
+                            StaticUtil.log("set working_word: intitial_word");
+                            working_word = intitial_word;
                         }
 
                         // Check if the current word String matches the qualifier rule.
-                        String matchedString = matcher.match(wordToMatch);
-                        if (!matchedString.isEmpty()) StaticUtil.log("MATCHED!!!: " + matchedString);
+                        StaticUtil.log("working_word_1: " + working_word);
+                        String matchedString = matcher.match(working_word);
+                        if (!matchedString.isEmpty()) StaticUtil.log("! MATCHED !: " + matchedString);
+                        else StaticUtil.log("! not matched !: " + matchedString);
                         ActionSpec[] actionSpecs;
 
                         if (!matchedString.isEmpty()) {
@@ -120,10 +122,15 @@ public class ProcessHandler {
                             actionSpecs = qualifier.getUnqualifiedActions();
                         }
 
-                        String working_word = current.getData().getValue();
+                        /*if (qualifier.getWord().equals(Word.MATCHED_TOKEN)) {
+                            working_word = matchedString;
+                        } else {
+                            working_word = current.getData().getValue();
+                        }*/
 
                         for (ActionSpec actionSpec : actionSpecs) {
-                            if (actionSpec.getAction().equals(Action.TOKEN_SHIP)) {
+                            if (actionSpec.getAction().equals(Action.SHIP)) {
+                                StaticUtil.log("! SHIPPED !: " + working_word);
                                 outputAttributes.put(attribute.getName(), working_word);
                                 current.getData().setProcessed(true);
                                 current = current.getNext();
@@ -139,6 +146,7 @@ public class ProcessHandler {
                                 Integer distance = Integer.valueOf(actionSpec.getParameter());
                                 if (distance==null || distance<0) distance = 1;
                                 for (int i = 1; i<=distance; i++) {
+                                    StaticUtil.log("Trying neighbors: " + i);
                                     if (tryNeighbors(current, working_word, i, matcher, attribute.getName())) {
                                         continue token_iteration;
                                     }
@@ -146,7 +154,8 @@ public class ProcessHandler {
                             } else {
                                 ActioneerInterface actioneer = ActioneerFactory.getActioneer(actionSpec.getAction());
                                 if (actioneer != null) {
-                                    actioneer.execute(token, actionSpec, matchedString);
+                                    working_word = actioneer.execute(working_word, actionSpec, matchedString);
+                                    StaticUtil.log("working_word_2: " + working_word);
                                 } else {
                                     StaticUtil.log("No executor found for action: " + actionSpec);
                                 }

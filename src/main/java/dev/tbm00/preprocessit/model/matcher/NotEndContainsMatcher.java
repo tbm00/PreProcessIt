@@ -10,12 +10,15 @@ public class NotEndContainsMatcher implements MatcherInterface {
     
     @Override
     public String match(String word) {
-        String lowerWord = word.toUpperCase();
+        String upperWord = word.toUpperCase();
+
         for (String s : substrings) {
-            if (lowerWord.endsWith(s)) {
+            String upperCandidate = s.toUpperCase();
+            if (upperWord.endsWith(upperCandidate)) {
                 return "";
             }
         }
+        
         return word;
     }
 }

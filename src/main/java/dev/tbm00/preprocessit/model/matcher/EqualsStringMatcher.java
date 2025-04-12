@@ -11,11 +11,15 @@ public class EqualsStringMatcher implements MatcherInterface {
 
     @Override
     public String match(String word) {
-        for (String value : validValues) {
-            if (word.equals(value)) return value;
-        }
+        String upperWord = word.toUpperCase();
 
-        // else
+        for (String v : validValues) {
+            String upperCandidate = v.toUpperCase();
+            if (upperWord.equals(upperCandidate)) {
+                return word;
+            }
+        }
+        
         return "";
     }
 }

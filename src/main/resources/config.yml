@@ -8,17 +8,17 @@ componentEntries:
           condition: CONTAINS
           value: "MS|milliseconds"
           qualifiedActions:
-            - TOKEN_TRIM_MATCH
+            - TRIM_MATCH_ALL
             - CONTINUE
           unqualifiedActions:
             - EXIT_TO_NEXT_TOKEN_ITERATION
         "2": 
           word: TOKEN
-          condition: IN_BETWEEN_EXCLUSIVE
+          condition: IN_BETWEEN_INCLUSIVE
           value: "0,50"
           qualifiedActions:
-            - TOKEN_APPEND("ms")
-            - TOKEN_SHIP
+            - APPEND("ms")
+            - SHIP
           unqualifiedActions:
             - TRY_NEIGHBORS("6")
       REFRESH_RATE:
@@ -27,16 +27,16 @@ componentEntries:
           condition: CONTAINS
           value: "HZ|hertz"
           qualifiedActions:
-            - TOKEN_TRIM_MATCH
+            - TRIM_MATCH_FROM_END
             - CONTINUE
           unqualifiedActions:
             - EXIT_TO_NEXT_TOKEN_ITERATION
         "2": 
           word: TOKEN
-          condition: IN_BETWEEN_EXCLUSIVE
+          condition: IN_BETWEEN_INCLUSIVE
           value: "59,361"
           qualifiedActions:
-            - TOKEN_APPEND("hz")
-            - TOKEN_SHIP
+            - APPEND("hz")
+            - SHIP
           unqualifiedActions:
             - TRY_NEIGHBORS("6")

@@ -10,12 +10,14 @@ public class ActioneerFactory {
     private static final Map<Action, ActioneerInterface> EXECUTOR_MAP = new HashMap<>();
 
     static {
-        EXECUTOR_MAP.put(Action.TOKEN_TRIM_MATCH_FROM_START, new TokenTrimMatchFromStartActioneer());
-        EXECUTOR_MAP.put(Action.TOKEN_TRIM_MATCH_FROM_END, new TokenTrimMatchFromEndActioneer());
-        EXECUTOR_MAP.put(Action.TOKEN_KEEP_MATCH, new TokenKeepMatchActioneer());
-        EXECUTOR_MAP.put(Action.TOKEN_APPEND, new TokenAppendActioneer());
-        EXECUTOR_MAP.put(Action.TOKEN_PREPEND, new TokenPrependActioneer());
-        EXECUTOR_MAP.put(Action.TOKEN_INSERT_AT, new TokenInsertAtActioneer());
+        EXECUTOR_MAP.put(Action.TRIM_MATCH_ALL, new TrimMatchAllActioneer());
+        EXECUTOR_MAP.put(Action.TRIM_MATCH_FIRST, new TrimMatchFirstActioneer());
+        EXECUTOR_MAP.put(Action.TRIM_MATCH_FROM_START, new TrimMatchFromStartActioneer());
+        EXECUTOR_MAP.put(Action.TRIM_MATCH_FROM_END, new TrimMatchFromEndActioneer());
+        EXECUTOR_MAP.put(Action.KEEP_MATCH, new KeepMatchActioneer());
+        EXECUTOR_MAP.put(Action.APPEND, new AppendActioneer());
+        EXECUTOR_MAP.put(Action.PREPEND, new PrependActioneer());
+        EXECUTOR_MAP.put(Action.INSERT_AT, new InsertAtActioneer());
     }
     
     public static ActioneerInterface getActioneer(Action action) {

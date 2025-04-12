@@ -9,11 +9,15 @@ public class NotEqualsStringMatcher implements MatcherInterface {
     
     @Override
     public String match(String word) {
-        for (String value : validValues) {
-            if (word.equals(value)) {
+        String upperWord = word.toUpperCase();
+
+        for (String v : validValues) {
+            String upperCandidate = v.toUpperCase();
+            if (upperWord.equals(upperCandidate)) {
                 return "";
             }
         }
+        
         return word;
     }
 }
