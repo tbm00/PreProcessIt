@@ -19,6 +19,7 @@ import dev.tbm00.preprocessit.model.matcher.MatcherInterface;
 
 public class ProcessHandler {
     private final Model model;
+    private Map<String, String> outputAttributes = new HashMap<>();
 
     public ProcessHandler(Model model) {
         this.model = model;
@@ -50,7 +51,8 @@ public class ProcessHandler {
             }
     
             // A map to hold values for attributes for the current line
-            Map<String, String> outputAttributes = new HashMap<>();
+            outputAttributes.clear();
+
             // Builder for any tokens or parts that did not match.
             StringBuilder leftoverBuilder = new StringBuilder();
     
@@ -64,11 +66,13 @@ public class ProcessHandler {
 
                 if (token.getValue().isEmpty()) {
                     current = current.getNext();
+                    StaticUtil.log("");
                     continue token_iteration;
                 }
 
                 if (token.isProcessed()) {
                     current = current.getNext();
+                    StaticUtil.log("");
                     continue token_iteration;
                 }
     
@@ -80,7 +84,7 @@ public class ProcessHandler {
                     StaticUtil.log(attribute.getName());
                     // Make sure the attribute's list of qualifiers is not null.
                     if (attribute.getQualifiers() == null) {
-                        continue;
+                        continue attribute_iteration;
                     }
     
                     // If we already extracted a value for this attribute on this line, skip it.
@@ -106,8 +110,9 @@ public class ProcessHandler {
 
                         // Check if the current word String matches the qualifier rule.
                         String matchedString = matcher.match(wordToMatch);
+                        if (!matchedString.isEmpty()) StaticUtil.log("MATCHED!!!: " + matchedString);
                         ActionSpec[] actionSpecs;
-                        
+
                         if (!matchedString.isEmpty()) {
                             actionSpecs = qualifier.getQualifiedActions();
                             tokenMatched = true;
@@ -115,9 +120,11 @@ public class ProcessHandler {
                             actionSpecs = qualifier.getUnqualifiedActions();
                         }
 
+                        String working_word = current.getData().getValue();
+
                         for (ActionSpec actionSpec : actionSpecs) {
                             if (actionSpec.getAction().equals(Action.TOKEN_SHIP)) {
-                                outputAttributes.put(attribute.getName(), token.getValue());
+                                outputAttributes.put(attribute.getName(), working_word);
                                 current.getData().setProcessed(true);
                                 current = current.getNext();
                                 continue token_iteration;
@@ -132,7 +139,7 @@ public class ProcessHandler {
                                 Integer distance = Integer.valueOf(actionSpec.getParameter());
                                 if (distance==null || distance<0) distance = 1;
                                 for (int i = 1; i<=distance; i++) {
-                                    if (tryNeighbors(current, i, matcher)) {
+                                    if (tryNeighbors(current, working_word, i, matcher, attribute.getName())) {
                                         continue token_iteration;
                                     }
                                 }
@@ -180,85 +187,71 @@ public class ProcessHandler {
      * If either neighbor contributes enough characters to produce a match from the matcher,
      * the token is updated and the consumed characters are removed from the neighbor.
      * 
-     * @param current The current node containing the token.
+     * @param current The current node containing the token, use to get neighbors.
+     * @param working_word The current node's string to work on.
      * @param charDistance The number of characters to try from the neighbor.
      * @param matcher The matcher used to verify whether the combined token now qualifies.
+     * @param attributeName The name of the attribute that might get added.
      * @return true if a match is found by borrowing from a neighbor; false otherwise.
      */
-    private boolean tryNeighbors(Node<Token> current, int charDistance, MatcherInterface matcher) {
-        if (tryLeftNeighbor(current, charDistance, matcher)) {
+    private boolean tryNeighbors(Node<Token> current, String working_word, int charDistance, MatcherInterface matcher, String attributeName) {
+        if (tryLeftNeighbor(current, working_word, charDistance, matcher, attributeName)) {
             return true;
         }
-        if (tryRightNeighbor(current, charDistance, matcher)) {
+        if (tryRightNeighbor(current, working_word, charDistance, matcher, attributeName)) {
             return true;
         }
         return false;
     }
 
-    /**
-     * Attempt to prepend characters from the left (prior) neighbor.
-     * 
-     * @param current The current token node.
-     * @param charDistance The number of characters to try from the neighbor's tail.
-     * @param matcher The matcher to test the new combined token.
-     * @return true if a valid match is found and the token updated; false otherwise.
-     */
-    private boolean tryLeftNeighbor(Node<Token> current, int charDistance, MatcherInterface matcher) {
+    private boolean tryLeftNeighbor(Node<Token> current, String working_word, int charDistance, MatcherInterface matcher, String attributeName) {
         Node<Token> leftNode = current.getPrior();
         if (leftNode != null && !leftNode.getData().isProcessed()) {
             String leftValue = leftNode.getData().getValue();
             if (leftValue.isEmpty()) {
                 return false;
             }
-            // Grab up to 'charDistance' characters from the end of the left token.
+            // Grab up to 'charDistance' characters from the end of the left token
             int startIndex = Math.max(0, leftValue.length() - charDistance);
             String neighborPart = leftValue.substring(startIndex);
-            String candidate = neighborPart + current.getData().getValue();
+            String candidate = neighborPart + working_word;
             String matchResult = matcher.match(candidate);
             if (!matchResult.isEmpty()) {
-                // Consume the used portion from the left token.
+                // Consume the used portion from the left token
                 String remaining = leftValue.substring(0, startIndex);
                 leftNode.getData().setValue(remaining);
                 if (remaining.isEmpty()) {
                     leftNode.getData().setProcessed(true);
                 }
-                // Update the current token value to the combined candidate.
-                current.getData().setValue(candidate);
+
+                outputAttributes.put(attributeName, candidate);
                 return true;
             }
         }
         return false;
     }
 
-    /**
-     * Attempt to append characters from the right (next) neighbor.
-     * 
-     * @param current The current token node.
-     * @param charDistance The number of characters to try from the neighbor's beginning.
-     * @param matcher The matcher used to check the updated token.
-     * @return true if the updated token yields a valid match; false otherwise.
-     */
-    private boolean tryRightNeighbor(Node<Token> current, int charDistance, MatcherInterface matcher) {
+    private boolean tryRightNeighbor(Node<Token> current, String working_word, int charDistance, MatcherInterface matcher, String attributeName) {
         Node<Token> rightNode = current.getNext();
         if (rightNode != null && !rightNode.getData().isProcessed()) {
             String rightValue = rightNode.getData().getValue();
             if (rightValue.isEmpty()) {
                 return false;
             }
-            // Get up to 'charDistance' characters from the beginning of the right token.
+            // Get up to 'charDistance' characters from the beginning of the right token
             int lengthToTake = Math.min(charDistance, rightValue.length());
             String neighborPart = rightValue.substring(0, lengthToTake);
             String candidate = current.getData().getValue() + neighborPart;
             String matchResult = matcher.match(candidate);
             if (!matchResult.isEmpty()) {
-                // Consume the used portion from the right token.
+                // Consume the used portion from the right token
                 String remaining = rightValue.substring(lengthToTake);
                 rightNode.getData().setValue(remaining);
                 if (remaining.isEmpty()) {
                     rightNode.getData().setProcessed(true);
                 }
-                // Update the current token value to the candidate.
-                current.getData().setValue(candidate);
+
+                outputAttributes.put(attributeName, candidate);
                 return true;
             }
         }

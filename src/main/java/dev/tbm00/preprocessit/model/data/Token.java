@@ -65,6 +65,20 @@ public class Token {
     }
 
     /**
+     * Consumes (removes) all the specified matched parts from the token's value.
+     * This is useful when an attribute has been extracted from the token,
+     * and you need to update the token to reflect that removal.
+     *
+     * @param matchedPart the substring to be removed from the token
+     */
+    public void consumeAllMatchedParts(String matchedPart) {
+        if (matchedPart != null && !matchedPart.isEmpty() && value.contains(matchedPart)) {
+            // Use regex quoting to match the literal substring.
+            value = value.replaceAll(java.util.regex.Pattern.quote(matchedPart), "");
+        }
+    }
+
+    /**
      * Merges the current token's value with another token's value.
      * This method appends the value of the other token to this token.
      *

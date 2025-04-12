@@ -10,16 +10,12 @@ public class ActioneerFactory {
     private static final Map<Action, ActioneerInterface> EXECUTOR_MAP = new HashMap<>();
 
     static {
-        EXECUTOR_MAP.put(Action.TOKEN_TRIM_MATCH, new TokenTrimMatchActioneer());
-
-        // TODO expand map with additional interfaces for actions
-        /*
-         * TOKEN_TRIM_MATCH (ALREADY DONE)
-         * TOKEN_KEEP_MATCH
-         * TOKEN_APPEND_END
-         * TOKEN_APPEND_START
-         * TOKEN_APPEND_AT
-         */
+        EXECUTOR_MAP.put(Action.TOKEN_TRIM_MATCH_FROM_START, new TokenTrimMatchFromStartActioneer());
+        EXECUTOR_MAP.put(Action.TOKEN_TRIM_MATCH_FROM_END, new TokenTrimMatchFromEndActioneer());
+        EXECUTOR_MAP.put(Action.TOKEN_KEEP_MATCH, new TokenKeepMatchActioneer());
+        EXECUTOR_MAP.put(Action.TOKEN_APPEND, new TokenAppendActioneer());
+        EXECUTOR_MAP.put(Action.TOKEN_PREPEND, new TokenPrependActioneer());
+        EXECUTOR_MAP.put(Action.TOKEN_INSERT_AT, new TokenInsertAtActioneer());
     }
     
     public static ActioneerInterface getActioneer(Action action) {
