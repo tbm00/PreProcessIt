@@ -4,27 +4,20 @@ componentEntries:
     attributeEntries:
       RESPONSE_TIME:
         1:
-          location: "END"
-          condition: "CONTAINS"
+          location: END
+          condition: CONTAINS
           value: "MS|milliseconds"
           qualifiedActions:
-            - "Continue"
+            - TRIM_TOKEN
+            - CONTINUE
           unqualifiedActions:
-            - "ExitToNextWordIteration"
+            - EXIT_TO_NEXT_TOKEN_ITERATION
         2: 
-          location: "REST"
-          condition: "IS-A"
-          value: "DOUBLE|INTEGER"
-          qualifiedActions:
-            - "Continue"
-          unqualifiedActions:
-            - "AppendNearbyCharactersFromNextOrPriorWordAndRetry(max of 6 appends before breaking and going to next word iteration)"
-        3:
-          location: "REST"
-          condition: "INBETWEEN_EXC"
+          location: WHOLE
+          condition: IN_BETWEEN_EXCLUSIVE
           value: "0,50"
           qualifiedActions:
-            - "Ship(\"REST\".append(MS))"
-            - "ExitToNextWordIteration"
+            - APPEND_END("ms")
+            - SHIP
           unqualifiedActions:
-            - "AppendNearbyCharactersFromNextOrPriorWordAndRetry(max of 6 appends before breaking and going to next word iteration)"
+            - TRY_NEIGHBORS(6)

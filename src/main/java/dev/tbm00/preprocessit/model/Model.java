@@ -1,9 +1,10 @@
 package dev.tbm00.preprocessit.model;
 
 import java.util.List;
-import java.util.ArrayList;
 
-import dev.tbm00.preprocessit.datastructures.Component;
+import dev.tbm00.preprocessit.data.Component;
+
+import java.util.ArrayList;
 
 /**
  * Model handles the data & state of the application

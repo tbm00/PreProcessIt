@@ -15,7 +15,7 @@ import java.net.URI;
 import java.nio.file.Files;
 import java.util.List;
 
-import dev.tbm00.preprocessit.datastructures.Component;
+import dev.tbm00.preprocessit.data.Component;
 import dev.tbm00.preprocessit.model.Model;
 import dev.tbm00.preprocessit.view.View;
 

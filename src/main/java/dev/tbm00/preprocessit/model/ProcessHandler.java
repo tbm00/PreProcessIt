@@ -3,13 +3,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import dev.tbm00.preprocessit.datastructures.DoublyLinkedList;
-import dev.tbm00.preprocessit.datastructures.Node;
-import dev.tbm00.preprocessit.datastructures.Component;
 import dev.tbm00.preprocessit.StaticUtil;
-import dev.tbm00.preprocessit.datastructures.Attribute;
-import dev.tbm00.preprocessit.datastructures.Qualifier;
-import dev.tbm00.preprocessit.datastructures.Token;
+import dev.tbm00.preprocessit.data.Attribute;
+import dev.tbm00.preprocessit.data.Component;
+import dev.tbm00.preprocessit.data.DoublyLinkedList;
+import dev.tbm00.preprocessit.data.Node;
+import dev.tbm00.preprocessit.data.Qualifier;
+import dev.tbm00.preprocessit.data.Token;
 import dev.tbm00.preprocessit.model.matcher.QualifierMatcher;
 
 public class ProcessHandler {
@@ -87,7 +87,7 @@ public class ProcessHandler {
                         String next = (current.getNext() != null) ? current.getNext().getData().getValue() : "";
     
                         // Check if the current token (with context) matches the qualifier rule.
-                        if (matcher.process(token.getValue(), prev, next, qualifier.getValue(), qualifier.getLocation(), qualifier.getQualifiedActions(), qualifier.getUnqualifiedActions())) {
+                        if (matcher.process(token.getValue(), prev, next, qualifier.getValue(), qualifier.getLocations(), qualifier.getQualifiedActions(), qualifier.getUnqualifiedActions())) {
                             // Standardize the value.
                             String standardizedValue = matcher.standardize(token.getValue());
                             standardizedAttributes.put(attribute.getName(), standardizedValue);

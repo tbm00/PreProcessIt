@@ -1,4 +1,4 @@
-package dev.tbm00.preprocessit.datastructures;
+package dev.tbm00.preprocessit.data;
 
 import dev.tbm00.preprocessit.StaticUtil;
 

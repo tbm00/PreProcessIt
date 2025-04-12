@@ -1,4 +1,4 @@
-package dev.tbm00.preprocessit.datastructures;
+package dev.tbm00.preprocessit.data;
 
 import java.util.ArrayList;
 import java.util.List;

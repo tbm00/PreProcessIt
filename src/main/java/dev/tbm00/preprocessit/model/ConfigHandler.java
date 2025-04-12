@@ -13,10 +13,13 @@ import java.util.Map;
 
 import org.yaml.snakeyaml.Yaml;
 
-import dev.tbm00.preprocessit.datastructures.Component;
 import dev.tbm00.preprocessit.StaticUtil;
-import dev.tbm00.preprocessit.datastructures.Attribute;
-import dev.tbm00.preprocessit.datastructures.Qualifier;
+import dev.tbm00.preprocessit.data.Attribute;
+import dev.tbm00.preprocessit.data.Component;
+import dev.tbm00.preprocessit.data.Qualifier;
+import dev.tbm00.preprocessit.data.enums.Action;
+import dev.tbm00.preprocessit.data.enums.Condition;
+import dev.tbm00.preprocessit.data.enums.Location;
 
 public class ConfigHandler {
     private final Model model;
@@ -74,6 +77,7 @@ public class ConfigHandler {
         }
     }
     
+    @SuppressWarnings("unchecked")
     public void loadConfig(File givenYaml) {
         if (givenYaml == null) {
             StaticUtil.log("No config.yml file provided to load");
@@ -84,106 +88,174 @@ public class ConfigHandler {
             Yaml yaml = new Yaml();
             Map<String, Object> data = yaml.load(fis);
 
-            // Top level key: "componentEntries"
             Map<String, Object> componentEntries = (Map<String, Object>) data.get("componentEntries");
-            if (componentEntries == null) {
-                StaticUtil.log("No 'componentEntries' found in config");
-            } else { // Iterate over each componentEntry
+            if (componentEntries != null) {
+                // Unload old components
                 model.clearComponents();
+
                 int componentID = 0;
+                componentLoop: // Iterate over each componentEntry configuration
                 for (Map.Entry<String, Object> componentEntry : componentEntries.entrySet()) {
                     String componentName = componentEntry.getKey();
+                    Map<String, Object> componentMap = (Map<String, Object>) componentEntry.getValue();
+
+                    List<String> attributeOrder = (List<String>) componentMap.get("attributeOrder");
+                    if (attributeOrder == null) {
+                        StaticUtil.log("- Component Not Loaded: " + componentName + " (no attributeOrder found)");
+                        continue componentLoop;
+                    }
+
+                    Map<String, Object> attributeEntries = (Map<String, Object>) componentMap.get("attributeEntries");
+                    if (attributeEntries == null) {
+                        StaticUtil.log("- Component Not Loaded: " + componentName + " (no attributeEntries found)");
+                        continue componentLoop;
+                    }
+                    
                     ArrayList<Attribute> attributes = new ArrayList<>();
 
-                    Map<String, Object> componentMap = (Map<String, Object>) componentEntry.getValue();
-                    List<String> attributeOrder = (List<String>) componentMap.get("attributeOrder");
-                    Map<String, Object> attributeEntries = (Map<String, Object>) componentMap.get("attributeEntries");
-                    if (attributeOrder == null) {
-                        StaticUtil.log("No 'attributeOrder' found in " + componentName + "'s config definition");
-                        continue;
-                    }
-                    if (attributeEntries == null) {
-                        StaticUtil.log("No 'attributeEntries' found in " + componentName + "'s config definition");
-                        continue;
-                    }
-                    
-                    // Iterate over each attributeEntry
+                    attributeLoop: // Iterate over each attributeEntry configuration
                     for (Map.Entry<String, Object> attributeEntry : attributeEntries.entrySet()) {
                         String attributeName = attributeEntry.getKey();
-                        ArrayList<Qualifier> qualifiers = new ArrayList<>();
-                    
                         Map<String, Object> attributeMap = (Map<String, Object>) attributeEntry.getValue();
                         Object rawQualifierEntries = attributeMap.get("qualifierEntries");
-                        if (rawQualifierEntries == null) {
-                            StaticUtil.log("No 'qualifierEntries' found in " + componentName + "'s " + attributeName + "'s config definition");
-                        } else if (rawQualifierEntries instanceof Map) {
-                            // qualifier entries defined as a map with numeric keys.
+                        ArrayList<Qualifier> qualifiers = new ArrayList<>();
+                        
+                        if (rawQualifierEntries != null && rawQualifierEntries instanceof Map) {
                             Map<String, Object> qualifierEntries = (Map<String, Object>) rawQualifierEntries;
+
+                            qualifierLoop: // Iterate over each qualifier entry configuration (mapped with numeric keys)
                             for (Map.Entry<String, Object> entry : qualifierEntries.entrySet()) {
                                 int qualifierID;
                                 try {
                                     qualifierID = Integer.parseInt(entry.getKey());
                                 } catch (NumberFormatException e) {
-                                    StaticUtil.log("Invalid qualifier key (should be a number): " + entry.getKey());
-                                    continue;
+                                    StaticUtil.log("--- Qualifier Not Loaded: " + componentName + "'s " + attributeName + "'s " + entry.getKey() + " (invalid qualifier key, should be a number)");
+                                    continue attributeLoop;
                                 }
+
                                 if (entry.getValue() instanceof Map) {
                                     Map<String, Object> qualMap = (Map<String, Object>) entry.getValue();
-                                    String qualifierLocation = (String) qualMap.get("location");
-                                    String qualifierCondition = (String) qualMap.get("condition");
+                                    
+                                    // Process locations: convert into ENUMs
+                                    String qualifierLocationStr = (String) qualMap.get("location");
+                                    Location[] locations = null;
+                                    if (qualifierLocationStr != null) {
+                                        List<Location> locationList = new ArrayList<>();
+                                        String[] locationStrings = qualifierLocationStr.split(",");
+
+                                        // Iterate over each configured location
+                                        for (String locStr : locationStrings) {
+                                            try {
+                                                locationList.add(Location.valueOf(locStr.trim().toUpperCase()));
+                                                StaticUtil.log("---- Location Loaded: " + componentName + "'s " + attributeName + "'s " + locStr);
+                                            } catch (IllegalArgumentException ex) {
+                                                StaticUtil.log("---- Location Not Loaded: " + componentName + "'s " + attributeName + "'s " + locStr + " (no applicable enum)");
+                                                continue qualifierLoop;
+                                            }
+                                        }
+                                        locations = locationList.toArray(new Location[0]);
+                                    } else {
+                                        StaticUtil.log("---- Locations Not Loaded: " + componentName + "'s " + attributeName + " (no locations found)");
+                                        continue qualifierLoop;
+                                    }
+                    
+                                    // Process condition: convert into ENUM
+                                    String qualifierConditionStr = (String) qualMap.get("condition");
+                                    Condition condition = null;
+                                    if (qualifierConditionStr != null) {
+                                        try {
+                                            condition = Condition.valueOf(qualifierConditionStr.trim().replace("-", "_").toUpperCase());
+                                            StaticUtil.log("---- Condition Loaded: " + componentName + "'s " + attributeName + "'s " + qualifierConditionStr);
+                                        } catch (IllegalArgumentException ex) {
+                                            StaticUtil.log("---- Condition Not Loaded: " + componentName + "'s " + attributeName + "'s " + qualifierConditionStr + " (no applicable enum)");
+                                            continue qualifierLoop;
+                                        }
+                                    } else {
+                                        StaticUtil.log("---- Condition Not Loaded: " + componentName + "'s " + attributeName + " (no condition found)");
+                                        continue qualifierLoop;
+                                    }
+                    
+                                    // Process value: leave as String
                                     String qualifierValue = (String) qualMap.get("value");
+                                    if (qualifierValue != null) {
+                                        StaticUtil.log("---- Value Loaded: " + componentName + "'s " + attributeName + "'s " + qualifierValue);
+                                    } else {
+                                        StaticUtil.log("---- Value Not Loaded: " + componentName + "'s " + attributeName + " (no value found)");
+                                        continue qualifierLoop;
+                                    }
                     
-                                    // Read the action arrays from the maps. They are expected to be lists of Strings.
+                                    // Process qualifiedActions: convert into ENUMs
                                     List<String> qualifiedActionList = (List<String>) qualMap.get("qualifiedActions");
+                                    List<Action> qualifiedActionsList = new ArrayList<>();
+                                    if (qualifiedActionList != null) {
+                                        // Iterate over each configured qualified action
+                                        for (String actionStr : qualifiedActionList) {
+                                            try {
+                                                Action action = Action.valueOf(actionStr.trim().replace("-", "_").toUpperCase());
+                                                qualifiedActionsList.add(action);
+                                                StaticUtil.log("---- Qualified Action Loaded: " + componentName + "'s " + attributeName + "'s " + actionStr);
+                                            } catch (IllegalArgumentException e) {
+                                                StaticUtil.log("---- Qualified Action Not Loaded: " + componentName + "'s " + attributeName + "'s " + actionStr + " (no applicable enum)");
+                                                continue qualifierLoop;
+                                            }
+                                        }
+                                    } else {
+                                        StaticUtil.log("---- Qualified Actions Not Loaded: " + componentName + "'s " + attributeName + " (no qualified actions found)");
+                                        continue qualifierLoop;
+                                    }
+                                    Action[] qualifiedActions = qualifiedActionsList.toArray(new Action[0]);
+                    
+                                    // Process unqualifiedActions: convert into ENUMs
                                     List<String> unqualifiedActionList = (List<String>) qualMap.get("unqualifiedActions");
+                                    List<Action> unqualifiedActionsList = new ArrayList<>();
+                                    if (unqualifiedActionList != null) {
+                                        // Iterate over each configured unqualified action
+                                        for (String actionStr : unqualifiedActionList) {
+                                            try {
+                                                Action action = Action.valueOf(actionStr.trim().replace("-", "_").toUpperCase());
+                                                unqualifiedActionsList.add(action);
+                                                StaticUtil.log("---- Unqualified Action Loaded: " + componentName + "'s " + attributeName + "'s " + actionStr);
+                                            } catch (IllegalArgumentException e) {
+                                                StaticUtil.log("---- Unqualified Action Not Loaded: " + componentName + "'s " + attributeName + "'s " + actionStr + " (no applicable enum)");
+                                                continue qualifierLoop;
+                                            }
+                                        }
+                                    } else {
+                                        StaticUtil.log("---- Unqualified Actions Not Loaded: " + componentName + "'s " + attributeName + " (no unqualified actions found)");
+                                        continue qualifierLoop;
+                                    }
+                                    Action[] unqualifiedActions = unqualifiedActionsList.toArray(new Action[0]);
                     
-                                    String[] qualifiedActions = qualifiedActionList != null ?
-                                            qualifiedActionList.toArray(new String[0]) : new String[0];
-                                    String[] unqualifiedActions = unqualifiedActionList != null ?
-                                            unqualifiedActionList.toArray(new String[0]) : new String[0];
-                    
-                                    // Create the qualifier with the new actions arrays.
-                                    Qualifier qualifier = new Qualifier(qualifierID, qualifierLocation, qualifierCondition, qualifierValue, qualifiedActions, unqualifiedActions);
+                                    // Add the local qualifier into the local attribute
+                                    Qualifier qualifier = new Qualifier(qualifierID, locations, condition, qualifierValue, qualifiedActions, unqualifiedActions);
                                     qualifiers.add(qualifier);
+                                    StaticUtil.log("--- Qualifier Loaded: " + componentName + "'s " + attributeName + "'s " + entry.getKey());
                                 } else {
-                                    StaticUtil.log("Invalid qualifier entry format for key: " + entry.getKey());
+                                    StaticUtil.log("--- Qualifier Not Loaded: " + componentName + "'s " + attributeName + "'s " + entry.getKey() + " (invalid qualifier entry format)");
                                 }
                             }
-                        } else if (rawQualifierEntries instanceof List) {
-                            // Optional: Support legacy list-based format if needed.
-                            List<String> qualifierEntries = (List<String>) rawQualifierEntries;
-                            int qualifierID = 0;
-                            for (String qualifierEntry : qualifierEntries) {
-                                // Expected format: "LOCATION CONDITION VALUE"
-                                String[] parts = qualifierEntry.split(" ", 3);
-                                if (parts.length >= 3) {
-                                    String qualifierLocation = parts[0];
-                                    String qualifierCondition = parts[1];
-                                    String qualifierValue = parts[2];
-                                    // Since no actions were defined in this format, defaults may be used:
-                                    Qualifier qualifier = new Qualifier(qualifierID++, qualifierLocation, qualifierCondition, qualifierValue, new String[0], new String[0]);
-                                    qualifiers.add(qualifier);
-                                } else {
-                                    StaticUtil.log("Invalid qualifier entry format: " + qualifierEntry);
-                                }
-                            }
+
+                            // Add the local attribute into the local component
+                            Attribute attribute = new Attribute(attributes.size(), attributeName, qualifiers);
+                            attributes.add(attribute);
+                            StaticUtil.log("-- Attribute Loaded: " + componentName + "'s " + attributeName);
+                        } else {
+                            StaticUtil.log("-- Attribute Not Loaded: " + componentName + "'s " + attributeName + " (no qualifiers found)");
+                            continue componentLoop;
                         }
-                    
-                        // Add local attribute into component's attributes
-                        Attribute attribute = new Attribute(attributes.size(), attributeName, qualifiers);
-                        attributes.add(attribute);
                     }
                     
-
                     // Add local component into model's components
                     Component component = new Component(componentID++, componentName, attributes, attributeOrder);
-                    StaticUtil.log("added Component: " + (componentID-1) + " " + componentName + " " + attributeOrder);
                     model.addComponent(component);
+                    StaticUtil.log("- Component Loaded: " + componentName + " " + componentName + " " + attributeOrder);
                 }
-                StaticUtil.log("Loaded " + model.getComponents().size() + " component(s) from config");
+                StaticUtil.log("Loaded " + model.getComponents().size() + " componentEntries from config");
+            } else {
+                StaticUtil.log("No componentEntries found in config");
             }
         } catch (Exception e) {
-            StaticUtil.log("Error loading config in " + appDirectory + ": " + e.getMessage());
+            StaticUtil.log("Error loading config file in " + appDirectory + ": " + e.getMessage());
         }
     }
 
