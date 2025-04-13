@@ -13,7 +13,7 @@ public class PrependActioneer implements ActioneerInterface {
         }
         // Prepend the parameter to the token's value.
         word = prependStr + word;
-        StaticUtil.log("PrependActioneer: " + word);
+        StaticUtil.log("      (PrependActioneer: " + word + ")");
         return word;
     }
 }

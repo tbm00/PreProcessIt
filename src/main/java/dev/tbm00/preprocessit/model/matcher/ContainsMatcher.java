@@ -1,7 +1,5 @@
 package dev.tbm00.preprocessit.model.matcher;
 
-import dev.tbm00.preprocessit.StaticUtil;
-
 public class ContainsMatcher implements MatcherInterface {
     private String[] substrings;
     
@@ -16,7 +14,6 @@ public class ContainsMatcher implements MatcherInterface {
         for (String s : substrings) {
             String upperCandidate = s.toUpperCase();
             int idx = upperWord.indexOf(upperCandidate);
-            StaticUtil.log("uppercandidate: " + upperCandidate + ", upperword: "+ upperWord + ", idx: " + idx);
             if (idx != -1) {
                 return word.substring(idx, idx+upperCandidate.length());
             }

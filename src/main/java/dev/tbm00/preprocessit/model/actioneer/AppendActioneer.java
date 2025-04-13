@@ -11,7 +11,7 @@ public class AppendActioneer implements ActioneerInterface {
         if (appendStr == null) appendStr = "";
 
         word = word + appendStr;
-        StaticUtil.log("AppendActioneer: " + word);
+        StaticUtil.log("      (AppendActioneer: " + word + ")");
         return word;
     }
 }

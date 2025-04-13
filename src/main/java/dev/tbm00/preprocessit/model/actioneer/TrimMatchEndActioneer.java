@@ -12,7 +12,7 @@ public class TrimMatchEndActioneer implements ActioneerInterface {
             word = word.substring(0, word.length() - matchedString.length());
         }
         
-        StaticUtil.log("TrimMatchEndActioneer: " + word);
+        StaticUtil.log("      (TrimMatchEndActioneer: " + word + ")");
         return word;
     }
 }

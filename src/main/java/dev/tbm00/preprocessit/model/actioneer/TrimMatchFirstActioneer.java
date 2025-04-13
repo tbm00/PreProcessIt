@@ -12,7 +12,7 @@ public class TrimMatchFirstActioneer implements ActioneerInterface {
             word = word.replaceFirst(java.util.regex.Pattern.quote(matchedString), "");
         }
 
-        StaticUtil.log("TrimMatchFirstActioneer: " + word);
+        StaticUtil.log("      (TrimMatchFirstActioneer: " + word + ")");
         return word;
     }
 }

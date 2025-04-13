@@ -8,7 +8,7 @@ public class KeepMatchActioneer implements ActioneerInterface {
     @Override
     public String execute(String word, ActionSpec actionSpec, String matchedString) {
         word = matchedString;
-        StaticUtil.log("KeepMatchActioneer: " + word);
+        StaticUtil.log("      (KeepMatchActioneer: " + word + ")");
         return word;
     }
 }

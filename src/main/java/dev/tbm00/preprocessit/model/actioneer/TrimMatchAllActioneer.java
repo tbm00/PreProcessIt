@@ -12,7 +12,7 @@ public class TrimMatchAllActioneer implements ActioneerInterface {
             word = word.replaceAll(java.util.regex.Pattern.quote(matchedString), "");
         }
 
-        StaticUtil.log("TrimMatchAllActioneer: " + word);
+        StaticUtil.log("      (TrimMatchAllActioneer: " + word + ")");
         return word;
     }
 }
