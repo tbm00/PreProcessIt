@@ -12,28 +12,28 @@ public class View extends JFrame {
     /**
      * Header (top 10%)
      */
-    private JPanel headerPanel;											// holds: headerTop + headerBottom
+    private JPanel headerPanel;					// holds: headerTop + toolPanel
     private JSplitPane headerTop;                   // holds: textPanel + controlPanel
-    private JPanel textPanel;                       // holds: titleLabel + subLabel
-    private JLabel titleLabel;                      // Label for title text
-    private JLabel subLabel;                        // Label for instruction text
-    private JPanel controlPanel;                    // holds: buttonsContainer
-    private JPanel buttonsContainer;                // holds: control buttons
-    private JButton inputComponentsButton;       		// Button for inputting config as YML
-    private JComboBox<String> componentSelector; 		// Dropdown for selecting config component
-    private JButton processDataButton;          		// Button for triggering data process
+    private JPanel textPanel;                           // holds: titleLabel + subLabel
+    private JLabel titleLabel;                              // Label for title text
+    private JLabel subLabel;                                // Label for instruction text
+    private JPanel controlPanel;                        // holds: buttonsContainer
+    private JPanel buttonsContainer;                        // holds: control buttons
+    private JButton inputComponentsButton;       		        // Button for inputting config as YML
+    private JComboBox<String> componentSelector; 		        // Dropdown for selecting config component
+    private JButton processDataButton;          		        // Button for triggering data process
     private JPanel toolPanel;                       // holds: tool buttons
-    private JButton inputDataButton;                // Button for inputting data as CSV or TXT
-    private JButton pasteDataButton;                // Button for pasting data from clipboard
-    private JButton copyOutputButton;               // Button for copying data to clipboard
-    private JButton saveOutputButton;               // Button for outputting data as CSV or TXT
-    private JButton clearButton;                    // Button for clearing input & output
+    private JButton inputDataButton;                    // Button for inputting data as CSV or TXT
+    private JButton pasteDataButton;                    // Button for pasting data from clipboard
+    private JButton copyOutputButton;                   // Button for copying data to clipboard
+    private JButton saveOutputButton;                   // Button for outputting data as CSV or TXT
+    private JButton clearButton;                        // Button for clearing input & output
 
 
     /**
      * IO (center 90%)
      */
-    private JSplitPane ioSplitPane;									// SplitPanel for IO
+    private JSplitPane ioSplitPane;				// SplitPanel for IO
     private JScrollPane inputScrollPane;            // scroll panel (left)
     private JTextArea inputTextArea;            		// input text screen (left)
     private LineNumber inputLineNumber;         		// line number component (left)
