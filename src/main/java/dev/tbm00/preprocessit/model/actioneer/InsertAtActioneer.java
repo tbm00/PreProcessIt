@@ -9,13 +9,13 @@ public class InsertAtActioneer implements ActioneerInterface {
     public String execute(String word, ActionSpec actionSpec, String matchedString) {
         String param = actionSpec.getParameter();
         if (param == null || param.isEmpty()) {
-            StaticUtil.log("No parameter provided for INSERT_AT action. Expected format: INSERT_AT(index,substring)");
+            StaticUtil.log("InsertAtActioneer: No parameter provided... not inserting!");
             return word;
         }
         // Expecting parameter format: "index,substring"
         String[] parts = param.split(",", 2);
         if (parts.length < 2) {
-            StaticUtil.log("Invalid parameter format for INSERT_AT action. Expected format: INSERT_AT(index,substring)");
+            StaticUtil.log("InsertAtActioneer: Invalid parameter... not inserting! (expected format: INSERT_AT(index,substring))");
             return word;
         }
         try {
@@ -33,7 +33,7 @@ public class InsertAtActioneer implements ActioneerInterface {
             word = newVal;
             StaticUtil.log("InsertAtActioneer: " + word);
         } catch (NumberFormatException e) {
-            StaticUtil.log("Error parsing index for INSERT_AT: " + e.getMessage());
+            StaticUtil.log("InsertAtActioneer: Error parsing index");
         } return word;
     }
 }

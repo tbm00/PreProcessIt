@@ -194,7 +194,7 @@ public class Controller {
     // Process the data in the Model
     private void handleProcessData() {
         // Use selectedComponent in the model to process the data
-        model.getProcessHandler().processData();
+        model.setOutputText(model.getProcessHandler().processData());
 
         // Update view with new data
         view.getOutputTextArea().setText(model.getOutputText());
