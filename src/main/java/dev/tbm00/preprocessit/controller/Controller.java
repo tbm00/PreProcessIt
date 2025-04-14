@@ -16,7 +16,7 @@ import java.nio.file.Files;
 import java.util.List;
 
 import dev.tbm00.preprocessit.model.Model;
-import dev.tbm00.preprocessit.model.Template;
+import dev.tbm00.preprocessit.model.data.Component;
 import dev.tbm00.preprocessit.view.View;
 
 /**
@@ -34,25 +34,25 @@ public class Controller {
         this.view = view;
         updateDropdown();
 
-        String selected = (String) view.getTemplateSelector().getSelectedItem();
-        model.setTemplateByString(selected);
+        String componentName = (String) view.getComponentSelector().getSelectedItem();
+        model.setSelectedComponent(componentName);
         initListeners();
     }
 
     private void initListeners() {
-        // Listener for Load Templates button
-        view.getInputTemplatesButton().addActionListener(new ActionListener() {
+        // Listener for Load Components button
+        view.getInputComponentsButton().addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                handleLoadTemplates();
+                handleLoadComponents();
             }
         });
 
-        // Listener for Template Selection dropdown
-        view.getTemplateSelector().addActionListener(new ActionListener() {
+        // Listener for Component Selection dropdown
+        view.getComponentSelector().addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                handleTemplateSelection();
+                handleComponentSelection();
             }
         });
 
@@ -133,42 +133,42 @@ public class Controller {
         });
     }
 
-    // Load templates from file YML
-    private void handleLoadTemplates() {
-        JFileChooser fc = new JFileChooser(model.getAppDirectory());
+    // Load components from file YML
+    private void handleLoadComponents() {
+        JFileChooser fc = new JFileChooser(model.getConfigHandler().getAppDirectory().toFile());
 
         fc.setFileFilter(new FileNameExtensionFilter(".YML", "yml"));
         int fileChoice = fc.showOpenDialog(view);
         if (fileChoice == JFileChooser.APPROVE_OPTION) {
-            File templateFile = fc.getSelectedFile();
-            String filename = templateFile.getName().toLowerCase();
+            File configFile = fc.getSelectedFile();
+            String filename = configFile.getName().toLowerCase();
             if (!filename.endsWith(".yml")) return;
 
             // Read/load YAML file/config
-            model.loadConfig(templateFile);
+            model.getConfigHandler().loadConfig(configFile);
             updateDropdown();
         }
     }
 
     public void updateDropdown() {
-        // Add each templates name to view
-        List<Template> templateList = model.getTemplates();
-        if (templateList.isEmpty() || templateList==null) return;
-        view.getTemplateSelector().removeAllItems();
-        for(Template t : templateList) {
-            view.getTemplateSelector().addItem(t.getName());
+        // Add each components name to view
+        List<Component> componentList = model.getComponents();
+        if (componentList==null || componentList.isEmpty() ) return;
+        view.getComponentSelector().removeAllItems();
+        for(Component t : componentList) {
+            view.getComponentSelector().addItem(t.getName());
         }
     }
 
     // Process the data in the Model
-    private void handleTemplateSelection() {
-        String selected = (String) view.getTemplateSelector().getSelectedItem();
-        model.setTemplateByString(selected);
+    private void handleComponentSelection() {
+        String componentString = (String) view.getComponentSelector().getSelectedItem();
+        model.setSelectedComponent(componentString);
     }
 
     // Load input from CSV or TXT
     private void handleLoadInputData() {
-        JFileChooser fc = new JFileChooser(model.getAppDirectory());
+        JFileChooser fc = new JFileChooser(model.getConfigHandler().getAppDirectory().toFile());
 
         fc.setFileFilter(new FileNameExtensionFilter(".CSV or .TXT", "csv","txt"));
         int choice = fc.showOpenDialog(view);
@@ -193,8 +193,8 @@ public class Controller {
 
     // Process the data in the Model
     private void handleProcessData() {
-        // Use selectedTemplate in the model to process the data
-        model.processData();
+        // Use selectedComponent in the model to process the data
+        model.setOutputText(model.getProcessHandler().processData());
 
         // Update view with new data
         view.getOutputTextArea().setText(model.getOutputText());
@@ -213,7 +213,7 @@ public class Controller {
         String output = view.getOutputTextArea().getText();
 
         // Show a save dialog with CSV/TXT filters
-        JFileChooser fc = new JFileChooser(model.getAppDirectory());
+        JFileChooser fc = new JFileChooser(model.getConfigHandler().getAppDirectory().toFile());
         fc.setFileFilter(new FileNameExtensionFilter(".CSV or .TXT", "csv","txt"));
         int choice = fc.showSaveDialog(view);
 
@@ -266,7 +266,7 @@ public class Controller {
         try {
             Desktop desktop = Desktop.getDesktop();
             desktop.browse(new URI(README_URL));
-            view.getTitleLabel().setText("<html><b>PreProcessIt</b> v0.0.6-beta, <br/>" +
+            view.getTitleLabel().setText("<html><b>PreProcessIt</b> v0.1.0-beta, <br/>" +
                                          "<a href='' style='color: purple; text-decoration: underline;'>README</a>, <i>made by @tbm00</i></html>");
         } catch (Exception e) {
             JOptionPane.showMessageDialog(view, "Failed to open README link: " + e.getMessage());

@@ -14,7 +14,7 @@ public class PreProcessIt {
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (Exception e) {
-            System.out.println("Error setting look and feel: " + e.getMessage());
+            StaticUtil.log("Error setting look and feel: " + e.getMessage());
         }
 
         SwingUtilities.invokeLater(() -> {

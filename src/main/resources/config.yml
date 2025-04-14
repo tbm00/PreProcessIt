@@ -1,13 +1,81 @@
-templateEntries:
-  '1':
-    name: "MONITOR"
-    attributes: "company model size resolution refreshRate responseTime panelTech"
-    commands:
-      - "ex1"
-      - "ex2"
-  '2':
-    name: "GPU"
-    attributes: "company model ramCapacity ramSpeed"
-    commands:
-      - "ex4"
-      - "ex3"
+# PreProcessIt v0.1.0-beta by @tbm00
+# https://github.com/tbm00/PreProcessIt
+
+components:
+  MONITOR:
+    attributeOutputOrder: ["RESPONSE_TIME", "REFRESH_RATE"]
+    attributes:
+      RESPONSE_TIME:
+        "1":
+          word: WORKING_TOKEN
+          condition: CONTAINS
+          value: "MS|milliseconds"
+          qualifiedActions:
+            - TRIM_MATCH_ALL
+            - CONTINUE
+          unqualifiedActions:
+            - EXIT_TO_NEXT_TOKEN_ITERATION
+        "2": 
+          word: WORKING_TOKEN
+          condition: IS_EMPTY
+          value: ""
+          qualifiedActions:
+            - CONTINUE
+          unqualifiedActions:
+            - CONTINUE_AND_SKIP_NEXT_QUALIFIER
+        "3": 
+          word: LEFT_NEIGHBOR
+          condition: IN_BETWEEN_INCLUSIVE
+          value: "0,50"
+          qualifiedActions:
+            - REMOVE_MATCH_FROM_LEFT_NEIGHBOR
+            - APPEND("ms")
+            - SHIP
+          unqualifiedActions:
+            - EXIT_TO_NEXT_TOKEN_ITERATION
+        "4": 
+          word: WORKING_TOKEN
+          condition: IN_BETWEEN_INCLUSIVE
+          value: "0,50"
+          qualifiedActions:
+            - APPEND("ms")
+            - SHIP
+          unqualifiedActions:
+            - EXIT_TO_NEXT_TOKEN_ITERATION
+      REFRESH_RATE:
+        "1":
+          word: WORKING_TOKEN
+          condition: CONTAINS
+          value: "HZ|hertz"
+          qualifiedActions:
+            - TRIM_MATCH_ALL
+            - CONTINUE
+          unqualifiedActions:
+            - EXIT_TO_NEXT_TOKEN_ITERATION
+        "2": 
+          word: WORKING_TOKEN
+          condition: IS_EMPTY
+          value: ""
+          qualifiedActions:
+            - CONTINUE
+          unqualifiedActions:
+            - CONTINUE_AND_SKIP_NEXT_QUALIFIER
+        "3": 
+          word: LEFT_NEIGHBOR
+          condition: IN_BETWEEN_INCLUSIVE
+          value: "59,361"
+          qualifiedActions:
+            - REMOVE_MATCH_FROM_LEFT_NEIGHBOR
+            - APPEND("hz")
+            - SHIP
+          unqualifiedActions:
+            - EXIT_TO_NEXT_TOKEN_ITERATION
+        "4": 
+          word: WORKING_TOKEN
+          condition: IN_BETWEEN_INCLUSIVE
+          value: "59,361"
+          qualifiedActions:
+            - APPEND("hz")
+            - SHIP
+          unqualifiedActions:
+            - EXIT_TO_NEXT_TOKEN_ITERATION
