@@ -135,7 +135,7 @@ public class Controller {
 
     // Load components from file YML
     private void handleLoadComponents() {
-        JFileChooser fc = new JFileChooser(model.getConfigHandler().getAppDirectory());
+        JFileChooser fc = new JFileChooser(model.getConfigHandler().getAppDirectory().toFile());
 
         fc.setFileFilter(new FileNameExtensionFilter(".YML", "yml"));
         int fileChoice = fc.showOpenDialog(view);
@@ -168,7 +168,7 @@ public class Controller {
 
     // Load input from CSV or TXT
     private void handleLoadInputData() {
-        JFileChooser fc = new JFileChooser(model.getConfigHandler().getAppDirectory());
+        JFileChooser fc = new JFileChooser(model.getConfigHandler().getAppDirectory().toFile());
 
         fc.setFileFilter(new FileNameExtensionFilter(".CSV or .TXT", "csv","txt"));
         int choice = fc.showOpenDialog(view);
@@ -213,7 +213,7 @@ public class Controller {
         String output = view.getOutputTextArea().getText();
 
         // Show a save dialog with CSV/TXT filters
-        JFileChooser fc = new JFileChooser(model.getConfigHandler().getAppDirectory());
+        JFileChooser fc = new JFileChooser(model.getConfigHandler().getAppDirectory().toFile());
         fc.setFileFilter(new FileNameExtensionFilter(".CSV or .TXT", "csv","txt"));
         int choice = fc.showSaveDialog(view);
 

@@ -29,23 +29,37 @@ import dev.tbm00.preprocessit.model.data.enums.Word;
  */
 public class ConfigHandler {
     private final Model model;
-    private final String appDirectory;
+    private final Path appDirectory;
     private final Path configPath;
     private final File config;
 
     /**
      * Constructs a new ConfigHandler instance.
      *
-     * <p>This constructor initializes the configuration directory path using the current user's documents directory,
-     * sets up the path for the configuration file, obtains the configuration file (or creates a default one if needed),
-     * and loads the configuration into the provided model.</p>
+     * <p>This constructor initializes the configuration directory path based on the operating system.
+     * For Windows and macOS, it uses the user's Documents folder. For Linux or other Unix-like systems,
+     * it checks the XDG_CONFIG_HOME variable and falls back to the user's .config directory if needed.
+     * It then sets up the path for the configuration file, obtains the configuration file
+     * (or creates a default one if needed), and loads the configuration into the provided model.</p>
      *
      * @param model The model instance into which configuration components will be loaded.
      */
     public ConfigHandler(Model model) {
         this.model = model;
-        this.appDirectory = System.getProperty("user.home") + "/Documents/PreProcessIt";
-        this.configPath = Paths.get(appDirectory, "config.yml");
+
+        String os = System.getProperty("os.name").toLowerCase();
+        if (os.contains("win") || os.contains("mac")) {
+            this.appDirectory = Paths.get(System.getProperty("user.home"), "Documents", "PreProcessIt");
+        } else {
+            String xdgConfig = System.getenv("XDG_CONFIG_HOME");
+            if (xdgConfig != null && !xdgConfig.isEmpty()) {
+                this.appDirectory = Paths.get(xdgConfig, "PreProcessIt");
+            } else {
+                this.appDirectory = Paths.get(System.getProperty("user.home"), ".config", "PreProcessIt");
+            }
+        }
+
+        this.configPath = appDirectory.resolve("config.yml");
         this.config = getConfigFile();
         loadConfig(config);
     }
@@ -100,7 +114,7 @@ public class ConfigHandler {
                 log("Could not find default config.yml in program's resources");
                 return null;
             }
-            Files.createDirectories(Paths.get(appDirectory));
+            Files.createDirectories(appDirectory);
             Files.copy(resourceStream, configPath, StandardCopyOption.REPLACE_EXISTING);
             log("Created config.yml in " + appDirectory);
             return file;
@@ -401,7 +415,7 @@ public class ConfigHandler {
      *
      * @return The absolute path of the application's directory.
      */
-    public String getAppDirectory() {
+    public Path getAppDirectory() {
         return appDirectory;
     }
     
