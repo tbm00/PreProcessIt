@@ -1,3 +1,6 @@
+# PreProcessIt v0.1.0-beta by @tbm00
+# https://github.com/tbm00/PreProcessIt
+
 components:
   MONITOR:
     attributeOutputOrder: ["RESPONSE_TIME", "REFRESH_RATE"]
