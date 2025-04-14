@@ -33,6 +33,9 @@ public class ConfigHandler {
     private final Path configPath;
     private final File config;
 
+    private boolean poolingEnabled;
+    private int configuredPoolSize;
+
     /**
      * Constructs a new ConfigHandler instance.
      *
@@ -143,6 +146,43 @@ public class ConfigHandler {
         try (FileInputStream fis = new FileInputStream(givenYaml)) {
             Yaml yaml = new Yaml();
             Map<String, Object> data = yaml.load(fis);
+
+            // Load concurrent threading toggle
+            Object poolEnabled = data.get("concurrentThreading");
+            if (poolEnabled != null) {
+                try {
+                    if (poolEnabled instanceof Boolean) {
+                        poolingEnabled = ((Boolean) poolEnabled).booleanValue();
+                        log("Concurrent threading is enabled in config!");
+                    } else {
+                        poolingEnabled = false;
+                        log("Concurrent threading is disabled in config!");
+                    }
+                } catch (NumberFormatException e) {
+                    log("Error loading concurrent threading boolean from config! " + e.getMessage());
+                }
+            }
+
+            // Load thread pool size override
+            Object poolOverrideObj = data.get("threadPoolSizeOverride");
+            if (poolingEnabled && (poolOverrideObj != null)) {
+                try {
+                    int newPoolSize;
+                    if (poolOverrideObj instanceof String) {
+                        newPoolSize = Integer.parseInt((String) poolOverrideObj);
+                    } else if (poolOverrideObj instanceof Number) {
+                        newPoolSize = ((Number) poolOverrideObj).intValue();
+                    } else {
+                        newPoolSize = 1;
+                    }
+                    configuredPoolSize = newPoolSize < 1 ? 1 : newPoolSize;
+                    log("Loaded thread pool size override (" + configuredPoolSize + ") from config!");
+                } catch (NumberFormatException e) {
+                    log("Error loading thread pool size override from config! " + e.getMessage());
+                }
+            } else {
+                configuredPoolSize = 1;
+            }
             
             Map<String, Object> componentMap = (Map<String, Object>) data.get("components");
             if (componentMap == null) {
@@ -441,5 +481,23 @@ public class ConfigHandler {
         public FatalComponentException(String message) {
             super(message);
         }
+    }
+
+    /**
+     * Getter for the config's thread pool size.
+     *
+     * @return The {@code configuredPoolSize}.
+     */
+    public int getConfiguredPoolSize() {
+        return configuredPoolSize;
+    }
+
+    /**
+     * Getter for the config's concurrent threading toggle.
+     *
+     * @return The {@code poolingEnabled} toggle.
+     */
+    public boolean getPoolingEnabled() {
+        return poolingEnabled;
     }
 }

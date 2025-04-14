@@ -1,15 +1,17 @@
 package dev.tbm00.preprocessit.model;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
-import dev.tbm00.preprocessit.StaticUtil;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.HashMap;
+
 import dev.tbm00.preprocessit.model.data.Component;
 import dev.tbm00.preprocessit.model.data.Attribute;
 import dev.tbm00.preprocessit.model.data.Qualifier;
 import dev.tbm00.preprocessit.model.data.Token;
 import dev.tbm00.preprocessit.model.data.Node;
 import dev.tbm00.preprocessit.model.data.DoublyLinkedList;
+import dev.tbm00.preprocessit.model.data.LineResult;
 import dev.tbm00.preprocessit.model.data.enums.Action;
 import dev.tbm00.preprocessit.model.data.enums.ActionResult;
 import dev.tbm00.preprocessit.model.data.enums.ActionSpec;
@@ -19,11 +21,10 @@ import dev.tbm00.preprocessit.model.actioneer.ActioneerInterface;
 import dev.tbm00.preprocessit.model.matcher.MatcherInterface;
 
 /**
- * Handles the processing of input data line-by-line, by evaluating tokens against component attributes,
+ * Handles the processing of input data line, by evaluating tokens against component attributes,
  * applying qualifiers and actioning as configured.
  */
-public class ProcessHandler {
-    private final Model model;
+public class LineProcessor {
     private Map<String, String> outputAttributes = new HashMap<>();
 
     private int skip_qualifier = 0;
@@ -31,50 +32,27 @@ public class ProcessHandler {
     private Node<Token> current_node = null;
     private String working_word = null;
 
-    /**
-     * Constructs a new ProcessHandler instance.
-     *
-     * <p>This constructor initializes the ProcessHandler with the provided model which contains the input data,
-     * selected component, and other processing-related information.</p>
-     *
-     * @param model The model that holds the input text, selected component, and holds the processing results.
-     */
-    public ProcessHandler(Model model) {
-        this.model = model;
-    }
+    private List<String> log = new ArrayList<String>();
 
     /**
-     * Processes the input data by tokenizing each input line, processing component attributes,
-     * and building the final output.
+     * Processes the input line by tokenizing it, processing component attributes, and building the output line.
+     * 
+     * <p>This method tokenizes the line, processes the attributes of the component, and rebuilds the line 
+     * based on processed tokens and attribute order, then returns the the output text as a String (to the model).</p>
      *
-     * <p>This method retrieves the selected component from the model and processes each line of the input text.
-     * It tokenizes the line, processes the attributes of the component, and rebuilds the line based on processed tokens
-     * and attribute order, then returns the the output text as a String (to the model).</p>
-     *
-     * @return A {@code String} representing the processed output text, or the untouched input text if no valid component is selected.
+     * @param index The input line's index.
+     * @return A {@code String} representing the processed output line.
      */
-    public String processData() {
-        Component component = model.getSelectedComponent();
-        if (component == null || component.getAttributes() == null) return "";
-
-        StringBuilder newOutput = new StringBuilder();
-        String[] lines = model.getInputText().split("\\r?\\n");
-
-        int i = 1;
-        for (String line : lines) {
-            StaticUtil.log(" ");
-            StaticUtil.log(" ");
-            StaticUtil.log(" ");
-            StaticUtil.log("-=-=-=-=-=-=-=- Line "+i+" -=-=-=-=-=-=-=-");
-            DoublyLinkedList<Token> tokenList = tokenizeLine(line);
-            outputAttributes.clear();
-            processComponentAttributes(tokenList, component);
-            newOutput.append(buildOutputLine(tokenList, component.getAttributeOrder())).append("\n");
-            StaticUtil.log("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-");
-            i++;
-        }
-        
-        return newOutput.toString();
+    public LineResult processLine(int index, String inputLine, Component component) {
+        log.add(" ");
+        log.add(" ");
+        log.add(" ");
+        log.add("-=-=-=-=-=-=-=- Line "+index+" -=-=-=-=-=-=-=-");
+        DoublyLinkedList<Token> tokenList = tokenizeLine(inputLine);
+        outputAttributes.clear();
+        processComponentAttributes(tokenList, component);
+        log.add("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-");
+        return new LineResult(index, buildOutputLine(tokenList, component.getAttributeOrder()), log);
     }
 
     /**
@@ -93,7 +71,7 @@ public class ProcessHandler {
                 continue;
             }
             processAttribute(tokenList, attribute);
-            StaticUtil.log("[-] attribute processed");
+            log.add("[-] attribute processed");
         }
     }
 
@@ -110,8 +88,8 @@ public class ProcessHandler {
     private void processAttribute(DoublyLinkedList<Token> tokenList, Attribute attribute) {
         current_node = tokenList.getHead();
 
-        StaticUtil.log(" ");
-        StaticUtil.log("  --==[ Processing Attribute "+attribute.getName()+" ]==--");
+        log.add(" ");
+        log.add("  --==[ Processing Attribute "+attribute.getName()+" ]==--");
         
         tokenLoop:
         while (current_node != null) {
@@ -124,21 +102,21 @@ public class ProcessHandler {
                 ActionResult result = processQualifiers(initialWord, attribute);
                 if (result.equals(ActionResult.NEXT_TOKEN)) {
                     current_node = current_node.getNext();
-                    StaticUtil.log("[-] attriubte continuing tokenLoop");
+                    log.add("[-] attriubte continuing tokenLoop");
                     continue tokenLoop;
                 } else {
                     current_node = current_node.getNext();
-                    StaticUtil.log("[-] attribute bumped the current node to the next neighbor!");
+                    log.add("[-] attribute bumped the current node to the next neighbor!");
                     return;
                 }
             } else {
                 // If token is processed or empty, skip it.
                 current_node = current_node.getNext();
-                //StaticUtil.log(" ");
+                //log.add(" ");
                 if (token.isProcessed()) 
-                    StaticUtil.log("[-] attribute bumped the current node to the next neighbor because the current node was already processed!");
+                    log.add("[-] attribute bumped the current node to the next neighbor because the current node was already processed!");
                 else 
-                    StaticUtil.log("[-] attribute bumped the current node to the next neighbor because the current node was empty/null!");
+                    log.add("[-] attribute bumped the current node to the next neighbor because the current node was empty/null!");
             }
         }
     }
@@ -169,24 +147,24 @@ public class ProcessHandler {
             current_matcher = qualifier.getMatcher();
             String matchedString = current_matcher.match(working_word);
 
-            StaticUtil.log(" ");
-            StaticUtil.log(attribute.getName()+"'s "+qualifier.getWord().name()+" "+qualifier.getCondition().name()+" '"+qualifier.getValues() +"'  ::  '"+ working_word + "' -> '" + matchedString + "'");
+            log.add(" ");
+            log.add(attribute.getName()+"'s "+qualifier.getWord().name()+" "+qualifier.getCondition().name()+" '"+qualifier.getValues() +"'  ::  '"+ working_word + "' -> '" + matchedString + "'");
 
             // Decide which set of actions to use
             ActionSpec[] actionSpecs = (matchedString.isEmpty()) ? qualifier.getUnqualifiedActions()
                                                                  : qualifier.getQualifiedActions();
 
             if (!matchedString.isEmpty()) {
-                StaticUtil.log("[-] therefore qualified actions will run");
-            } else StaticUtil.log("[-] therefore unqualified actions will run");
+                log.add("[-] therefore qualified actions will run");
+            } else log.add("[-] therefore unqualified actions will run");
 
             // Execute the actions; if one action “ships” (matches) the attribute then exit.
             ActionResult result = executeActions(matchedString, actionSpecs, attribute.getName());
             if (result.equals(ActionResult.NEXT_QUALIFIER)) {
-                StaticUtil.log("[-] qualifier continuing qualifierLoop");
+                log.add("[-] qualifier continuing qualifierLoop");
                 continue qualifierLoop;
             } else {
-                //StaticUtil.log("[-] qualifier returning result: " + result.name());
+                //log.add("[-] qualifier returning result: " + result.name());
                 return result;
             }
             
@@ -212,10 +190,10 @@ public class ProcessHandler {
         for (ActionSpec actionSpec : actionSpecs) {
             ActionResult result = executeAction(matchedString, actionSpec, attributeName);
             if (result.equals(ActionResult.NEXT_ACTION)) {
-                StaticUtil.log("[-] action continuing executeLoop");
+                log.add("[-] action continuing executeLoop");
                 continue executeLoop;
             } else {
-                //StaticUtil.log("[-] action returning result: " + result.name());
+                //log.add("[-] action returning result: " + result.name());
                 return result;
             }
         }
@@ -238,11 +216,11 @@ public class ProcessHandler {
      */
     private ActionResult executeAction(String matchedString, ActionSpec actionSpec, String attributeName) {
         Action action = actionSpec.getAction();
-        StaticUtil.log("[-] executing action " + action.name() + "...");
+        log.add("[-] executing action " + action.name() + "...");
         // Using a switch (or if/else) here helps centralize the different action behaviors.
         switch (action) {
             case SHIP:
-                StaticUtil.log("      (shipping " + working_word + ")");
+                log.add("      (shipping " + working_word + ")");
                 outputAttributes.put(attributeName, working_word);
                 current_node.getData().setProcessed(true);
                 return ActionResult.NEXT_ATTRIBUTE;
@@ -257,12 +235,12 @@ public class ProcessHandler {
                 return ActionResult.NEXT_QUALIFIER;
             case CONTINUE_AND_SKIP_NEXT_QUALIFIER:
                 int skipAmount = parsePositiveIntOrDefault(actionSpec.getParameter(), 1);
-                StaticUtil.log("      (skipping " + skipAmount + " qualifiers)");
+                log.add("      (skipping " + skipAmount + " qualifiers)");
                 skip_qualifier = skipAmount;
                 return ActionResult.NEXT_QUALIFIER;
             case TRY_NEIGHBORS:
                 int distance = parsePositiveIntOrDefault(actionSpec.getParameter(), 1);
-                StaticUtil.log("      (trying " + distance + "*2 neighbor characters)");
+                log.add("      (trying " + distance + "*2 neighbor characters)");
                 if (tryNeighbors(distance, attributeName)) {
                     return ActionResult.NEXT_TOKEN;
                 } else return ActionResult.NEXT_QUALIFIER;
@@ -272,9 +250,9 @@ public class ProcessHandler {
                     if (actioneer != null) {
                         String newValue = actioneer.execute(working_word, actionSpec, matchedString);
                         current_node.getPrior().getData().setValue(newValue);
-                        StaticUtil.log("      (removed match from left neighbor, updated neigbhor: " + newValue + ")");
+                        log.add("      (removed match from left neighbor, updated neigbhor: " + newValue + ")");
                     } else {
-                        StaticUtil.log("      (no executor found for Action." + actionSpec.getAction().name() + ")");
+                        log.add("      (no executor found for Action." + actionSpec.getAction().name() + ")");
                     }
                 }
                 return ActionResult.NEXT_ACTION;
@@ -284,9 +262,9 @@ public class ProcessHandler {
                     if (actioneer != null) {
                         String newValue = actioneer.execute(working_word, actionSpec, matchedString);
                         current_node.getNext().getData().setValue(newValue);
-                        StaticUtil.log("      (removed match from right neighbor, updated neigbhor: " + newValue + ")");
+                        log.add("      (removed match from right neighbor, updated neigbhor: " + newValue + ")");
                     } else {
-                        StaticUtil.log("      (no executor found for Action." + actionSpec.getAction().name() + ")");
+                        log.add("      (no executor found for Action." + actionSpec.getAction().name() + ")");
                     }
                 }
                 return ActionResult.NEXT_ACTION;
@@ -295,9 +273,9 @@ public class ProcessHandler {
                 ActioneerInterface actioneer = ActioneerFactory.getActioneer(action);
                 if (actioneer != null) {
                     working_word = actioneer.execute(working_word, actionSpec, matchedString);
-                    StaticUtil.log("      (updated working word to: " + working_word + ")");
+                    log.add("      (updated working word to: " + working_word + ")");
                 } else {
-                    StaticUtil.log("      (no executor found for Action." + actionSpec.getAction().name() + ")");
+                    log.add("      (no executor found for Action." + actionSpec.getAction().name() + ")");
                 }
                 return ActionResult.NEXT_ACTION;
         }
