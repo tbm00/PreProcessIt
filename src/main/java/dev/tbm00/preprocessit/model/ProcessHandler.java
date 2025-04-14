@@ -266,7 +266,7 @@ public class ProcessHandler {
                 if (tryNeighbors(distance, attributeName)) {
                     return ActionResult.NEXT_TOKEN;
                 } else return ActionResult.NEXT_QUALIFIER;
-            case REMOVE_MATCH_FROM_LEFT_NEIGHBOR:
+            case TRIM_MATCH_FROM_LEFT_NEIGHBOR:
                 if (current_node.getPrior() != null) {
                     ActioneerInterface actioneer = ActioneerFactory.getActioneer(action);
                     if (actioneer != null) {
@@ -278,7 +278,7 @@ public class ProcessHandler {
                     }
                 }
                 return ActionResult.NEXT_ACTION;
-            case REMOVE_MATCH_FROM_RIGHT_NEIGHBOR:
+            case TRIM_MATCH_FROM_RIGHT_NEIGHBOR:
                 if (current_node.getNext() != null) {
                     ActioneerInterface actioneer = ActioneerFactory.getActioneer(action);
                     if (actioneer != null) {

@@ -28,7 +28,7 @@ components:
           condition: IN_BETWEEN_INCLUSIVE
           value: "0,50"
           qualifiedActions:
-            - REMOVE_MATCH_FROM_LEFT_NEIGHBOR
+            - TRIM_MATCH_FROM_LEFT_NEIGHBOR
             - APPEND("ms")
             - SHIP
           unqualifiedActions:
@@ -65,7 +65,7 @@ components:
           condition: IN_BETWEEN_INCLUSIVE
           value: "59,361"
           qualifiedActions:
-            - REMOVE_MATCH_FROM_LEFT_NEIGHBOR
+            - TRIM_MATCH_FROM_LEFT_NEIGHBOR
             - APPEND("hz")
             - SHIP
           unqualifiedActions:
