@@ -3,28 +3,10 @@ A Java application that cleans up and standardizes string lists.
 
 Created by tbm00.
 
-
 ## Dependencies
 - **Java 8+**: REQUIRED
 
+## License
+PreProcessIt is released under the [PreProcessIt Non-Commercial License](LICENSE).
 
-## Default Config
-
-```
-# PreProcessIt v0.0.6-beta by @tbm00
-# https://github.com/tbm00/PreProcessIt
-
-templateEntries:
-  '1':
-    name: "monitor"
-    attributes: "company model size resolution refreshRate responseTime panelTech"
-    commands:
-      - "ex1"
-      - "ex2"
-  '2':
-    name: "gpu"
-    attributes: "company model ramCapacity ramSpeed"
-    commands:
-      - "ex4"
-      - "ex3"
-```
+This license permits non-commercial use, but any commercial usage, modification, copying, or redistribution is prohibited without explicit permission.
