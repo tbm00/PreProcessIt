@@ -1,7 +1,7 @@
-componentEntries:
+components:
   MONITOR:
-    attributeOrder: ["RESPONSE_TIME", "REFRESH_RATE"]
-    attributeEntries:
+    attributeOutputOrder: ["RESPONSE_TIME", "REFRESH_RATE"]
+    attributes:
       RESPONSE_TIME:
         "1":
           word: WORKING_TOKEN

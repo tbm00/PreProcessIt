@@ -470,14 +470,14 @@ public class ProcessHandler {
      * Builds the final output line from the tokens and attribute order.
      *
      * <p>This method traverses the token list to concatenate any tokens that were not processed.
-     * It then builds a formatted line by first appending attribute values (in the order specified by {@code attributeOrder})
+     * It then builds a formatted line by first appending attribute values (in the order specified by {@code attributeOutputOrder})
      * and then appending any leftover tokens, creating the final output string.</p>
      *
      * @param tokenList      The doubly linked list of tokens representing the processed input line.
-     * @param attributeOrder The list defining the order in which attribute values should appear.
+     * @param attributeOutputOrder The list defining the order in which attribute values should appear.
      * @return A {@code String} representing the final formatted output line.
      */
-    private String buildOutputLine(DoublyLinkedList<Token> tokenList, List<String> attributeOrder) {
+    private String buildOutputLine(DoublyLinkedList<Token> tokenList, List<String> attributeOutputOrder) {
         StringBuilder leftoverBuilder = new StringBuilder();
         Node<Token> current = tokenList.getHead();
         while (current != null) {
@@ -488,7 +488,7 @@ public class ProcessHandler {
             current = current.getNext();
         }
         StringBuilder formattedLine = new StringBuilder();
-        for (String attrName : attributeOrder) {
+        for (String attrName : attributeOutputOrder) {
             String value = outputAttributes.getOrDefault(attrName, "");
             formattedLine.append(value).append(",");
         }

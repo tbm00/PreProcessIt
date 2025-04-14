@@ -130,9 +130,9 @@ public class ConfigHandler {
             Yaml yaml = new Yaml();
             Map<String, Object> data = yaml.load(fis);
             
-            Map<String, Object> componentEntries = (Map<String, Object>) data.get("componentEntries");
-            if (componentEntries == null) {
-                log("No componentEntries found in config");
+            Map<String, Object> componentMap = (Map<String, Object>) data.get("components");
+            if (componentMap == null) {
+                log("No components found in config");
                 return;
             }
             
@@ -141,7 +141,7 @@ public class ConfigHandler {
             int componentID = 0;
             
             // Iterate over each component entry
-            for (Map.Entry<String, Object> componentEntry : componentEntries.entrySet()) {
+            for (Map.Entry<String, Object> componentEntry : componentMap.entrySet()) {
                 Component component = loadComponent(componentID, componentEntry);
                 if (component != null) {
                     model.addComponent(component);
@@ -149,7 +149,7 @@ public class ConfigHandler {
                     log("- - - - Component Loaded: " + component.getName() + " " + component.getAttributeOrder());
                 }
             }
-            log("Loaded " + model.getComponents().size() + " componentEntries from config");
+            log("Loaded " + model.getComponents().size() + " components from config");
         } catch (Exception e) {
             log("Error loading config file in " + appDirectory + ": " + e.getMessage());
         }
@@ -159,7 +159,7 @@ public class ConfigHandler {
      * Loads a component configuration entry from the YAML data.
      *
      * <p>This method extracts the component name, attribute order, and attribute entries.
-     * If essential keys are missing (like "attributeOrder" or "attributeEntries"), the component is not loaded.</p>
+     * If essential keys are missing (like "attributeOutputOrder" or "attributes"), the component is not loaded.</p>
      *
      * @param componentID   The identifier assigned to the component.
      * @param componentEntry A key-value pair representing the component entry from the YAML configuration.
@@ -171,20 +171,20 @@ public class ConfigHandler {
         Map<String, Object> componentMap = (Map<String, Object>) componentEntry.getValue();
         
         // Ensure essential keys exist
-        List<String> attributeOrder = (List<String>) componentMap.get("attributeOrder");
-        if (attributeOrder == null) {
-            log("- - - - Component Not Loaded: " + componentName + " (no attributeOrder found)");
+        List<String> attributeOutputOrder = (List<String>) componentMap.get("attributeOutputOrder");
+        if (attributeOutputOrder == null) {
+            log("- - - - Component Not Loaded: " + componentName + " (no attributeOutputOrder found)");
             return null;
         }
-        Map<String, Object> attributeEntries = (Map<String, Object>) componentMap.get("attributeEntries");
-        if (attributeEntries == null) {
-            log("- - - - Component Not Loaded: " + componentName + " (no attributeEntries found)");
+        Map<String, Object> attributeMap = (Map<String, Object>) componentMap.get("attributes");
+        if (attributeMap == null) {
+            log("- - - - Component Not Loaded: " + componentName + " (no attributes found)");
             return null;
         }
         
         ArrayList<Attribute> attributes = new ArrayList<>();
         // Process each attribute entry.
-        for (Map.Entry<String, Object> attributeEntry : attributeEntries.entrySet()) {
+        for (Map.Entry<String, Object> attributeEntry : attributeMap.entrySet()) {
             try {
                 Attribute attr = loadAttribute(componentName, attributeEntry, attributes.size());
                 if (attr != null) {
@@ -198,7 +198,7 @@ public class ConfigHandler {
             }
         }
         
-        return new Component(componentID, componentName, attributes, attributeOrder);
+        return new Component(componentID, componentName, attributes, attributeOutputOrder);
     }
     
     /**
@@ -226,8 +226,8 @@ public class ConfigHandler {
                     + attributeName + " (no qualifiers found)");
         }
         
-        Map<String, Object> qualifierEntries = (Map<String, Object>) rawQualifiers;
-        List<Integer> sortedKeys = qualifierEntries.keySet().stream()
+        Map<String, Object> qualiferMap = (Map<String, Object>) rawQualifiers;
+        List<Integer> sortedKeys = qualiferMap.keySet().stream()
                 .map(key -> {
                     try {
                         return Integer.valueOf(key);
@@ -243,7 +243,7 @@ public class ConfigHandler {
         ArrayList<Qualifier> qualifiers = new ArrayList<>();
         
         for (Integer key : sortedKeys) {
-            Map<String, Object> qualMap = (Map<String, Object>) qualifierEntries.get(key.toString());
+            Map<String, Object> qualMap = (Map<String, Object>) qualiferMap.get(key.toString());
             if (qualMap != null) {
                 // If loading the qualifier fails, skip this attribute entirely
                 Qualifier qualifier = loadQualifier(componentName, attributeName, key, qualMap);

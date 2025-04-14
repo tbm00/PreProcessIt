@@ -11,7 +11,7 @@
 
     <name>PreProcessIt</name>
 
-    <description>This app cleans up and standardizes string lists</description>
+    <description>A Java application that parses and standardizes raw input data.</description>
     <properties>
         <java.version>1.8</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

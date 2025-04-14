@@ -10,13 +10,13 @@ public class Component {
     private int id;
     private String name;
     private ArrayList<Attribute> attributes;
-    private List<String> attributeOrder;
+    private List<String> attributeOutputOrder;
 
-    public Component(int id, String name, ArrayList<Attribute> attributes, List<String> attributeOrder) {
+    public Component(int id, String name, ArrayList<Attribute> attributes, List<String> attributeOutputOrder) {
         this.id = id;
         this.name = name;
         this.attributes = attributes;
-        this.attributeOrder = attributeOrder;
+        this.attributeOutputOrder = attributeOutputOrder;
         //StaticUtil.log("component: " + id + " " + name + " " + attributes);
     }
 
@@ -45,10 +45,10 @@ public class Component {
     }
 
     public List<String> getAttributeOrder() {
-        return attributeOrder;
+        return attributeOutputOrder;
     }
 
-    public void setAttributeOrder(List<String> attributeOrder) {
-        this.attributeOrder = attributeOrder;
+    public void setAttributeOrder(List<String> attributeOutputOrder) {
+        this.attributeOutputOrder = attributeOutputOrder;
     }
 }
