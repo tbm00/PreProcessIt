@@ -177,8 +177,8 @@ public class ProcessHandler {
                                                                  : qualifier.getQualifiedActions();
 
             if (!matchedString.isEmpty()) {
-                StaticUtil.log("[-] therefore unqualified actions will run");
-            } else StaticUtil.log("[-] therefore qualified actions will run");
+                StaticUtil.log("[-] therefore qualified actions will run");
+            } else StaticUtil.log("[-] therefore unqualified actions will run");
 
             // Execute the actions; if one action “ships” (matches) the attribute then exit.
             ActionResult result = executeActions(matchedString, actionSpecs, attribute.getName());
