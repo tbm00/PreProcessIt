@@ -1,5 +1,8 @@
-# PreProcessIt v0.1.1-beta by @tbm00
+# PreProcessIt v0.1.0-beta by @tbm00
 # https://github.com/tbm00/PreProcessIt
+
+concurrentThreading: true
+threadPoolSizeOverride: -1
 
 components:
   MONITOR:
@@ -28,7 +31,7 @@ components:
           condition: IN_BETWEEN_INCLUSIVE
           value: "0,50"
           qualifiedActions:
-            - REMOVE_MATCH_FROM_LEFT_NEIGHBOR
+            - TRIM_MATCH_FROM_LEFT_NEIGHBOR
             - APPEND("ms")
             - SHIP
           unqualifiedActions:
@@ -65,7 +68,7 @@ components:
           condition: IN_BETWEEN_INCLUSIVE
           value: "59,361"
           qualifiedActions:
-            - REMOVE_MATCH_FROM_LEFT_NEIGHBOR
+            - TRIM_MATCH_FROM_LEFT_NEIGHBOR
             - APPEND("hz")
             - SHIP
           unqualifiedActions:
