@@ -85,7 +85,7 @@ public class View extends JFrame {
 
         // Initialize title label with right alignment inside textPanel
         titleLabel = new JLabel();
-        String titleHtml = "<html><b>PreProcessIt</b> v0.1.0-beta, <br/>" +
+        String titleHtml = "<html><b>PreProcessIt</b> v0.1.1-beta, <br/>" +
                 "<a href='' style=color: blue; text-decoration: underline;>README</a>, <i>made by @tbm00</i></html>";
         titleLabel.setText(titleHtml);
         titleLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
