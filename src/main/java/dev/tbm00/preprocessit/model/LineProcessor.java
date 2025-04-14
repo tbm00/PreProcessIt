@@ -19,11 +19,10 @@ import dev.tbm00.preprocessit.model.actioneer.ActioneerInterface;
 import dev.tbm00.preprocessit.model.matcher.MatcherInterface;
 
 /**
- * Handles the processing of input data line-by-line, by evaluating tokens against component attributes,
+ * Handles the processing of input data line, by evaluating tokens against component attributes,
  * applying qualifiers and actioning as configured.
  */
-public class ProcessHandler {
-    private final Model model;
+public class LineProcessor {
     private Map<String, String> outputAttributes = new HashMap<>();
 
     private int skip_qualifier = 0;
@@ -32,49 +31,24 @@ public class ProcessHandler {
     private String working_word = null;
 
     /**
-     * Constructs a new ProcessHandler instance.
+     * Processes the input line by tokenizing it, processing component attributes, and building the output line.
+     * 
+     * <p>This method tokenizes the line, processes the attributes of the component, and rebuilds the line 
+     * based on processed tokens and attribute order, then returns the the output text as a String (to the model).</p>
      *
-     * <p>This constructor initializes the ProcessHandler with the provided model which contains the input data,
-     * selected component, and other processing-related information.</p>
-     *
-     * @param model The model that holds the input text, selected component, and holds the processing results.
+     * @param index The input line's index.
+     * @return A {@code String} representing the processed output line.
      */
-    public ProcessHandler(Model model) {
-        this.model = model;
-    }
-
-    /**
-     * Processes the input data by tokenizing each input line, processing component attributes,
-     * and building the final output.
-     *
-     * <p>This method retrieves the selected component from the model and processes each line of the input text.
-     * It tokenizes the line, processes the attributes of the component, and rebuilds the line based on processed tokens
-     * and attribute order, then returns the the output text as a String (to the model).</p>
-     *
-     * @return A {@code String} representing the processed output text, or the untouched input text if no valid component is selected.
-     */
-    public String processData() {
-        Component component = model.getSelectedComponent();
-        if (component == null || component.getAttributes() == null) return "";
-
-        StringBuilder newOutput = new StringBuilder();
-        String[] lines = model.getInputText().split("\\r?\\n");
-
-        int i = 1;
-        for (String line : lines) {
-            StaticUtil.log(" ");
-            StaticUtil.log(" ");
-            StaticUtil.log(" ");
-            StaticUtil.log("-=-=-=-=-=-=-=- Line "+i+" -=-=-=-=-=-=-=-");
-            DoublyLinkedList<Token> tokenList = tokenizeLine(line);
-            outputAttributes.clear();
-            processComponentAttributes(tokenList, component);
-            newOutput.append(buildOutputLine(tokenList, component.getAttributeOrder())).append("\n");
-            StaticUtil.log("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-");
-            i++;
-        }
-        
-        return newOutput.toString();
+    public String processLine(int index, String inputLine, Component component) {
+        StaticUtil.log(" ");
+        StaticUtil.log(" ");
+        StaticUtil.log(" ");
+        StaticUtil.log("-=-=-=-=-=-=-=- Line "+index+" -=-=-=-=-=-=-=-");
+        DoublyLinkedList<Token> tokenList = tokenizeLine(inputLine);
+        outputAttributes.clear();
+        processComponentAttributes(tokenList, component);
+        StaticUtil.log("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-");
+        return buildOutputLine(tokenList, component.getAttributeOrder());
     }
 
     /**
