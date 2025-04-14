@@ -2,7 +2,6 @@ package dev.tbm00.preprocessit.model;
 
 import java.util.List;
 import java.util.ArrayList;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -71,7 +70,11 @@ public class Model {
 
         // Process each line
         for (int i = 0; i < lines.length; i++) {
-            newOutput.append(lineProcessor.processLine(i+1, lines[i], component)).append("\n");
+            LineResult result = lineProcessor.processLine(i+1, lines[i], component);
+            newOutput.append(result.output).append("\n");
+            for (String line : result.log) {
+                StaticUtil.log(line);
+            }
         }
 
         return newOutput.toString();
@@ -110,8 +113,7 @@ public class Model {
             // Submit future task that processes one line
             Future<LineResult> future = executor.submit(() -> {
                 LineProcessor lineProcessor = new LineProcessor();
-                String processedOutput = lineProcessor.processLine(lineNumber, line, component);
-                return new LineResult(lineNumber, processedOutput);
+                return lineProcessor.processLine(lineNumber, line, component);
             });
             futureList.add(future);
         }
@@ -122,8 +124,11 @@ public class Model {
             for (Future<LineResult> future : futureList) {
                 LineResult result = future.get();
                 outputs[result.lineNumber - 1] = result.output;
+                for (String line : result.log) {
+                    StaticUtil.log(line);
+                }
             }
-        } catch (InterruptedException | ExecutionException e) {
+        } catch (Exception e) {
             StaticUtil.log("Exception throw when preparing output!");
             e.printStackTrace();
         }
