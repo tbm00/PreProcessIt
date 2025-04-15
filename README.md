@@ -61,30 +61,36 @@ Once a token has been "shipped" for a particular attribute, the program will sea
  - `NOT_IS_EMPTY`
 
 ### Available Actions
- - `SHIP` Ship current token and go to next attribute iteration
+ - `SHIP` Ship current token as current attribute's final value, and go to next attribute iteration
  - `TRY_NEIGHBORS(max_characters)` Try appending neighbors' characters to see if it might qualify (with the same matcher)
  - `EXIT_TO_NEXT_ATTRIBUTE_ITERATION` Go to next attribute iteration
  - `EXIT_TO_NEXT_TOKEN_ITERATION` Go to next token iteration on current attribute iteration
  - `CONTINUE_AND_SKIP_NEXT_QUALIFIER(count)` Skip next qualifer(s) on current attribute iteration
  - `CONTINUE` Continue to the next, immediate qualifier on current attribute iteration
- - `REPLACE_ALL(fromString,toString)`Replace all occurences of the fromString in the working token with toString, Case sensitive
- - `REPLACE_FIRST(fromString,toString)` Replace first occurence of the fromString in the working token with toString, Case sensitive
+ - `REPLACE_ALL(fromString,toString)` Replace all occurences of fromString in the working token with toString, Case sensitive
+ - `REPLACE_FIRST(fromString,toString)` Replace first occurence of fromString in the working token with toString, Case sensitive
  - `INSERT_AT(index,String)` Insert a String at specifc index in working token
  - `APPEND(String)` Attach a String to end of working token
  - `PREPEND(String)` Attach a String to start of working token
- - `KEEP_MATCH` Set current working token to equal only the matched portion
- - `REPLACE_MATCH_ALL(toString)` Replace all occurences of the matched portion in the working token with toString, Case sensitive
- - `REPLACE_MATCH_FIRST(toString)` Replace first occurence of the matched portion in the working token with toString, Case sensitive
- - `TRIM_MATCH_ALL` Remove all occurences of the matched portion from the working token
- - `TRIM_MATCH_FIRST` Remove first occurence of the matched portion from the working token
- - `TRIM_MATCH_START` Remove matched portion from working token if the token begins with the matched value
- - `TRIM_MATCH_END` Remove matched portion from working token if the token ends with the matched value
- - `TRIM_MATCH_FROM_LEFT_NEIGHBOR` Remove matched portion from the back of the prior token, if its there
- - `TRIM_MATCH_FROM_RIGHT_NEIGHBOR` Remove matched portion from the front of the next token, if its there
+ - `KEEP_MATCH` Set current working token to equal only the matched value
+ - `REPLACE_MATCH_ALL(toString)` Replace all occurences of the matched value in the working token with toString, Case sensitive
+ - `REPLACE_MATCH_FIRST(toString)` Replace first occurence of the matched value in the working token with toString, Case sensitive
+ - `TRIM_MATCH_ALL` Remove all occurences of the matched value from the working token
+ - `TRIM_MATCH_FIRST` Remove first occurence of the matched value from the working token
+ - `TRIM_MATCH_START` Remove matched value from working token if the token begins with the matched value
+ - `TRIM_MATCH_END` Remove matched value from working token if the token ends with the matched value
+ - `TRIM_MATCH_FROM_LEFT_NEIGHBOR` Remove matched value from the back of the prior token, if its there
+ - `TRIM_MATCH_FROM_RIGHT_NEIGHBOR` Remove matched value from the front of the next token, if its there
+ - `TRIM_UNMATCHED_ALL` Remove all occurences of the unmatched value from the working token
+ - `TRIM_UNMATCHED_FIRST` Remove first occurence of the unmatched value from the working token
+ - `TRIM_UNMATCHED_START` Remove unmatched value from working token if the token begins with the matched value
+ - `TRIM_UNMATCHED_END` Remove unmatched value from working token if the token ends with the matched value
+ - `NEW_TOKEN_FROM_MATCH` Create new token with the matched value, placed at end of current line's token list
+ - `NEW_TOKEN_FROM_UNMATCHED` Create new token with the unmatched value, placed at end of current line's token list
 
 ### Default Config
 ```
-# PreProcessIt v0.1.2-beta by @tbm00
+# PreProcessIt v0.1.3-beta by @tbm00
 # https://github.com/tbm00/PreProcessIt
 
 concurrentThreading: true
