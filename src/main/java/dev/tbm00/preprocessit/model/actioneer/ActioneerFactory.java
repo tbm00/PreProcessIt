@@ -10,6 +10,10 @@ public class ActioneerFactory {
     private static final Map<Action, ActioneerInterface> EXECUTOR_MAP = new HashMap<>();
 
     static {
+        EXECUTOR_MAP.put(Action.TRIM_UNMATCHED_ALL, new TrimUnmatchedAllActioneer());
+        EXECUTOR_MAP.put(Action.TRIM_UNMATCHED_FIRST, new TrimUnmatchedFirstActioneer());
+        EXECUTOR_MAP.put(Action.TRIM_UNMATCHED_START, new TrimUnmatchedStartActioneer());
+        EXECUTOR_MAP.put(Action.TRIM_UNMATCHED_END, new TrimUnmatchedEndActioneer());
         EXECUTOR_MAP.put(Action.TRIM_MATCH_ALL, new TrimMatchAllActioneer());
         EXECUTOR_MAP.put(Action.TRIM_MATCH_FIRST, new TrimMatchFirstActioneer());
         EXECUTOR_MAP.put(Action.TRIM_MATCH_START, new TrimMatchStartActioneer());

@@ -25,6 +25,7 @@ import dev.tbm00.preprocessit.model.matcher.MatcherInterface;
  * applying qualifiers and actioning as configured.
  */
 public class LineProcessor {
+    private DoublyLinkedList<Token> tokenList;
     private Map<String, String> outputAttributes = new HashMap<>();
 
     private int skip_qualifier = 0;
@@ -48,7 +49,7 @@ public class LineProcessor {
         log.add(" ");
         log.add(" ");
         log.add("-=-=-=-=-=-=-=- Line "+index+" -=-=-=-=-=-=-=-");
-        DoublyLinkedList<Token> tokenList = tokenizeLine(inputLine);
+        tokenList = tokenizeLine(inputLine);
         outputAttributes.clear();
         processComponentAttributes(tokenList, component);
         log.add("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-");
@@ -268,6 +269,20 @@ public class LineProcessor {
                     }
                 }
                 return ActionResult.NEXT_ACTION;
+            case NEW_TOKEN_FROM_MATCH:
+                tokenList.addLast(new Token(matchedString));
+                log.add("      (added new token to end of current token list:" + matchedString);
+                return ActionResult.NEXT_ACTION;
+            case NEW_TOKEN_FROM_UNMATCHED: {
+                    ActioneerInterface actioneer = ActioneerFactory.getActioneer(Action.TRIM_MATCH_ALL);
+                    if (actioneer != null) {
+                        String newToken = actioneer.execute(working_word, actionSpec, matchedString);
+                        tokenList.addLast(new Token(newToken));
+                        log.add("      (added new token to end of current token list:" + newToken);
+                    } else {
+                        log.add("      (no executor found for Action.NEW_TOKEN_FROM_UNMATCHED"); // (actually TRIM_MATCH_ALL)
+                    }
+                    return ActionResult.NEXT_ACTION; }
             default:
                 // For any other action, attempt to execute it.
                 ActioneerInterface actioneer = ActioneerFactory.getActioneer(action);

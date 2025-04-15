@@ -118,7 +118,7 @@ public class Model {
             futureList.add(future);
         }
 
-        // Prepare output with originate order
+        // Prepare output with original order
         String[] outputs = new String[lines.length];
         try {
             for (Future<LineResult> future : futureList) {
