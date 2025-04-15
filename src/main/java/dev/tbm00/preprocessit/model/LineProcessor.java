@@ -25,6 +25,7 @@ import dev.tbm00.preprocessit.model.matcher.MatcherInterface;
  * applying qualifiers and actioning as configured.
  */
 public class LineProcessor {
+    private DoublyLinkedList<Token> tokenList;
     private Map<String, String> outputAttributes = new HashMap<>();
 
     private int skip_qualifier = 0;
@@ -48,7 +49,7 @@ public class LineProcessor {
         log.add(" ");
         log.add(" ");
         log.add("-=-=-=-=-=-=-=- Line "+index+" -=-=-=-=-=-=-=-");
-        DoublyLinkedList<Token> tokenList = tokenizeLine(inputLine);
+        tokenList = tokenizeLine(inputLine);
         outputAttributes.clear();
         processComponentAttributes(tokenList, component);
         log.add("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-");
@@ -102,7 +103,7 @@ public class LineProcessor {
                 ActionResult result = processQualifiers(initialWord, attribute);
                 if (result.equals(ActionResult.NEXT_TOKEN)) {
                     current_node = current_node.getNext();
-                    log.add("[-] attriubte continuing tokenLoop");
+                    log.add("[-] attribute continuing tokenLoop");
                     continue tokenLoop;
                 } else {
                     current_node = current_node.getNext();
@@ -250,7 +251,7 @@ public class LineProcessor {
                     if (actioneer != null) {
                         String newValue = actioneer.execute(working_word, actionSpec, matchedString);
                         current_node.getPrior().getData().setValue(newValue);
-                        log.add("      (removed match from left neighbor, updated neigbhor: " + newValue + ")");
+                        log.add("      (removed match from left neighbor, updated neighbor: " + newValue + ")");
                     } else {
                         log.add("      (no executor found for Action." + actionSpec.getAction().name() + ")");
                     }
@@ -262,12 +263,26 @@ public class LineProcessor {
                     if (actioneer != null) {
                         String newValue = actioneer.execute(working_word, actionSpec, matchedString);
                         current_node.getNext().getData().setValue(newValue);
-                        log.add("      (removed match from right neighbor, updated neigbhor: " + newValue + ")");
+                        log.add("      (removed match from right neighbor, updated neighbor: " + newValue + ")");
                     } else {
                         log.add("      (no executor found for Action." + actionSpec.getAction().name() + ")");
                     }
                 }
                 return ActionResult.NEXT_ACTION;
+            case NEW_TOKEN_FROM_MATCH:
+                tokenList.addLast(new Token(matchedString));
+                log.add("      (added new token to end of current token list:" + matchedString);
+                return ActionResult.NEXT_ACTION;
+            case NEW_TOKEN_FROM_UNMATCHED: {
+                    ActioneerInterface actioneer = ActioneerFactory.getActioneer(Action.TRIM_MATCH_ALL);
+                    if (actioneer != null) {
+                        String newToken = actioneer.execute(working_word, actionSpec, matchedString);
+                        tokenList.addLast(new Token(newToken));
+                        log.add("      (added new token to end of current token list:" + newToken);
+                    } else {
+                        log.add("      (no executor found for Action.NEW_TOKEN_FROM_UNMATCHED"); // (actually TRIM_MATCH_ALL)
+                    }
+                    return ActionResult.NEXT_ACTION; }
             default:
                 // For any other action, attempt to execute it.
                 ActioneerInterface actioneer = ActioneerFactory.getActioneer(action);
