@@ -19,6 +19,14 @@ public class MatcherFactory {
             return new InBetweenInclusiveMatcher(values);
         } else if (Condition.IN_BETWEEN_EXCLUSIVE.equals(condition)) {
             return new InBetweenExclusiveMatcher(values);
+        } else if (Condition.START_IN_BETWEEN_INCLUSIVE.equals(condition)) {
+            return new StartInBetweenInclusiveMatcher(values);
+        } else if (Condition.START_IN_BETWEEN_EXCLUSIVE.equals(condition)) {
+            return new StartInBetweenExclusiveMatcher(values);
+        } else if (Condition.END_IN_BETWEEN_INCLUSIVE.equals(condition)) {
+            return new EndInBetweenInclusiveMatcher(values);
+        } else if (Condition.END_IN_BETWEEN_EXCLUSIVE.equals(condition)) {
+            return new EndInBetweenExclusiveMatcher(values);
         } else if (Condition.EQUALS_VALUE.equals(condition)) {
             return new EqualsValueMatcher(values);
         } else if (Condition.CONTAINS.equals(condition)) {

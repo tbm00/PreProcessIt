@@ -15,7 +15,7 @@ public class InBetweenInclusiveMatcher implements MatcherInterface {
     public String match(String word) {
         try {
             double number = Double.parseDouble(word);
-            return (min <= number&&number <= max) ? word : "";
+            return (min <= number && number <= max) ? word : "";
         } catch (NumberFormatException e) {
             return "";
         }
