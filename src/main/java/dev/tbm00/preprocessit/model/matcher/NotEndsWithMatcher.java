@@ -1,9 +1,9 @@
 package dev.tbm00.preprocessit.model.matcher;
 
-public class NotEndContainsMatcher implements MatcherInterface {
+public class NotEndsWithMatcher implements MatcherInterface {
     private String[] substrings;
     
-    public NotEndContainsMatcher(String values) {
+    public NotEndsWithMatcher(String values) {
         values.toUpperCase();
         this.substrings = values.split("\\|");
     }

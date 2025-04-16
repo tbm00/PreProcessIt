@@ -31,10 +31,10 @@ public class MatcherFactory {
             return new EqualsValueMatcher(values);
         } else if (Condition.CONTAINS.equals(condition)) {
             return new ContainsMatcher(values);
-        } else if (Condition.START_CONTAINS.equals(condition)) {
-            return new StartContainsMatcher(values);
-        } else if (Condition.END_CONTAINS.equals(condition)) {
-            return new EndContainsMatcher(values);
+        } else if (Condition.STARTS_WITH.equals(condition)) {
+            return new StartsWithMatcher(values);
+        } else if (Condition.ENDS_WITH.equals(condition)) {
+            return new EndsWithMatcher(values);
         } else if (Condition.IS_TYPE.equals(condition)) {
             return new IsTypeMatcher(values);
         } else if (Condition.START_IS_TYPE.equals(condition)) {
@@ -53,10 +53,10 @@ public class MatcherFactory {
             return new NotEqualsStringMatcher(values);
         } else if (Condition.NOT_CONTAINS.equals(condition)) {
             return new NotContainsMatcher(values);
-        } else if (Condition.NOT_START_CONTAINS.equals(condition)) {
-            return new NotStartContainsMatcher(values);
-        } else if (Condition.NOT_END_CONTAINS.equals(condition)) {
-            return new NotEndContainsMatcher(values);
+        } else if (Condition.NOT_STARTS_WITH.equals(condition)) {
+            return new NotStartsWithMatcher(values);
+        } else if (Condition.NOT_ENDS_WITH.equals(condition)) {
+            return new NotEndsWithMatcher(values);
         } else if (Condition.NOT_IS_TYPE.equals(condition)) {
             return new NotIsTypeMatcher(values);
         } else if (Condition.NOT_IS_EMPTY.equals(condition)) {

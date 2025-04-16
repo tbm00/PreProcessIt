@@ -14,8 +14,8 @@ public enum Condition {
     EQUALS_VALUE,
     EQUALS_STRING,
     CONTAINS,
-    START_CONTAINS,
-    END_CONTAINS,
+    STARTS_WITH,
+    ENDS_WITH,
     IS_TYPE,
     START_IS_TYPE,
     END_IS_TYPE,
@@ -25,8 +25,8 @@ public enum Condition {
     NOT_EQUALS_VALUE,
     NOT_EQUALS_STRING,
     NOT_CONTAINS,
-    NOT_START_CONTAINS,
-    NOT_END_CONTAINS,
+    NOT_STARTS_WITH,
+    NOT_ENDS_WITH,
     NOT_IS_TYPE,
     NOT_IS_EMPTY
 }

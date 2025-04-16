@@ -1,13 +1,13 @@
 package dev.tbm00.preprocessit.model.matcher;
 
-public class StartContainsMatcher implements MatcherInterface {
+public class NotStartsWithMatcher implements MatcherInterface {
     private String[] substrings;
     
-    public StartContainsMatcher(String values) {
+    public NotStartsWithMatcher(String values) {
         values.toUpperCase();
         this.substrings = values.split("\\|");
     }
-
+    
     @Override
     public String match(String word) {
         String upperWord = word.toUpperCase();
@@ -15,11 +15,10 @@ public class StartContainsMatcher implements MatcherInterface {
         for (String s : substrings) {
             String upperCandidate = s.toUpperCase();
             if (upperWord.startsWith(upperCandidate)) {
-                int len = s.length();
-                return word.substring(0, len);
+                return "";
             }
         }
         
-        return "";
+        return word;
     }
 }
