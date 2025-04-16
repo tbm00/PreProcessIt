@@ -4,19 +4,21 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Components hold attributes
+ * Components hold attributes & input line rules
  */
 public class Component {
     private int id;
     private String name;
     private ArrayList<Attribute> attributes;
     private List<String> attributeOutputOrder;
+    private InputLineRule inputLineRule;
 
-    public Component(int id, String name, ArrayList<Attribute> attributes, List<String> attributeOutputOrder) {
+    public Component(int id, String name, ArrayList<Attribute> attributes, List<String> attributeOutputOrder, InputLineRule inputLineRule) {
         this.id = id;
         this.name = name;
         this.attributes = attributes;
         this.attributeOutputOrder = attributeOutputOrder;
+        this.inputLineRule = inputLineRule;
         //StaticUtil.log("component: " + id + " " + name + " " + attributes);
     }
 
@@ -50,5 +52,13 @@ public class Component {
 
     public void setAttributeOrder(List<String> attributeOutputOrder) {
         this.attributeOutputOrder = attributeOutputOrder;
+    }
+
+    public InputLineRule getInputLineRule() {
+        return inputLineRule;
+    }
+
+    public void setInputLineRule(InputLineRule inputLineRule) {
+        this.inputLineRule = inputLineRule;
     }
 }

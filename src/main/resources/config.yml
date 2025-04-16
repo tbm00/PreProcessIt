@@ -6,6 +6,16 @@ threadPoolSizeOverride: -1
 
 components:
   MONITOR:
+    inputLineRules:
+      "1":
+        word: WORKING_LINE
+        condition: STARTS_WITH
+        value: "EXAMPLE"
+        qualifiedActions:
+          - TRIM_MATCH_FIRST
+          - SHIP
+        unqualifiedActions:
+          - SHIP
     attributeOutputOrder: ["RESPONSE_TIME", "REFRESH_RATE"]
     attributes:
       RESPONSE_TIME:
@@ -33,6 +43,7 @@ components:
           qualifiedActions:
             - TRIM_MATCH_FROM_LEFT_NEIGHBOR
             - APPEND("ms")
+            - DECLARE_TOKEN_PROCESSED
             - SHIP
           unqualifiedActions:
             - EXIT_TO_NEXT_TOKEN_ITERATION
@@ -42,6 +53,7 @@ components:
           value: "0,50"
           qualifiedActions:
             - APPEND("ms")
+            - DECLARE_TOKEN_PROCESSED
             - SHIP
           unqualifiedActions:
             - EXIT_TO_NEXT_TOKEN_ITERATION
@@ -70,6 +82,7 @@ components:
           qualifiedActions:
             - TRIM_MATCH_FROM_LEFT_NEIGHBOR
             - APPEND("hz")
+            - DECLARE_TOKEN_PROCESSED
             - SHIP
           unqualifiedActions:
             - EXIT_TO_NEXT_TOKEN_ITERATION
@@ -79,6 +92,7 @@ components:
           value: "59,361"
           qualifiedActions:
             - APPEND("hz")
+            - DECLARE_TOKEN_PROCESSED
             - SHIP
           unqualifiedActions:
             - EXIT_TO_NEXT_TOKEN_ITERATION
