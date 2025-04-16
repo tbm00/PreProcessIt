@@ -20,7 +20,7 @@ public class NotIsTypeMatcher implements MatcherInterface {
             case "DOUBLE":
                 try {
                     Double.parseDouble(word);
-                    if (word.contains(".")) {
+                    if (word.contains(".") && Character.isDigit(word.charAt(word.length() - 1))) {
                         return "";
                     }
                     return word;
@@ -30,7 +30,10 @@ public class NotIsTypeMatcher implements MatcherInterface {
             case "NUMBER":
                 try {
                     Double.parseDouble(word);
-                    return "";
+                    if (Character.isDigit(word.charAt(word.length() - 1))) {
+                        return "";
+                    }
+                    return word;
                 } catch (NumberFormatException e) {
                     return word;
                 }

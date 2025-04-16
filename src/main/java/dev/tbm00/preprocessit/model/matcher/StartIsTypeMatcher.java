@@ -21,7 +21,7 @@ public class StartIsTypeMatcher implements MatcherInterface {
                 case "DOUBLE":
                     try {
                         Double.parseDouble(subWord);
-                        if (subWord.contains(".")) {
+                        if (subWord.contains(".") && Character.isDigit(subWord.charAt(subWord.length() - 1))) {
                             return subWord;
                         }
                     } catch (NumberFormatException e) {}
@@ -29,7 +29,9 @@ public class StartIsTypeMatcher implements MatcherInterface {
                 case "NUMBER":
                     try {
                         Double.parseDouble(subWord);
-                        return subWord;
+                        if (Character.isDigit(subWord.charAt(subWord.length() - 1))) {
+                            return subWord;
+                        }
                     } catch (NumberFormatException e) {}
                     break;
                 case "STRING":
