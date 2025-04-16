@@ -1,16 +1,17 @@
 package dev.tbm00.preprocessit.model.actioneer;
 
-import dev.tbm00.preprocessit.StaticUtil;
+import java.util.List;
+
 import dev.tbm00.preprocessit.model.data.enums.ActionSpec;
 
 public class ReplaceMatchAllActioneer implements ActioneerInterface {
     
     @Override
-    public String execute(String word, ActionSpec actionSpec, String matchedString) {
+    public String execute(String word, ActionSpec actionSpec, String matchedString, List<String> log) {
 
         String param = actionSpec.getParameter();
         if (param == null || param.isEmpty()) {
-            StaticUtil.log("      (ReplaceMatchAllActioneer: no parameter provided)");
+            log.add("      (ReplaceMatchAllActioneer: no parameter provided)");
             return word;
         }
 
@@ -18,7 +19,7 @@ public class ReplaceMatchAllActioneer implements ActioneerInterface {
             word = word.replaceAll(java.util.regex.Pattern.quote(matchedString), param);
         }
 
-        StaticUtil.log("      (ReplaceMatchAllActioneer: " + word + ")");
+        log.add("      (ReplaceMatchAllActioneer: " + word + ")");
         return word;
     }
 }

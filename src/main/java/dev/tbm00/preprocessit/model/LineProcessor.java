@@ -108,6 +108,8 @@ public class LineProcessor {
                 } else {
                     current_node = current_node.getNext();
                     log.add("[-] attribute bumped the current node to the next neighbor!");
+                    if (current_node != null)
+                       log.add("      ("+current_node.getData().getValue()+")");
                     return;
                 }
             } else {
@@ -249,7 +251,7 @@ public class LineProcessor {
                 if (current_node.getPrior() != null) {
                     ActioneerInterface actioneer = ActioneerFactory.getActioneer(action);
                     if (actioneer != null) {
-                        String newValue = actioneer.execute(working_word, actionSpec, matchedString);
+                        String newValue = actioneer.execute(working_word, actionSpec, matchedString, log);
                         current_node.getPrior().getData().setValue(newValue);
                         log.add("      (removed match from left neighbor, updated neighbor: " + newValue + ")");
                     } else {
@@ -261,7 +263,7 @@ public class LineProcessor {
                 if (current_node.getNext() != null) {
                     ActioneerInterface actioneer = ActioneerFactory.getActioneer(action);
                     if (actioneer != null) {
-                        String newValue = actioneer.execute(working_word, actionSpec, matchedString);
+                        String newValue = actioneer.execute(working_word, actionSpec, matchedString, log);
                         current_node.getNext().getData().setValue(newValue);
                         log.add("      (removed match from right neighbor, updated neighbor: " + newValue + ")");
                     } else {
@@ -271,23 +273,23 @@ public class LineProcessor {
                 return ActionResult.NEXT_ACTION;
             case NEW_TOKEN_FROM_MATCH:
                 tokenList.addLast(new Token(matchedString));
-                log.add("      (added new token to end of current token list:" + matchedString);
+                log.add("      (added new token to end of current token list: " + matchedString + ")");
                 return ActionResult.NEXT_ACTION;
             case NEW_TOKEN_FROM_UNMATCHED: {
                     ActioneerInterface actioneer = ActioneerFactory.getActioneer(Action.TRIM_MATCH_ALL);
                     if (actioneer != null) {
-                        String newToken = actioneer.execute(working_word, actionSpec, matchedString);
+                        String newToken = actioneer.execute(working_word, actionSpec, matchedString, log);
                         tokenList.addLast(new Token(newToken));
-                        log.add("      (added new token to end of current token list:" + newToken);
+                        log.add("      (added new token to end of current token list: " + newToken + ")");
                     } else {
-                        log.add("      (no executor found for Action.NEW_TOKEN_FROM_UNMATCHED"); // (actually TRIM_MATCH_ALL)
+                        log.add("      (no executor found for Action.NEW_TOKEN_FROM_UNMATCHED)"); // (actually TRIM_MATCH_ALL)
                     }
                     return ActionResult.NEXT_ACTION; }
             default:
                 // For any other action, attempt to execute it.
                 ActioneerInterface actioneer = ActioneerFactory.getActioneer(action);
                 if (actioneer != null) {
-                    working_word = actioneer.execute(working_word, actionSpec, matchedString);
+                    working_word = actioneer.execute(working_word, actionSpec, matchedString, log);
                     log.add("      (updated working word to: " + working_word + ")");
                 } else {
                     log.add("      (no executor found for Action." + actionSpec.getAction().name() + ")");

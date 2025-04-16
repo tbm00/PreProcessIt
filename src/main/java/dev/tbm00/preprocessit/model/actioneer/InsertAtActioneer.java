@@ -1,21 +1,22 @@
 package dev.tbm00.preprocessit.model.actioneer;
 
-import dev.tbm00.preprocessit.StaticUtil;
+import java.util.List;
+
 import dev.tbm00.preprocessit.model.data.enums.ActionSpec;
 
 public class InsertAtActioneer implements ActioneerInterface {
     
     @Override
-    public String execute(String word, ActionSpec actionSpec, String matchedString) {
+    public String execute(String word, ActionSpec actionSpec, String matchedString, List<String> log) {
         String param = actionSpec.getParameter();
         if (param == null || param.isEmpty()) {
-            StaticUtil.log("      (InsertAtActioneer: no parameter provided)");
+            log.add("      (InsertAtActioneer: no parameter provided)");
             return word;
         }
         // Expecting parameter format: "index,substring"
         String[] parts = param.split(",", 2);
         if (parts.length < 2) {
-            StaticUtil.log("      (InsertAtActioneer: invalid parameter format)");
+            log.add("      (InsertAtActioneer: invalid parameter format)");
             return word;
         }
         try {
@@ -31,9 +32,9 @@ public class InsertAtActioneer implements ActioneerInterface {
             }
             String newVal = tokenVal.substring(0, index) + insertStr + tokenVal.substring(index);
             word = newVal;
-            StaticUtil.log("      (InsertAtActioneer: " + word + ")");
+            log.add("      (InsertAtActioneer: " + word + ")");
         } catch (NumberFormatException e) {
-            StaticUtil.log("      (InsertAtActioneer: error parsing index)");
+            log.add("      (InsertAtActioneer: error parsing index)");
         } return word;
     }
 }
