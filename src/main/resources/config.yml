@@ -16,6 +16,16 @@ components:
           - SHIP
         unqualifiedActions:
           - SHIP
+    outputLineRules:
+      "1":
+        word: WORKING_LINE
+        condition: NOT_IS_EMPTY
+        value: ""
+        qualifiedActions:
+          - PREPEND(",")
+          - SHIP
+        unqualifiedActions:
+          - SHIP
     attributeOutputOrder: ["RESPONSE_TIME", "REFRESH_RATE"]
     attributes:
       RESPONSE_TIME:

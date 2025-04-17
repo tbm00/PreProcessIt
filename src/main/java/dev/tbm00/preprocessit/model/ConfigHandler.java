@@ -20,7 +20,7 @@ import org.yaml.snakeyaml.error.YAMLException;
 
 import dev.tbm00.preprocessit.StaticUtil;
 import dev.tbm00.preprocessit.model.data.Component;
-import dev.tbm00.preprocessit.model.data.InputLineRule;
+import dev.tbm00.preprocessit.model.data.LineRule;
 import dev.tbm00.preprocessit.model.data.Attribute;
 import dev.tbm00.preprocessit.model.data.Qualifier;
 import dev.tbm00.preprocessit.model.data.enums.Action;
@@ -222,40 +222,11 @@ public class ConfigHandler {
     private Component loadComponent(int componentID, Map.Entry<String, Object> componentEntry) {
         String componentName = componentEntry.getKey();
         Map<String, Object> componentMap = (Map<String, Object>) componentEntry.getValue();
-        
-        // Ensure essential keys exist
-        List<String> attributeOutputOrder = (List<String>) componentMap.get(StaticUtil.KEY_ATTRIBUTE_OUTPUT_ORDER);
-        if (attributeOutputOrder == null) {
-            log("- - - - Component Not Loaded: " + componentName + " (no attributeOutputOrder found)");
-            return null;
-        }
-        
-        Map<String, Object> attributeMap = (Map<String, Object>) componentMap.get(StaticUtil.KEY_ATTRIBUTES);
-        if (attributeMap == null) {
-            log("- - - - Component Not Loaded: " + componentName + " (no attributes found)");
-            return null;
-        }
-        ArrayList<Attribute> attributes = new ArrayList<>();
-        // Process each attribute entry.
-        for (Map.Entry<String, Object> attributeEntry : attributeMap.entrySet()) {
-            try {
-                Attribute attr = loadAttribute(componentName, attributeEntry, attributes.size());
-                if (attr != null) {
-                    attributes.add(attr);
-                    log("- - - Attribute Loaded: " + componentName + "'s " + attr.getName());
-                }
-            } catch (FatalComponentException fce) {
-                log("- Fatal error loading attributes for component " + componentName + "!");
-                log(fce.getMessage());
-                return null;
-            }
-        }
 
+        // Load inputLineRules
         Map<String, Object> inputLineRuleMap = (Map<String, Object>) componentMap.get(StaticUtil.KEY_INPUT_LINE_RULES);
-        InputLineRule inputLineRule = new InputLineRule(componentID, null);
+        LineRule inputLineRule = new LineRule(componentID, null);
         if (inputLineRuleMap != null) {
-
-            // Process each qualifier in the line rule.
             ArrayList<Qualifier> lineRuleQualifiers = new ArrayList<>();
 
             for (Map.Entry<String, Object> qualifierEntry : inputLineRuleMap.entrySet()) {
@@ -283,8 +254,67 @@ public class ConfigHandler {
             inputLineRule.setQualifiers(lineRuleQualifiers);
         }
 
+        // Load outputLineRules
+        Map<String, Object> outputLineRuleMap = (Map<String, Object>) componentMap.get(StaticUtil.KEY_OUTPUT_LINE_RULES);
+        LineRule outputLineRule = new LineRule(componentID, null);
+        if (outputLineRuleMap != null) {
+            ArrayList<Qualifier> lineRuleQualifiers = new ArrayList<>();
+
+            for (Map.Entry<String, Object> qualifierEntry : outputLineRuleMap.entrySet()) {
+                String key = qualifierEntry.getKey();
+                int qualifierIndex;
+                try {
+                    qualifierIndex = Integer.parseInt(key);
+                } catch (NumberFormatException e) {
+                    log("- Invalid outputLineRules key for component " + componentName + ": " + key);
+                    return null;
+                }
+
+                try {
+                    Map<String, Object> qualMap = (Map<String, Object>) qualifierEntry.getValue();
+                    Qualifier qualifier = loadQualifier(componentName, null, qualifierIndex, qualMap);
+                    if (qualifier != null) {
+                        lineRuleQualifiers.add(qualifier);
+                        log("- - - Output Line Rule Loaded: " + componentName + "'s " + qualifierEntry.getKey());
+                    }
+                } catch (Exception e) {
+                    log("– Error in outputLineRules[" + key + "] for " + componentName + ": " + e.getMessage());
+                    continue;
+                }
+            }
+            outputLineRule.setQualifiers(lineRuleQualifiers);
+        }
         
-        return new Component(componentID, componentName, attributes, attributeOutputOrder, inputLineRule);
+
+        // Load attributeOutputOrder
+        List<String> attributeOutputOrder = (List<String>) componentMap.get(StaticUtil.KEY_ATTRIBUTE_OUTPUT_ORDER);
+        if (attributeOutputOrder == null) {
+            log("- - - - Component Not Loaded: " + componentName + " (no attributeOutputOrder found)");
+            return null;
+        }
+        
+        // Load each attribute
+        Map<String, Object> attributeMap = (Map<String, Object>) componentMap.get(StaticUtil.KEY_ATTRIBUTES);
+        if (attributeMap == null) {
+            log("- - - - Component Not Loaded: " + componentName + " (no attributes found)");
+            return null;
+        }
+        ArrayList<Attribute> attributes = new ArrayList<>();
+        for (Map.Entry<String, Object> attributeEntry : attributeMap.entrySet()) {
+            try {
+                Attribute attr = loadAttribute(componentName, attributeEntry, attributes.size());
+                if (attr != null) {
+                    attributes.add(attr);
+                    log("- - - Attribute Loaded: " + componentName + "'s " + attr.getName());
+                }
+            } catch (FatalComponentException fce) {
+                log("- Fatal error loading attributes for component " + componentName + "!");
+                log(fce.getMessage());
+                return null;
+            }
+        }
+        
+        return new Component(componentID, componentName, attributes, attributeOutputOrder, inputLineRule, outputLineRule);
     }
     
     /**
@@ -362,50 +392,50 @@ public class ConfigHandler {
      */
     @SuppressWarnings("unchecked")
     private Qualifier loadQualifier(String componentName, String attributeName, Integer qualifierKey, Map<String, Object> qualMap) {
-        boolean isInputLineRule = (attributeName == null);
+        boolean isLineRule = (attributeName == null);
 
         // Process "word"
         String qualifierWordStr = (String) qualMap.get(StaticUtil.KEY_WORD);
         if (qualifierWordStr == null) {
-            log("- Word Not Loaded: " + componentName + (isInputLineRule ? "" : "'s " + attributeName) + " (no words found)");
+            log("- Word Not Loaded: " + componentName + (isLineRule ? "" : "'s " + attributeName) + " (no words found)");
             return null;
         }
         Word word;
         try {
             word = Word.valueOf(qualifierWordStr.trim().replace("-", "_").toUpperCase());
-            log("- Word Loaded: " + componentName + (isInputLineRule ? "" : "'s " + attributeName) + "'s " + qualifierWordStr);
+            log("- Word Loaded: " + componentName + (isLineRule ? "" : "'s " + attributeName) + "'s " + qualifierWordStr);
         } catch (IllegalArgumentException ex) {
-            log("- Word Not Loaded: " + componentName + (isInputLineRule ? "" : "'s " + attributeName) + "'s " + qualifierWordStr + " (no applicable ENUM)");
+            log("- Word Not Loaded: " + componentName + (isLineRule ? "" : "'s " + attributeName) + "'s " + qualifierWordStr + " (no applicable ENUM)");
             return null;
         }
 
         // Process "condition"
         String qualifierConditionStr = (String) qualMap.get("condition");
         if (qualifierConditionStr == null) {
-            log("- Condition Not Loaded: " + componentName + (isInputLineRule ? "" : "'s " + attributeName) + " (no condition found)");
+            log("- Condition Not Loaded: " + componentName + (isLineRule ? "" : "'s " + attributeName) + " (no condition found)");
             return null;
         }
         Condition condition;
         try {
             condition = Condition.valueOf(qualifierConditionStr.trim().replace("-", "_").toUpperCase());
-            log("- Condition Loaded: " + componentName + (isInputLineRule ? "" : "'s " + attributeName) + "'s " + qualifierConditionStr);
+            log("- Condition Loaded: " + componentName + (isLineRule ? "" : "'s " + attributeName) + "'s " + qualifierConditionStr);
         } catch (IllegalArgumentException ex) {
-            log("- Condition Not Loaded: " + componentName + (isInputLineRule ? "" : "'s " + attributeName) + "'s " + qualifierConditionStr + " (no applicable ENUM)");
+            log("- Condition Not Loaded: " + componentName + (isLineRule ? "" : "'s " + attributeName) + "'s " + qualifierConditionStr + " (no applicable ENUM)");
             return null;
         }
 
         // Process "value"
         String qualifierValue = (String) qualMap.get(StaticUtil.KEY_VALUE);
         if (qualifierValue == null) {
-            log("- Value Not Loaded: " + componentName + (isInputLineRule ? "" : "'s " + attributeName) + " (no value found)");
+            log("- Value Not Loaded: " + componentName + (isLineRule ? "" : "'s " + attributeName) + " (no value found)");
             return null;
         }
-        log("- Value Loaded: " + componentName + (isInputLineRule ? "" : "'s " + attributeName) + "'s " + qualifierValue);
+        log("- Value Loaded: " + componentName + (isLineRule ? "" : "'s " + attributeName) + "'s " + qualifierValue);
 
         // Process "qualifiedActions"
         List<String> qualifiedActionList = (List<String>) qualMap.get(StaticUtil.KEY_QUALIFIED_ACTIONS);
         if (qualifiedActionList == null) {
-            log("- Qualified Actions Not Loaded: " + componentName + (isInputLineRule ? "" : "'s " + attributeName) + " (no qualified actions found)");
+            log("- Qualified Actions Not Loaded: " + componentName + (isLineRule ? "" : "'s " + attributeName) + " (no qualified actions found)");
             return null;
         }
         List<ActionSpec> qualifiedActionsList = new ArrayList<>();
@@ -424,7 +454,7 @@ public class ConfigHandler {
         // Process "unqualifiedActions"
         List<String> unqualifiedActionList = (List<String>) qualMap.get(StaticUtil.KEY_UNQUALIFIED_ACTIONS);
         if (unqualifiedActionList == null) {
-            log("- Unqualified Actions Not Loaded: " + componentName + (isInputLineRule ? "" : "'s " + attributeName) + " (no unqualified actions found)");
+            log("- Unqualified Actions Not Loaded: " + componentName + (isLineRule ? "" : "'s " + attributeName) + " (no unqualified actions found)");
             return null;
         }
         List<ActionSpec> unqualifiedActionsList = new ArrayList<>();

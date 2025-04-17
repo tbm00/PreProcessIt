@@ -11,14 +11,16 @@ public class Component {
     private String name;
     private ArrayList<Attribute> attributes;
     private List<String> attributeOutputOrder;
-    private InputLineRule inputLineRule;
+    private LineRule inputLineRule;
+    private LineRule outputLineRule;
 
-    public Component(int id, String name, ArrayList<Attribute> attributes, List<String> attributeOutputOrder, InputLineRule inputLineRule) {
+    public Component(int id, String name, ArrayList<Attribute> attributes, List<String> attributeOutputOrder, LineRule inputLineRule, LineRule outputLineRule) {
         this.id = id;
         this.name = name;
         this.attributes = attributes;
         this.attributeOutputOrder = attributeOutputOrder;
         this.inputLineRule = inputLineRule;
+        this.outputLineRule = outputLineRule;
         //StaticUtil.log("component: " + id + " " + name + " " + attributes);
     }
 
@@ -54,11 +56,19 @@ public class Component {
         this.attributeOutputOrder = attributeOutputOrder;
     }
 
-    public InputLineRule getInputLineRule() {
+    public LineRule getInputLineRule() {
         return inputLineRule;
     }
 
-    public void setInputLineRule(InputLineRule inputLineRule) {
+    public void setInputLineRule(LineRule inputLineRule) {
         this.inputLineRule = inputLineRule;
+    }
+
+    public LineRule getOutputLineRule() {
+        return outputLineRule;
+    }
+
+    public void setOututLineRule(LineRule outputLineRule) {
+        this.outputLineRule = outputLineRule;
     }
 }

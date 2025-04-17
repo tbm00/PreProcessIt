@@ -11,7 +11,7 @@ import dev.tbm00.preprocessit.model.data.Qualifier;
 import dev.tbm00.preprocessit.model.data.Token;
 import dev.tbm00.preprocessit.model.data.Node;
 import dev.tbm00.preprocessit.model.data.DoublyLinkedList;
-import dev.tbm00.preprocessit.model.data.InputLineRule;
+import dev.tbm00.preprocessit.model.data.LineRule;
 import dev.tbm00.preprocessit.model.data.LineResult;
 import dev.tbm00.preprocessit.model.data.enums.Action;
 import dev.tbm00.preprocessit.model.data.enums.ActionResult;
@@ -39,9 +39,10 @@ public class LineProcessor {
     /**
      * Processes a single input line for the specified component.
      * 
-     * <p>This method applies any {@link InputLineRule} to transform the entire line, then tokenizes the resulting line 
+     * <p>This method applies all input {@link LineRule}s to transform the entire line, then tokenizes the resulting line 
      * into a {@link DoublyLinkedList} of {@link Token}s, processes each component attribute by evaluating 
-     * their qualifiers and executing actions, and finally builds the formatted output line.</p>
+     * their qualifiers and executing actions, builds the formatted output line, and finally applies all 
+     * output {@link LineRule}s to transform the entire line.</p>
      *
      * @param index The input line's index.
      * @return A {@code String} representing the processed output line.
@@ -51,39 +52,57 @@ public class LineProcessor {
         log.add(" ");
         log.add(" ");
         log.add("-=-=-=-=-=-=-=- Line "+index+" -=-=-=-=-=-=-=-");
-        working_word = inputLine;
-        inputLine = processInputLineRules(inputLine, component).trim();
 
-        // Reset local variables after processing InputLineRules
+        // Process input LineRules
+        working_word = inputLine;
+        inputLine = processLineRules(inputLine, component, "input").trim();
+
+        // Reset local variables after processing LineRules
         skip_qualifier = 0;
         current_matcher = null;
         working_word = null; 
 
+        // Process input Attributes
         tokenList = tokenizeLine(inputLine);
         outputAttributes.clear();
-        processComponentAttributes(tokenList, component);
+        processAttributes(tokenList, component);
+        
+        // Reset local variables after processing Attributes
+        skip_qualifier = 0;
+        current_matcher = null;
+        
+        // Process output LineRules
+        String outputLine = buildOutputLine(tokenList, component.getAttributeOrder());
+        working_word = outputLine;
+        outputLine = processLineRules(outputLine, component, "output");
+
         log.add("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-");
-        return new LineResult(index, buildOutputLine(tokenList, component.getAttributeOrder()), log);
+        return new LineResult(index, outputLine, log);
     }
 
     /**
-     * Processes each input line rule for the current component on the given token list.
+     * Processes each line rule for the current component on the given token list.
      *
-     * <p>This method iterates over all qualifiers for the specified component's InputLineRules.
+     * <p>This method iterates over all qualifiers for the specified component's LineRules.
      * It calls {@link #processQualifiers(String, Component, Attribute)} to process the entire line using the qualifiers.</p>
      *
      * @param tokenList The list of tokens generated from a line of input text.
      * @param component The component whose attributes are to be processed.
+     * @param type      The type of line rules that are running (input/output)
      */
-    private String processInputLineRules(String inputLine, Component component) {
-        InputLineRule lineRule = component.getInputLineRule();
+    private String processLineRules(String line, Component component, String type) {
+        LineRule lineRule;
+        if (type.equals("input")) lineRule = component.getInputLineRule();
+        else if (type.equals("output")) lineRule = component.getOutputLineRule();
+        else lineRule = null;
+
         if (lineRule!=null) {
-            processQualifiers(inputLine, component, null, lineRule.getQualifiers());
-            log.add("[-] input line rules processed");
+            processQualifiers(line, component, null, lineRule.getQualifiers());
+            log.add("[-] "+type+" line rules processed");
             return working_word;
         } else {
-            log.add("[-] no input line rules found");
-            return inputLine;
+            log.add("[-] no "+type+" line rules found");
+            return line;
         }
     }
 
@@ -97,7 +116,7 @@ public class LineProcessor {
      * @param tokenList The list of tokens generated from a line of input text.
      * @param component The component whose attributes are to be processed.
      */
-    private void processComponentAttributes(DoublyLinkedList<Token> tokenList, Component component) {
+    private void processAttributes(DoublyLinkedList<Token> tokenList, Component component) {
         for (Attribute attribute : component.getAttributes()) {
             if (outputAttributes.containsKey(attribute.getName())) {
                 continue;
@@ -170,7 +189,7 @@ public class LineProcessor {
      * @return An {@code ActionResult} indicating the next processing step.
      */
     private ActionResult processQualifiers(String initialWord, Component component, Attribute attribute, ArrayList<Qualifier> qualifiers) {
-        boolean isInputLineRule = (attribute == null);
+        boolean isLineRule = (attribute == null);
 
         // For each qualifier in the attribute
         qualifierLoop:
@@ -186,7 +205,7 @@ public class LineProcessor {
             String matchedString = current_matcher.match(working_word);
 
             log.add(" ");
-            if (isInputLineRule) log.add(component.getName()+"'s InputLineRule's "+qualifier.getWord().name()+" "+qualifier.getCondition().name()+" '"+qualifier.getValues() +"'  ::  '"+ working_word + "' -> '" + matchedString + "'");
+            if (isLineRule) log.add(component.getName()+"'s LineRule's "+qualifier.getWord().name()+" "+qualifier.getCondition().name()+" '"+qualifier.getValues() +"'  ::  '"+ working_word + "' -> '" + matchedString + "'");
             else log.add(attribute.getName()+"'s "+qualifier.getWord().name()+" "+qualifier.getCondition().name()+" '"+qualifier.getValues() +"'  ::  '"+ working_word + "' -> '" + matchedString + "'");
 
             // Decide which set of actions to use
@@ -254,18 +273,18 @@ public class LineProcessor {
      * @return An {@code ActionResult} indicating the outcome of the action execution.
      */
     private ActionResult executeAction(String matchedString, ActionSpec actionSpec, String attributeName) {
-        boolean isInputLineRule = (attributeName == null);
+        boolean isLineRule = (attributeName == null);
         Action action = actionSpec.getAction();
         log.add("[-] executing action " + action.name() + "...");
 
 
         if (action.equals(Action.DECLARE_TOKEN_PROCESSED)) {
-            if (!isInputLineRule) {
+            if (!isLineRule) {
                 log.add("      (declaring token as processed)");
                 current_node.getData().setProcessed(true);
                 return ActionResult.NEXT_ACTION;
             } else {
-                log.add("      (cannot use DECLARE_TOKEN_PROCESSED in InputLineRules)");
+                log.add("      (cannot use DECLARE_TOKEN_PROCESSED in LineRules)");
                 return ActionResult.NEXT_QUALIFIER;
             }
         }
@@ -273,33 +292,33 @@ public class LineProcessor {
         switch (action) {
             case SHIP:
                 log.add("      (shipping " + working_word + ")");
-                if (!isInputLineRule) {
+                if (!isLineRule) {
                     outputAttributes.put(attributeName, working_word);
                 }
                 return ActionResult.NEXT_ATTRIBUTE;
             case DECLARE_TOKEN_PROCESSED:
-                if (!isInputLineRule) {
+                if (!isLineRule) {
                     log.add("      (declaring token as processed)");
                     current_node.getData().setProcessed(true);
                     return ActionResult.NEXT_ACTION;
                 } else {
-                    log.add("      (cannot use DECLARE_TOKEN_PROCESSED in InputLineRules)");
+                    log.add("      (cannot use DECLARE_TOKEN_PROCESSED in LineRules)");
                     return ActionResult.NEXT_QUALIFIER;
                 }
             case EXIT_TO_NEXT_TOKEN_ITERATION:
-                if (!isInputLineRule) {
+                if (!isLineRule) {
                     // The calling loop will get the next token.
                     return ActionResult.NEXT_TOKEN;
                 } else {
-                    log.add("      (cannot use EXIT_TO_NEXT_TOKEN_ITERATION in InputLineRules)");
+                    log.add("      (cannot use EXIT_TO_NEXT_TOKEN_ITERATION in LineRules)");
                     return ActionResult.NEXT_QUALIFIER;
                 }
             case EXIT_TO_NEXT_ATTRIBUTE_ITERATION:
-                if (!isInputLineRule) {
+                if (!isLineRule) {
                     // Exit evaluation for this attribute.
                     return ActionResult.NEXT_ATTRIBUTE;
                 } else {
-                    log.add("      (cannot use EXIT_TO_NEXT_ATTRIBUTE_ITERATION in InputLineRules)");
+                    log.add("      (cannot use EXIT_TO_NEXT_ATTRIBUTE_ITERATION in LineRules)");
                     return ActionResult.NEXT_QUALIFIER;
                 }
             case CONTINUE:
@@ -311,7 +330,7 @@ public class LineProcessor {
                 skip_qualifier = skipAmount;
                 return ActionResult.NEXT_QUALIFIER;
             case TRY_NEIGHBORS:
-                if (!isInputLineRule) {
+                if (!isLineRule) {
                     int distance = parsePositiveIntOrDefault(actionSpec.getParameter(), 1);
                     log.add("      (trying " + distance + "*2 neighbor characters)");
                     if (tryNeighbors(distance, attributeName)) {
@@ -320,11 +339,11 @@ public class LineProcessor {
                         return ActionResult.NEXT_QUALIFIER;
                     }
                 } else {
-                    log.add("      (cannot use TRY_NEIGHBORS in InputLineRules)");
+                    log.add("      (cannot use TRY_NEIGHBORS in LineRules)");
                     return ActionResult.NEXT_QUALIFIER;
                 }
             case TRIM_MATCH_FROM_LEFT_NEIGHBOR:
-                if (!isInputLineRule) {
+                if (!isLineRule) {
                     if (current_node.getPrior() != null) {
                         ActioneerInterface actioneer = ActioneerFactory.getActioneer(action);
                         if (actioneer != null) {
@@ -337,11 +356,11 @@ public class LineProcessor {
                     }
                     return ActionResult.NEXT_ACTION;
                 } else {
-                    log.add("      (cannot use TRIM_MATCH_FROM_LEFT_NEIGHBOR in InputLineRules)");
+                    log.add("      (cannot use TRIM_MATCH_FROM_LEFT_NEIGHBOR in LineRules)");
                     return ActionResult.NEXT_QUALIFIER;
                 }
             case TRIM_MATCH_FROM_RIGHT_NEIGHBOR:
-                if (!isInputLineRule) {
+                if (!isLineRule) {
                     if (current_node.getNext() != null) {
                         ActioneerInterface actioneer = ActioneerFactory.getActioneer(action);
                         if (actioneer != null) {
@@ -354,11 +373,11 @@ public class LineProcessor {
                     }
                     return ActionResult.NEXT_ACTION;
                 } else {
-                    log.add("      (cannot use TRIM_MATCH_FROM_RIGHT_NEIGHBOR in InputLineRules)");
+                    log.add("      (cannot use TRIM_MATCH_FROM_RIGHT_NEIGHBOR in LineRules)");
                     return ActionResult.NEXT_QUALIFIER;
                 }
             case NEW_TOKEN_FROM_MATCH:
-                if (!isInputLineRule) {
+                if (!isLineRule) {
                     if (matchedString.isEmpty()) {
                         log.add("      (no new token created because matchedString is empty)");
                         return ActionResult.NEXT_ACTION;
@@ -377,11 +396,11 @@ public class LineProcessor {
                     }
                     return ActionResult.NEXT_ACTION;
                 } else {
-                    log.add("      (cannot use NEW_TOKEN_FROM_MATCH in InputLineRules)");
+                    log.add("      (cannot use NEW_TOKEN_FROM_MATCH in LineRules)");
                     return ActionResult.NEXT_QUALIFIER;
                 }
             case NEW_TOKEN_FROM_UNMATCHED:
-                if (!isInputLineRule) {
+                if (!isLineRule) {
                     
                     ActioneerInterface actioneer = ActioneerFactory.getActioneer(Action.TRIM_MATCH_ALL);
                     if (actioneer != null) {
@@ -399,7 +418,7 @@ public class LineProcessor {
                     }
                     return ActionResult.NEXT_ACTION;
                 } else {
-                    log.add("      (cannot use NEW_TOKEN_FROM_UNMATCHED in InputLineRules)");
+                    log.add("      (cannot use NEW_TOKEN_FROM_UNMATCHED in LineRules)");
                     return ActionResult.NEXT_QUALIFIER;
                 }
             default:

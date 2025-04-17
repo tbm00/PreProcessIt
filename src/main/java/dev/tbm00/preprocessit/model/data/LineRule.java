@@ -3,13 +3,13 @@ package dev.tbm00.preprocessit.model.data;
 import java.util.ArrayList;
 
 /**
- * InputLineRules hold qualifiers
+ * LineRules hold qualifiers
  */
-public class InputLineRule {
+public class LineRule {
     private int id;
     private ArrayList<Qualifier> qualifiers;
 
-    public InputLineRule(int id, ArrayList<Qualifier> qualifiers) {
+    public LineRule(int id, ArrayList<Qualifier> qualifiers) {
         this.id = id;
         this.qualifiers = qualifiers;
         //StaticUtil.log("attribute: " + id + " " + name + " " + qualifiers);
