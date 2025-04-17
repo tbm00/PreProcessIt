@@ -1,5 +1,10 @@
 package dev.tbm00.preprocessit;
 
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.regex.Pattern;
 
 public class StaticUtil {
@@ -22,8 +27,28 @@ public class StaticUtil {
     public static final Pattern NUMBER_PREFIX = Pattern.compile("^(\\d+(?:\\.\\d+)?)");
     public static final Pattern NUMBER_SUFFIX = Pattern.compile("(\\d+(?:\\.\\d+)?)$");
 
-    public static void log(String string) {
-        System.out.println(string);
+    private static BufferedWriter logWriter;
+    private static Path logFile;
+
+    public static Path initLogFile() throws IOException {
+        if (logFile == null) {
+            logFile = Files.createTempFile("preprocessit-temp‑log", ".txt");
+            logWriter = Files.newBufferedWriter(logFile,
+                                   StandardOpenOption.APPEND,
+                                   StandardOpenOption.CREATE);
+        }
+        return logFile;
+    }
+
+    public static synchronized void log(String msg) {
+        try {
+            if (logWriter == null) initLogFile();
+            logWriter.write(msg);
+            logWriter.newLine();
+            logWriter.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public static void log(Object obj) {
