@@ -87,7 +87,7 @@ public class PreProcessIt {
         }
         if (configPath == null || inputPath == null || outputPath == null) {
             System.err.println(
-                "Usage: java -jar PreProcessIt-0.0.0-beta.jar --config <config.yml> [--component <name>] --input <in.txt> --output <out.csv> [--log]"
+                "Usage: java -jar PreProcessIt-0.1.5-beta.jar --config <config.yml> [--component <name>] --input <in.txt> --output <out.csv> [--log]"
             );
             System.exit(1);
         }

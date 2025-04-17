@@ -13,6 +13,7 @@ PreProcessIt follows the Model-View-Controller (MVC) design pattern, ensuring cl
   - **Advanced Token Handling:** Process tokens using configurable rules that consider neighboring tokens, enabling complex pattern matching and data transformation.
   - **Highly Configurable:** Use a YAML configuration file to control the behavior of the parser, ensuring it meets the needs of varied input data formats.
   - **Robust Error Handling and Logging:** Detailed logging and error management provide transparency during data processing and facilitate troubleshooting and config creation.
+  - **User-friendly GUI & Headless Command:** Either use the GUI to import, process, and export data, or use the headless command to import, process and export data directly to a CSV.
 
 ## Dependencies
   - **Java 8+**: REQUIRED
@@ -51,6 +52,9 @@ original_input,response_time,refresh_rate,leftovers
    60HZ 5MS,5MS,60HZ,
 99HERTZ RANDOMTEXT 20MS,20MS,99HZ,RANDOMTEXT
 ```
+
+### Headless Command
+  - `java -jar PreProcessIt-0.1.5-beta.jar --config <config.yml> [--component <name>] --input <input.txt> --output <output.csv> [--log]`
 
 ## Configuration
 
@@ -126,7 +130,7 @@ original_input,response_time,refresh_rate,leftovers
 
 ### Default Config
 ```
-# PreProcessIt v0.1.4-beta by @tbm00
+# PreProcessIt v0.1.5-beta by @tbm00
 # https://github.com/tbm00/PreProcessIt
 
 concurrentThreading: true
