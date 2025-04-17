@@ -279,18 +279,6 @@ public class LineProcessor {
         Action action = actionSpec.getAction();
         log.add("[-] executing action " + action.name() + "...");
 
-
-        if (action.equals(Action.DECLARE_TOKEN_PROCESSED)) {
-            if (!isLineRule) {
-                log.add("      (declaring token as processed)");
-                current_node.getData().setProcessed(true);
-                return ActionResult.NEXT_ACTION;
-            } else {
-                log.add("      (cannot use DECLARE_TOKEN_PROCESSED in LineRules)");
-                return ActionResult.NEXT_QUALIFIER;
-            }
-        }
-
         switch (action) {
             case SHIP:
                 log.add("      (shipping " + working_word + ")");
@@ -305,7 +293,7 @@ public class LineProcessor {
                     return ActionResult.NEXT_ACTION;
                 } else {
                     log.add("      (cannot use DECLARE_TOKEN_PROCESSED in LineRules)");
-                    return ActionResult.NEXT_QUALIFIER;
+                    return ActionResult.NEXT_ACTION;
                 }
             case EXIT_TO_NEXT_TOKEN_ITERATION:
                 if (!isLineRule) {
@@ -313,7 +301,7 @@ public class LineProcessor {
                     return ActionResult.NEXT_TOKEN;
                 } else {
                     log.add("      (cannot use EXIT_TO_NEXT_TOKEN_ITERATION in LineRules)");
-                    return ActionResult.NEXT_QUALIFIER;
+                    return ActionResult.NEXT_ACTION;
                 }
             case EXIT_TO_NEXT_ATTRIBUTE_ITERATION:
                 if (!isLineRule) {
@@ -321,7 +309,7 @@ public class LineProcessor {
                     return ActionResult.NEXT_ATTRIBUTE;
                 } else {
                     log.add("      (cannot use EXIT_TO_NEXT_ATTRIBUTE_ITERATION in LineRules)");
-                    return ActionResult.NEXT_QUALIFIER;
+                    return ActionResult.NEXT_ACTION;
                 }
             case CONTINUE:
                 // Just continue processing qualifiers.
@@ -342,7 +330,7 @@ public class LineProcessor {
                     }
                 } else {
                     log.add("      (cannot use TRY_NEIGHBORS in LineRules)");
-                    return ActionResult.NEXT_QUALIFIER;
+                    return ActionResult.NEXT_ACTION;
                 }
             case TRIM_MATCH_FROM_LEFT_NEIGHBOR:
                 if (!isLineRule) {
@@ -359,7 +347,7 @@ public class LineProcessor {
                     return ActionResult.NEXT_ACTION;
                 } else {
                     log.add("      (cannot use TRIM_MATCH_FROM_LEFT_NEIGHBOR in LineRules)");
-                    return ActionResult.NEXT_QUALIFIER;
+                    return ActionResult.NEXT_ACTION;
                 }
             case TRIM_MATCH_FROM_RIGHT_NEIGHBOR:
                 if (!isLineRule) {
@@ -376,7 +364,7 @@ public class LineProcessor {
                     return ActionResult.NEXT_ACTION;
                 } else {
                     log.add("      (cannot use TRIM_MATCH_FROM_RIGHT_NEIGHBOR in LineRules)");
-                    return ActionResult.NEXT_QUALIFIER;
+                    return ActionResult.NEXT_ACTION;
                 }
             case NEW_TOKEN_FROM_MATCH:
                 if (!isLineRule) {
@@ -399,7 +387,7 @@ public class LineProcessor {
                     return ActionResult.NEXT_ACTION;
                 } else {
                     log.add("      (cannot use NEW_TOKEN_FROM_MATCH in LineRules)");
-                    return ActionResult.NEXT_QUALIFIER;
+                    return ActionResult.NEXT_ACTION;
                 }
             case NEW_TOKEN_FROM_UNMATCHED:
                 if (!isLineRule) {
@@ -421,7 +409,7 @@ public class LineProcessor {
                     return ActionResult.NEXT_ACTION;
                 } else {
                     log.add("      (cannot use NEW_TOKEN_FROM_UNMATCHED in LineRules)");
-                    return ActionResult.NEXT_QUALIFIER;
+                    return ActionResult.NEXT_ACTION;
                 }
             default:
                 // For any other action, attempt to execute it.

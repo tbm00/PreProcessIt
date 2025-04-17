@@ -31,6 +31,7 @@ public class PreProcessIt {
      */
     public static void main(String[] args) {
         boolean cliMode = GraphicsEnvironment.isHeadless() || Arrays.asList(args).contains("--input");
+        // ----- CLI mode -----
         if (cliMode) {
             try {
                 runHeadless(args);
@@ -87,16 +88,16 @@ public class PreProcessIt {
         }
         if (configPath == null || inputPath == null || outputPath == null) {
             System.err.println(
-                "Usage: java -jar PreProcessIt-0.0.0-beta.jar --config <config.yml> [--component <name>] --input <in.txt> --output <out.csv> [--log]"
+                "Usage: java -jar PreProcessIt-0.0.0-beta.jar --config <config.yml> [--component <name>] --input <input.txt> --output <output.csv> [--log]"
             );
             System.exit(1);
         }
 
-        // 1) load config
+        // load config
         Model model = new Model();
         model.getConfigHandler().loadConfig(configPath.toFile());
 
-        // 4) pick component
+        // pick component
         List<Component> comps = model.getComponents();
         if (comps == null || comps.isEmpty()) {
             System.err.println("Error: No components defined in your config.yml!");
@@ -118,15 +119,15 @@ public class PreProcessIt {
             model.setSelectedComponent(comps.get(0).getName());
         }
 
-        // 2) read input file (Java 8 style)
+        // read input file
         byte[] inBytes = Files.readAllBytes(inputPath);
         String input = new String(inBytes, StandardCharsets.UTF_8);
         model.setInputText(input);
 
-        // 3) process
+        // process
         String result = model.processData();
 
-        // 4) write output file (Java 8 style)
+        // write output file
         byte[] outBytes = result.getBytes(StandardCharsets.UTF_8);
         Files.write(outputPath, outBytes);
     }

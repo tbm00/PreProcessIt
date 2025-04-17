@@ -30,7 +30,7 @@ import dev.tbm00.preprocessit.view.View;
 public class Controller {
     private Model model;
     private View view;
-    private static final String README_URL = "https://github.com/tbm00/PreProcessit";
+    private static final String README_URL = "https://github.com/tbm00/PreProcessIt";
 
     public Controller(Model model, View view) {
         this.model = model;
@@ -136,7 +136,7 @@ public class Controller {
         });
     }
 
-    // Load components from file YML
+    // Load components from file
     private void handleLoadComponents() {
         JFileChooser fc = new JFileChooser(model.getConfigHandler().getAppDirectory().toFile());
 
@@ -179,7 +179,7 @@ public class Controller {
     private void handleLoadInputData() {
         JFileChooser fc = new JFileChooser(model.getConfigHandler().getAppDirectory().toFile());
 
-        fc.setFileFilter(new FileNameExtensionFilter("CSV (*.csv) or TXT (*.txt) files", "csv","txt"));
+        fc.setFileFilter(new FileNameExtensionFilter("CSV files (*.csv) or TXT files (*.txt)", "csv","txt"));
         int choice = fc.showOpenDialog(view);
         if(choice == JFileChooser.APPROVE_OPTION) {
             File dataFile = fc.getSelectedFile();
@@ -222,32 +222,26 @@ public class Controller {
         String output = view.getOutputTextArea().getText();
         
         JFileChooser fc = new JFileChooser(model.getConfigHandler().getAppDirectory().toFile());
-        // CSV and TXT filters
         FileNameExtensionFilter csvFilter = new FileNameExtensionFilter("CSV files (*.csv)", "csv");
         FileNameExtensionFilter txtFilter = new FileNameExtensionFilter("Text files (*.txt)", "txt");
         fc.addChoosableFileFilter(csvFilter);
         fc.addChoosableFileFilter(txtFilter);
         
-        // Re-enable the “All Files” filter
         fc.setAcceptAllFileFilterUsed(true);
-        
-        // Optionally set CSV as the default
         fc.setFileFilter(csvFilter);
         
         int choice = fc.showSaveDialog(view);
         if (choice != JFileChooser.APPROVE_OPTION) return;
         
-        File selected = fc.getSelectedFile();
         // Determine extension to append only if user picked CSV or TXT filter
+        File selected = fc.getSelectedFile();
         FileFilter chosen = fc.getFileFilter();
         String path = selected.getAbsolutePath();
-        
         if (chosen == csvFilter) {
             if (!path.toLowerCase().endsWith(".csv")) path += ".csv";
         } else if (chosen == txtFilter) {
             if (!path.toLowerCase().endsWith(".txt")) path += ".txt";
         }
-        // if “All Files” is selected, we leave the exact filename the user typed
         
         File outFile = new File(path);
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(outFile))) {
