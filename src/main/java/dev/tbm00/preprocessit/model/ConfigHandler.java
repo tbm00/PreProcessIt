@@ -3,6 +3,8 @@ package dev.tbm00.preprocessit.model;
 import java.io.InputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.Path;
@@ -14,9 +16,11 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.yaml.snakeyaml.Yaml;
+import org.yaml.snakeyaml.error.YAMLException;
 
 import dev.tbm00.preprocessit.StaticUtil;
 import dev.tbm00.preprocessit.model.data.Component;
+import dev.tbm00.preprocessit.model.data.LineRule;
 import dev.tbm00.preprocessit.model.data.Attribute;
 import dev.tbm00.preprocessit.model.data.Qualifier;
 import dev.tbm00.preprocessit.model.data.enums.Action;
@@ -128,13 +132,15 @@ public class ConfigHandler {
     }
     
     /**
-     * Loads the configuration from the provided YAML file into the model.
+     * Loads the application configuration from the specified YAML file into the model.
      *
-     * <p>The method reads the YAML file into a Map, extracts component entries, clears any existing components from the model,
-     * and iterates over each component entry to load its corresponding component. If the configuration file is {@code null}
-     * or component entries are missing, it logs appropriate messages.</p>
+     * <p>This method reads and parses the given YAML configuration file, verifies that the 
+     * "components" section exists and is valid, and initializes the concurrent‑threading options.</p>
      *
-     * @param givenYaml The YAML configuration file to load.
+     * @param givenYaml the configuration file to load; if {@code null}, the method returns immediately
+     * @throws FileNotFoundException if the config file does not exist at the expected location
+     * @throws IOException           if an I/O error occurs while opening or reading the file
+     * @throws YAMLException         if the file contains malformed YAML
      */
     @SuppressWarnings("unchecked")
     public void loadConfig(File givenYaml) {
@@ -147,65 +153,62 @@ public class ConfigHandler {
             Yaml yaml = new Yaml();
             Map<String, Object> data = yaml.load(fis);
 
-            // Load concurrent threading toggle
-            Object poolEnabled = data.get("concurrentThreading");
-            if (poolEnabled != null) {
-                try {
-                    if (poolEnabled instanceof Boolean) {
-                        poolingEnabled = ((Boolean) poolEnabled).booleanValue();
-                        log("Concurrent threading is enabled in config!");
-                    } else {
-                        poolingEnabled = false;
-                        log("Concurrent threading is disabled in config!");
-                    }
-                } catch (NumberFormatException e) {
-                    log("Error loading concurrent threading boolean from config! " + e.getMessage());
-                }
+            if (!(data.get(StaticUtil.KEY_COMPONENTS) instanceof Map)) {
+                log("Missing or invalid 'components' section; aborting load.");
+                return;
             }
 
+            // Load concurrent threading toggle
+            Object poolObj = data.get(StaticUtil.KEY_CONCURRENT_THREADING);
+            poolingEnabled = Boolean.TRUE.equals(poolObj);
+            log(" ");
+            log("Concurrent threading " + (poolingEnabled ? "enabled" : "disabled") + " in config");
+
             // Load thread pool size override
-            Object poolOverrideObj = data.get("threadPoolSizeOverride");
-            if (poolingEnabled && (poolOverrideObj != null)) {
+            Object overrideObj = data.get(StaticUtil.KEY_CONCURRENT_OVERRIDE);
+            if (poolingEnabled && overrideObj != null) {
                 try {
-                    int newPoolSize;
-                    if (poolOverrideObj instanceof String) {
-                        newPoolSize = Integer.parseInt((String) poolOverrideObj);
-                    } else if (poolOverrideObj instanceof Number) {
-                        newPoolSize = ((Number) poolOverrideObj).intValue();
-                    } else {
-                        newPoolSize = 1;
-                    }
-                    configuredPoolSize = newPoolSize < 1 ? 1 : newPoolSize;
-                    log("Loaded thread pool size override (" + configuredPoolSize + ") from config!");
-                } catch (NumberFormatException e) {
-                    log("Error loading thread pool size override from config! " + e.getMessage());
+                    configuredPoolSize = Math.max(1,
+                        Integer.parseInt(overrideObj.toString())
+                    );
+                    log("Loaded thread pool size override: " + configuredPoolSize);
+                } catch (NumberFormatException ex) {
+                    log("Invalid threadPoolSizeOverride, defaulting to 1");
+                    configuredPoolSize = 1;
                 }
             } else {
                 configuredPoolSize = 1;
-            }
-            
-            Map<String, Object> componentMap = (Map<String, Object>) data.get("components");
+            } log(" ");
+
+            Map<String, Object> componentMap = (Map<String, Object>) data.get(StaticUtil.KEY_COMPONENTS);
             if (componentMap == null) {
                 log("No components found in config");
                 return;
-            }
+            } else {log("Loading component(s)...\n");}
             
             // Clear components before loading a new config
             model.clearComponents();
             int componentID = 0;
             
             // Iterate over each component entry
+            int i = 1;
             for (Map.Entry<String, Object> componentEntry : componentMap.entrySet()) {
+                log("[component: " + i +"]");
                 Component component = loadComponent(componentID, componentEntry);
                 if (component != null) {
                     model.addComponent(component);
                     componentID++;
-                    log("- - - - Component Loaded: " + component.getName() + " " + component.getAttributeOrder());
+                    log("- - - - Component Loaded: " + component.getName() + " " + component.getAttributeOrder() + "\n");
                 }
+                i++;
             }
-            log("Loaded " + model.getComponents().size() + " components from config");
-        } catch (Exception e) {
-            log("Error loading config file in " + appDirectory + ": " + e.getMessage());
+            log("Loaded " + model.getComponents().size() + " component(s) from config");
+        }  catch (FileNotFoundException e) {
+            log("Config file not found in " + appDirectory + ": " + e.getMessage());
+        } catch (IOException e) {
+            log("I/O error reading config file in " + appDirectory + ": " + e.getMessage());
+        } catch (YAMLException e) {
+            log("YAML parsing error in " + appDirectory + "'s config.yml': " + e.getMessage());
         }
     }
     
@@ -223,22 +226,112 @@ public class ConfigHandler {
     private Component loadComponent(int componentID, Map.Entry<String, Object> componentEntry) {
         String componentName = componentEntry.getKey();
         Map<String, Object> componentMap = (Map<String, Object>) componentEntry.getValue();
+
+        // Load inputLineRules
+        LineRule inputLineRule = null;
+        if (componentMap.get(StaticUtil.KEY_INPUT_LINE_RULES)!=null) {
+            try {
+                Map<String, Object> inputLineRuleMap = (Map<String, Object>) componentMap.get(StaticUtil.KEY_INPUT_LINE_RULES);
+                log("Loading inputLineRules...");
+                inputLineRule = new LineRule(componentID, null);
+                if (inputLineRuleMap != null) {
+                    ArrayList<Qualifier> lineRuleQualifiers = new ArrayList<>();
         
-        // Ensure essential keys exist
-        List<String> attributeOutputOrder = (List<String>) componentMap.get("attributeOutputOrder");
+                    for (Map.Entry<String, Object> qualifierEntry : inputLineRuleMap.entrySet()) {
+                        String key = qualifierEntry.getKey();
+                        int qualifierIndex;
+                        try {
+                            qualifierIndex = Integer.parseInt(key);
+                        } catch (NumberFormatException e) {
+                            log("- - Invalid inputLineRules key for component " + componentName + ": " + key);
+                            return null;
+                        }
+        
+                        try {
+                            Map<String, Object> qualMap = (Map<String, Object>) qualifierEntry.getValue();
+                            Qualifier qualifier = loadQualifier(componentName, null, qualifierIndex, qualMap);
+                            if (qualifier != null) {
+                                lineRuleQualifiers.add(qualifier);
+                                log("- - Input Line Rule Loaded: " + componentName + "'s " + qualifierEntry.getKey());
+                            }
+                        } catch (Exception e) {
+                            log("– - Error in inputLineRules[" + key + "] for " + componentName + ": " + e.getMessage());
+                            continue;
+                        }
+                    }
+                    inputLineRule.setQualifiers(lineRuleQualifiers);
+                }
+            } catch (Exception e) {}
+        }
+
+        // Load outputLineRules
+        LineRule outputLineRule = null;
+        if (componentMap.get(StaticUtil.KEY_OUTPUT_LINE_RULES)!=null) {
+            try {
+                Map<String, Object> outputLineRuleMap = (Map<String, Object>) componentMap.get(StaticUtil.KEY_OUTPUT_LINE_RULES);
+                log("Loading outputLineRules...");
+                outputLineRule = new LineRule(componentID, null);
+                if (outputLineRuleMap != null) {
+                    ArrayList<Qualifier> lineRuleQualifiers = new ArrayList<>();
+        
+                    for (Map.Entry<String, Object> qualifierEntry : outputLineRuleMap.entrySet()) {
+                        String key = qualifierEntry.getKey();
+                        int qualifierIndex;
+                        try {
+                            qualifierIndex = Integer.parseInt(key);
+                        } catch (NumberFormatException e) {
+                            log("- - Invalid outputLineRules key for component " + componentName + ": " + key);
+                            return null;
+                        }
+        
+                        try {
+                            Map<String, Object> qualMap = (Map<String, Object>) qualifierEntry.getValue();
+                            Qualifier qualifier = loadQualifier(componentName, null, qualifierIndex, qualMap);
+                            if (qualifier != null) {
+                                lineRuleQualifiers.add(qualifier);
+                                log("- - Output Line Rule Loaded: " + componentName + "'s " + qualifierEntry.getKey());
+                            }
+                        } catch (Exception e) {
+                            log("– - Error in outputLineRules[" + key + "] for " + componentName + ": " + e.getMessage());
+                            continue;
+                        }
+                    }
+                    outputLineRule.setQualifiers(lineRuleQualifiers);
+                }
+            } catch (Exception e) {}
+        }
+
+        // Load attributeOutputOrder
+        log("Loading attributeOutputOrder...");
+        List<String> attributeOutputOrder = (List<String>) componentMap.get(StaticUtil.KEY_ATTRIBUTE_OUTPUT_ORDER);
         if (attributeOutputOrder == null) {
-            log("- - - - Component Not Loaded: " + componentName + " (no attributeOutputOrder found)");
+            log("- Component Not Loaded: " + componentName + " (no attributeOutputOrder found)");
             return null;
+        } else {
+            log("- Attribute Output Order Loaded: " + attributeOutputOrder.toString());
         }
-        Map<String, Object> attributeMap = (Map<String, Object>) componentMap.get("attributes");
-        if (attributeMap == null) {
-            log("- - - - Component Not Loaded: " + componentName + " (no attributes found)");
+
+        // Load attributeOutputDelimiter
+        log("Loading attributeOutputDelimiter...");
+        String attributeOutputDelimiter = (String) componentMap.get(StaticUtil.KEY_ATTRIBUTE_OUTPUT_DELIMITER);
+        if (attributeOutputDelimiter == null) {
+            log("- Component Not Loaded: " + componentName + " (no attributeOutputDelimiter found)");
             return null;
+        } else {
+            log("- Attribute Output Delimiter Loaded: " + attributeOutputDelimiter);
         }
         
+        // Load each attribute
+        log("Loading attributes...");
+        Map<String, Object> attributeMap = (Map<String, Object>) componentMap.get(StaticUtil.KEY_ATTRIBUTES);
+        if (attributeMap == null) {
+            log("- Component Not Loaded: " + componentName + " (no attributes found)");
+            return null;
+        }
         ArrayList<Attribute> attributes = new ArrayList<>();
-        // Process each attribute entry.
+        int i = 1;
         for (Map.Entry<String, Object> attributeEntry : attributeMap.entrySet()) {
+            log("[" + componentName + " attribute: "+ i +"]");
             try {
                 Attribute attr = loadAttribute(componentName, attributeEntry, attributes.size());
                 if (attr != null) {
@@ -246,13 +339,14 @@ public class ConfigHandler {
                     log("- - - Attribute Loaded: " + componentName + "'s " + attr.getName());
                 }
             } catch (FatalComponentException fce) {
-                // A fatal error in this attribute causes us to skip the entire component.
+                log("Fatal error loading attributes for component " + componentName + "!");
                 log(fce.getMessage());
                 return null;
             }
+            i++;
         }
         
-        return new Component(componentID, componentName, attributes, attributeOutputOrder);
+        return new Component(componentID, componentName, attributes, attributeOutputOrder, attributeOutputDelimiter, inputLineRule, outputLineRule);
     }
     
     /**
@@ -296,7 +390,9 @@ public class ConfigHandler {
                 
         ArrayList<Qualifier> qualifiers = new ArrayList<>();
         
+        int i = 1;
         for (Integer key : sortedKeys) {
+            log("[" + componentName + "'s " + attributeName+ "'s qualifier: "+ i +"]");
             Map<String, Object> qualMap = (Map<String, Object>) qualiferMap.get(key.toString());
             if (qualMap != null) {
                 // If loading the qualifier fails, skip this attribute entirely
@@ -311,68 +407,70 @@ public class ConfigHandler {
                 log("- - Qualifier Not Loaded: " + componentName + "'s " + attributeName 
                         + "'s " + key.toString() + " (invalid qualifier entry format)");
             }
+            i++;
         }
         return new Attribute(attributeIndex, attributeName, qualifiers);
     }
-    
+
     /**
-     * Loads a qualifier for a specified attribute within a component from its configuration map.
+     * Loads a qualifier for a specified component or input line rule from its configuration map.
      *
      * <p>This method processes the qualifier details including "word", "condition", "value",
      * and lists of qualified and unqualified actions. If any required information is missing or invalid,
      * it logs the error and returns {@code null}.</p>
      *
      * @param componentName The name of the component.
-     * @param attributeName The name of the attribute for which the qualifier is being loaded.
+     * @param attributeName The name of the attribute for which the qualifier is being loaded (can be null for input line rule).
      * @param qualifierKey  The key identifier for the qualifier.
      * @param qualMap       A map representing the qualifier's configuration.
      * @return A constructed Qualifier object, or {@code null} if required data is missing or invalid.
      */
     @SuppressWarnings("unchecked")
-    private Qualifier loadQualifier(String componentName, String attributeName, Integer qualifierKey, 
-                                    Map<String, Object> qualMap) {
+    private Qualifier loadQualifier(String componentName, String attributeName, Integer qualifierKey, Map<String, Object> qualMap) {
+        boolean isLineRule = (attributeName == null);
+
         // Process "word"
-        String qualifierWordStr = (String) qualMap.get("word");
+        String qualifierWordStr = (String) qualMap.get(StaticUtil.KEY_WORD);
         if (qualifierWordStr == null) {
-            log("- Words Not Loaded: " + componentName + "'s " + attributeName + " (no words found)");
+            log("- Word Not Loaded: " + componentName + (isLineRule ? "" : "'s " + attributeName) + " (no words found)");
             return null;
         }
         Word word;
         try {
             word = Word.valueOf(qualifierWordStr.trim().replace("-", "_").toUpperCase());
-            log("- Word Loaded: " + componentName + "'s " + attributeName + "'s " + qualifierWordStr);
+            log("- Word Loaded: " + componentName + (isLineRule ? "" : "'s " + attributeName) + "'s " + qualifierWordStr);
         } catch (IllegalArgumentException ex) {
-            log("- Word Not Loaded: " + componentName + "'s " + attributeName + "'s " + qualifierWordStr + " (no applicable ENUM)");
+            log("- Word Not Loaded: " + componentName + (isLineRule ? "" : "'s " + attributeName) + "'s " + qualifierWordStr + " (no applicable ENUM)");
             return null;
         }
-        
+
         // Process "condition"
-        String qualifierConditionStr = (String) qualMap.get("condition");
+        String qualifierConditionStr = (String) qualMap.get(StaticUtil.KEY_CONDITION);
         if (qualifierConditionStr == null) {
-            log("- Condition Not Loaded: " + componentName + "'s " + attributeName + " (no condition found)");
+            log("- Condition Not Loaded: " + componentName + (isLineRule ? "" : "'s " + attributeName) + " (no condition found)");
             return null;
         }
         Condition condition;
         try {
             condition = Condition.valueOf(qualifierConditionStr.trim().replace("-", "_").toUpperCase());
-            log("- Condition Loaded: " + componentName + "'s " + attributeName + "'s " + qualifierConditionStr);
+            log("- Condition Loaded: " + componentName + (isLineRule ? "" : "'s " + attributeName) + "'s " + qualifierConditionStr);
         } catch (IllegalArgumentException ex) {
-            log("- Condition Not Loaded: " + componentName + "'s " + attributeName + "'s " + qualifierConditionStr + " (no applicable ENUM)");
+            log("- Condition Not Loaded: " + componentName + (isLineRule ? "" : "'s " + attributeName) + "'s " + qualifierConditionStr + " (no applicable ENUM)");
             return null;
         }
-        
+
         // Process "value"
-        String qualifierValue = (String) qualMap.get("value");
+        String qualifierValue = (String) qualMap.get(StaticUtil.KEY_VALUE);
         if (qualifierValue == null) {
-            log("- Value Not Loaded: " + componentName + "'s " + attributeName + " (no value found)");
+            log("- Value Not Loaded: " + componentName + (isLineRule ? "" : "'s " + attributeName) + " (no value found)");
             return null;
         }
-        log("- Value Loaded: " + componentName + "'s " + attributeName + "'s " + qualifierValue);
-        
+        log("- Value Loaded: " + componentName + (isLineRule ? "" : "'s " + attributeName) + "'s " + qualifierValue);
+
         // Process "qualifiedActions"
-        List<String> qualifiedActionList = (List<String>) qualMap.get("qualifiedActions");
+        List<String> qualifiedActionList = (List<String>) qualMap.get(StaticUtil.KEY_QUALIFIED_ACTIONS);
         if (qualifiedActionList == null) {
-            log("- Qualified Actions Not Loaded: " + componentName + "'s " + attributeName + " (no qualified actions found)");
+            log("- Qualified Actions Not Loaded: " + componentName + (isLineRule ? "" : "'s " + attributeName) + " (no qualified actions found)");
             return null;
         }
         List<ActionSpec> qualifiedActionsList = new ArrayList<>();
@@ -387,11 +485,11 @@ public class ConfigHandler {
             }
         }
         ActionSpec[] qualifiedActions = qualifiedActionsList.toArray(new ActionSpec[0]);
-        
+
         // Process "unqualifiedActions"
-        List<String> unqualifiedActionList = (List<String>) qualMap.get("unqualifiedActions");
+        List<String> unqualifiedActionList = (List<String>) qualMap.get(StaticUtil.KEY_UNQUALIFIED_ACTIONS);
         if (unqualifiedActionList == null) {
-            log("- Unqualified Actions Not Loaded: " + componentName + "'s " + attributeName + " (no unqualified actions found)");
+            log("- Unqualified Actions Not Loaded: " + componentName + (isLineRule ? "" : "'s " + attributeName) + " (no unqualified actions found)");
             return null;
         }
         List<ActionSpec> unqualifiedActionsList = new ArrayList<>();
@@ -406,7 +504,7 @@ public class ConfigHandler {
             }
         }
         ActionSpec[] unqualifiedActions = unqualifiedActionsList.toArray(new ActionSpec[0]);
-        
+
         return new Qualifier(qualifierKey, word, condition, qualifierValue, qualifiedActions, unqualifiedActions);
     }
 

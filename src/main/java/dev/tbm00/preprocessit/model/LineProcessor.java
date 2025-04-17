@@ -11,6 +11,7 @@ import dev.tbm00.preprocessit.model.data.Qualifier;
 import dev.tbm00.preprocessit.model.data.Token;
 import dev.tbm00.preprocessit.model.data.Node;
 import dev.tbm00.preprocessit.model.data.DoublyLinkedList;
+import dev.tbm00.preprocessit.model.data.LineRule;
 import dev.tbm00.preprocessit.model.data.LineResult;
 import dev.tbm00.preprocessit.model.data.enums.Action;
 import dev.tbm00.preprocessit.model.data.enums.ActionResult;
@@ -21,13 +22,15 @@ import dev.tbm00.preprocessit.model.actioneer.ActioneerInterface;
 import dev.tbm00.preprocessit.model.matcher.MatcherInterface;
 
 /**
- * Handles the processing of input data line, by evaluating tokens against component attributes,
- * applying qualifiers and actioning as configured.
+ * Handles the processing of input data line, by applying lines rules, evaluating tokens 
+ * against component attributes' qualifiers and actioning as configured.
  */
 public class LineProcessor {
+    private Component component;
     private DoublyLinkedList<Token> tokenList;
     private Map<String, String> outputAttributes = new HashMap<>();
 
+    private String original_input_line;
     private int skip_qualifier = 0;
     private MatcherInterface current_matcher = null;
     private Node<Token> current_node = null;
@@ -36,24 +39,74 @@ public class LineProcessor {
     private List<String> log = new ArrayList<String>();
 
     /**
-     * Processes the input line by tokenizing it, processing component attributes, and building the output line.
+     * Processes a single input line for the specified component.
      * 
-     * <p>This method tokenizes the line, processes the attributes of the component, and rebuilds the line 
-     * based on processed tokens and attribute order, then returns the the output text as a String (to the model).</p>
+     * <p>This method applies all input {@link LineRule}s to transform the entire line, then tokenizes the resulting line 
+     * into a {@link DoublyLinkedList} of {@link Token}s, processes each component attribute by evaluating 
+     * their qualifiers and executing actions, builds the formatted output line, and finally applies all 
+     * output {@link LineRule}s to transform the entire line.</p>
      *
      * @param index The input line's index.
      * @return A {@code String} representing the processed output line.
      */
     public LineResult processLine(int index, String inputLine, Component component) {
+        this.component = component;
         log.add(" ");
         log.add(" ");
         log.add(" ");
         log.add("-=-=-=-=-=-=-=- Line "+index+" -=-=-=-=-=-=-=-");
+
+        // Process input LineRules
+        working_word = inputLine;
+        original_input_line = inputLine;
+        inputLine = processLineRules(inputLine, "input").trim();
+
+        // Reset local variables after processing LineRules
+        skip_qualifier = 0;
+        current_matcher = null;
+        working_word = null; 
+
+        // Process input Attributes
         tokenList = tokenizeLine(inputLine);
         outputAttributes.clear();
-        processComponentAttributes(tokenList, component);
+        processAttributes();
+        
+        // Reset local variables after processing Attributes
+        skip_qualifier = 0;
+        current_matcher = null;
+        
+        // Process output LineRules
+        String outputLine = buildOutputLine();
+        working_word = outputLine;
+        outputLine = processLineRules(outputLine, "output");
+
         log.add("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-");
-        return new LineResult(index, buildOutputLine(tokenList, component.getAttributeOrder()), log);
+        return new LineResult(index, outputLine, log);
+    }
+
+    /**
+     * Processes each line rule for the current component on the given token list.
+     *
+     * <p>This method iterates over all qualifiers for the specified component's LineRules.
+     * It calls {@link #processQualifiers(String, Component, Attribute)} to process the entire line using the qualifiers.</p>
+     *
+     * @param tokenList The list of tokens generated from a line of input text.
+     * @param type      The type of line rules that are running (input/output)
+     */
+    private String processLineRules(String line, String type) {
+        LineRule lineRule;
+        if (type.equals("input")) lineRule = component.getInputLineRule();
+        else if (type.equals("output")) lineRule = component.getOutputLineRule();
+        else lineRule = null;
+
+        if (lineRule!=null) {
+            processQualifiers(line, component, null, lineRule.getQualifiers());
+            log.add("[-] "+type+" line rules processed");
+            return working_word;
+        } else {
+            log.add("[-] no "+type+" line rules found");
+            return line;
+        }
     }
 
     /**
@@ -64,14 +117,13 @@ public class LineProcessor {
      * to process individual tokens.</p>
      *
      * @param tokenList The list of tokens generated from a line of input text.
-     * @param component The component whose attributes are to be processed.
      */
-    private void processComponentAttributes(DoublyLinkedList<Token> tokenList, Component component) {
+    private void processAttributes() {
         for (Attribute attribute : component.getAttributes()) {
             if (outputAttributes.containsKey(attribute.getName())) {
                 continue;
             }
-            processAttribute(tokenList, attribute);
+            processAttribute(tokenList, component, attribute);
             log.add("[-] attribute processed");
         }
     }
@@ -80,13 +132,14 @@ public class LineProcessor {
      * Processes a single attribute by iterating through the token list and applying its qualifiers.
      *
      * <p>This method starts processing at the head of the token list. For each unprocessed token, it applies the attribute's
-     * qualifiers via {@link #processQualifiers(String, Attribute)}. Depending on the result, it either continues to the next token,
+     * qualifiers via {@link #processQualifiers(String, Component, Attribute)}. Depending on the result, it either continues to the next token,
      * or returns early if processing of the attribute is complete.</p>
      *
      * @param tokenList The list of tokens for the current line.
+     * @param component The component whose attributes are being processed.
      * @param attribute The attribute whose qualifiers need to be processed.
      */
-    private void processAttribute(DoublyLinkedList<Token> tokenList, Attribute attribute) {
+    private void processAttribute(DoublyLinkedList<Token> tokenList, Component component, Attribute attribute) {
         current_node = tokenList.getHead();
 
         log.add(" ");
@@ -100,7 +153,7 @@ public class LineProcessor {
                 working_word = initialWord;
 
                 // Process each qualifier for the attribute.
-                ActionResult result = processQualifiers(initialWord, attribute);
+                ActionResult result = processQualifiers(initialWord, component, attribute, attribute.getQualifiers());
                 if (result.equals(ActionResult.NEXT_TOKEN)) {
                     current_node = current_node.getNext();
                     log.add("[-] attribute continuing tokenLoop");
@@ -108,6 +161,8 @@ public class LineProcessor {
                 } else {
                     current_node = current_node.getNext();
                     log.add("[-] attribute bumped the current node to the next neighbor!");
+                    if (current_node != null)
+                       log.add("      ("+current_node.getData().getValue()+")");
                     return;
                 }
             } else {
@@ -125,19 +180,22 @@ public class LineProcessor {
     /**
      * Evaluates all qualifiers for a given attribute using the provided initial word.
      *
-     * <p>This method iterates over each qualifier in the attribute. It first determines the working word based on the qualifier,
+     * <p>This method iterates over each passed-in qualifier. It first determines the working word based on the qualifier,
      * then obtains a matched string from the qualifier's matcher. Depending on whether a match is found, the method chooses a set
      * of actions to execute. Execution results are used to decide whether to continue with further qualifiers or tokens.</p>
      *
      * @param initialWord The original token value to be evaluated.
+     * @param component   The component whose input line rule qualifiers are to be processed.
      * @param attribute   The attribute whose qualifiers are to be processed.
+     * @param qualifiers  The qualifiers to be processed.
      * @return An {@code ActionResult} indicating the next processing step.
      */
-    private ActionResult processQualifiers(String initialWord, Attribute attribute) {
+    private ActionResult processQualifiers(String initialWord, Component component, Attribute attribute, ArrayList<Qualifier> qualifiers) {
+        boolean isLineRule = (attribute == null);
 
         // For each qualifier in the attribute
         qualifierLoop:
-        for (Qualifier qualifier : attribute.getQualifiers()) {
+        for (Qualifier qualifier : qualifiers) {
             if (skip_qualifier > 0) {
                 skip_qualifier--;
                 continue qualifierLoop;
@@ -149,7 +207,8 @@ public class LineProcessor {
             String matchedString = current_matcher.match(working_word);
 
             log.add(" ");
-            log.add(attribute.getName()+"'s "+qualifier.getWord().name()+" "+qualifier.getCondition().name()+" '"+qualifier.getValues() +"'  ::  '"+ working_word + "' -> '" + matchedString + "'");
+            if (isLineRule) log.add(component.getName()+"'s LineRule's "+qualifier.getWord().name()+" "+qualifier.getCondition().name()+" '"+qualifier.getValues() +"'  ::  '"+ working_word + "' -> '" + matchedString + "'");
+            else log.add(attribute.getName()+"'s "+qualifier.getWord().name()+" "+qualifier.getCondition().name()+" '"+qualifier.getValues() +"'  ::  '"+ working_word + "' -> '" + matchedString + "'");
 
             // Decide which set of actions to use
             ActionSpec[] actionSpecs = (matchedString.isEmpty()) ? qualifier.getUnqualifiedActions()
@@ -160,7 +219,9 @@ public class LineProcessor {
             } else log.add("[-] therefore unqualified actions will run");
 
             // Execute the actions; if one action “ships” (matches) the attribute then exit.
-            ActionResult result = executeActions(matchedString, actionSpecs, attribute.getName());
+            ActionResult result;
+            if (attribute==null) result = executeActions(matchedString, actionSpecs, null);
+            else result = executeActions(matchedString, actionSpecs, attribute.getName());
             if (result.equals(ActionResult.NEXT_QUALIFIER)) {
                 log.add("[-] qualifier continuing qualifierLoop");
                 continue qualifierLoop;
@@ -168,11 +229,9 @@ public class LineProcessor {
                 //log.add("[-] qualifier returning result: " + result.name());
                 return result;
             }
-            
         }
         return ActionResult.NEXT_TOKEN;
     }
-
 
     /**
      * Executes all actions for a given qualifier.
@@ -216,21 +275,54 @@ public class LineProcessor {
      * @return An {@code ActionResult} indicating the outcome of the action execution.
      */
     private ActionResult executeAction(String matchedString, ActionSpec actionSpec, String attributeName) {
+        boolean isLineRule = (attributeName == null);
         Action action = actionSpec.getAction();
         log.add("[-] executing action " + action.name() + "...");
-        // Using a switch (or if/else) here helps centralize the different action behaviors.
+
+
+        if (action.equals(Action.DECLARE_TOKEN_PROCESSED)) {
+            if (!isLineRule) {
+                log.add("      (declaring token as processed)");
+                current_node.getData().setProcessed(true);
+                return ActionResult.NEXT_ACTION;
+            } else {
+                log.add("      (cannot use DECLARE_TOKEN_PROCESSED in LineRules)");
+                return ActionResult.NEXT_QUALIFIER;
+            }
+        }
+
         switch (action) {
             case SHIP:
                 log.add("      (shipping " + working_word + ")");
-                outputAttributes.put(attributeName, working_word);
-                current_node.getData().setProcessed(true);
+                if (!isLineRule) {
+                    outputAttributes.put(attributeName, working_word);
+                }
                 return ActionResult.NEXT_ATTRIBUTE;
+            case DECLARE_TOKEN_PROCESSED:
+                if (!isLineRule) {
+                    log.add("      (declaring token as processed)");
+                    current_node.getData().setProcessed(true);
+                    return ActionResult.NEXT_ACTION;
+                } else {
+                    log.add("      (cannot use DECLARE_TOKEN_PROCESSED in LineRules)");
+                    return ActionResult.NEXT_QUALIFIER;
+                }
             case EXIT_TO_NEXT_TOKEN_ITERATION:
-                // The calling loop will get the next token.
-                return ActionResult.NEXT_TOKEN;
+                if (!isLineRule) {
+                    // The calling loop will get the next token.
+                    return ActionResult.NEXT_TOKEN;
+                } else {
+                    log.add("      (cannot use EXIT_TO_NEXT_TOKEN_ITERATION in LineRules)");
+                    return ActionResult.NEXT_QUALIFIER;
+                }
             case EXIT_TO_NEXT_ATTRIBUTE_ITERATION:
-                // Exit evaluation for this attribute.
-                return ActionResult.NEXT_ATTRIBUTE;
+                if (!isLineRule) {
+                    // Exit evaluation for this attribute.
+                    return ActionResult.NEXT_ATTRIBUTE;
+                } else {
+                    log.add("      (cannot use EXIT_TO_NEXT_ATTRIBUTE_ITERATION in LineRules)");
+                    return ActionResult.NEXT_QUALIFIER;
+                }
             case CONTINUE:
                 // Just continue processing qualifiers.
                 return ActionResult.NEXT_QUALIFIER;
@@ -240,54 +332,103 @@ public class LineProcessor {
                 skip_qualifier = skipAmount;
                 return ActionResult.NEXT_QUALIFIER;
             case TRY_NEIGHBORS:
-                int distance = parsePositiveIntOrDefault(actionSpec.getParameter(), 1);
-                log.add("      (trying " + distance + "*2 neighbor characters)");
-                if (tryNeighbors(distance, attributeName)) {
-                    return ActionResult.NEXT_TOKEN;
-                } else return ActionResult.NEXT_QUALIFIER;
+                if (!isLineRule) {
+                    int distance = parsePositiveIntOrDefault(actionSpec.getParameter(), 1);
+                    log.add("      (trying " + distance + "*2 neighbor characters)");
+                    if (tryNeighbors(distance, attributeName)) {
+                        return ActionResult.NEXT_TOKEN;
+                    } else {
+                        return ActionResult.NEXT_QUALIFIER;
+                    }
+                } else {
+                    log.add("      (cannot use TRY_NEIGHBORS in LineRules)");
+                    return ActionResult.NEXT_QUALIFIER;
+                }
             case TRIM_MATCH_FROM_LEFT_NEIGHBOR:
-                if (current_node.getPrior() != null) {
-                    ActioneerInterface actioneer = ActioneerFactory.getActioneer(action);
-                    if (actioneer != null) {
-                        String newValue = actioneer.execute(working_word, actionSpec, matchedString);
-                        current_node.getPrior().getData().setValue(newValue);
-                        log.add("      (removed match from left neighbor, updated neighbor: " + newValue + ")");
-                    } else {
-                        log.add("      (no executor found for Action." + actionSpec.getAction().name() + ")");
+                if (!isLineRule) {
+                    if (current_node.getPrior() != null) {
+                        ActioneerInterface actioneer = ActioneerFactory.getActioneer(action);
+                        if (actioneer != null) {
+                            String newValue = actioneer.execute(working_word, actionSpec, matchedString, log);
+                            current_node.getPrior().getData().setValue(newValue);
+                            log.add("      (removed match from left neighbor, updated neighbor: " + newValue + ")");
+                        } else {
+                            log.add("      (no executor found for Action." + actionSpec.getAction().name() + ")");
+                        }
                     }
+                    return ActionResult.NEXT_ACTION;
+                } else {
+                    log.add("      (cannot use TRIM_MATCH_FROM_LEFT_NEIGHBOR in LineRules)");
+                    return ActionResult.NEXT_QUALIFIER;
                 }
-                return ActionResult.NEXT_ACTION;
             case TRIM_MATCH_FROM_RIGHT_NEIGHBOR:
-                if (current_node.getNext() != null) {
-                    ActioneerInterface actioneer = ActioneerFactory.getActioneer(action);
-                    if (actioneer != null) {
-                        String newValue = actioneer.execute(working_word, actionSpec, matchedString);
-                        current_node.getNext().getData().setValue(newValue);
-                        log.add("      (removed match from right neighbor, updated neighbor: " + newValue + ")");
-                    } else {
-                        log.add("      (no executor found for Action." + actionSpec.getAction().name() + ")");
+                if (!isLineRule) {
+                    if (current_node.getNext() != null) {
+                        ActioneerInterface actioneer = ActioneerFactory.getActioneer(action);
+                        if (actioneer != null) {
+                            String newValue = actioneer.execute(working_word, actionSpec, matchedString, log);
+                            current_node.getNext().getData().setValue(newValue);
+                            log.add("      (removed match from right neighbor, updated neighbor: " + newValue + ")");
+                        } else {
+                            log.add("      (no executor found for Action." + actionSpec.getAction().name() + ")");
+                        }
                     }
+                    return ActionResult.NEXT_ACTION;
+                } else {
+                    log.add("      (cannot use TRIM_MATCH_FROM_RIGHT_NEIGHBOR in LineRules)");
+                    return ActionResult.NEXT_QUALIFIER;
                 }
-                return ActionResult.NEXT_ACTION;
             case NEW_TOKEN_FROM_MATCH:
-                tokenList.addLast(new Token(matchedString));
-                log.add("      (added new token to end of current token list:" + matchedString);
-                return ActionResult.NEXT_ACTION;
-            case NEW_TOKEN_FROM_UNMATCHED: {
+                if (!isLineRule) {
+                    if (matchedString.isEmpty()) {
+                        log.add("      (no new token created because matchedString is empty)");
+                        return ActionResult.NEXT_ACTION;
+                    }
+
                     ActioneerInterface actioneer = ActioneerFactory.getActioneer(Action.TRIM_MATCH_ALL);
                     if (actioneer != null) {
-                        String newToken = actioneer.execute(working_word, actionSpec, matchedString);
-                        tokenList.addLast(new Token(newToken));
-                        log.add("      (added new token to end of current token list:" + newToken);
+                        
+                        String unmatchedString = actioneer.execute(working_word, actionSpec, matchedString, log);
+
+                        current_node.getData().setValue(unmatchedString);
+                        tokenList.addAfter(current_node, new Token(matchedString));
+                        log.add("      (added new token after current token: " + matchedString + ")");
                     } else {
-                        log.add("      (no executor found for Action.NEW_TOKEN_FROM_UNMATCHED"); // (actually TRIM_MATCH_ALL)
+                        log.add("      (no executor found for Action.NEW_TOKEN_FROM_MATCH)"); // (actually TRIM_MATCH_ALL)
                     }
-                    return ActionResult.NEXT_ACTION; }
+                    return ActionResult.NEXT_ACTION;
+                } else {
+                    log.add("      (cannot use NEW_TOKEN_FROM_MATCH in LineRules)");
+                    return ActionResult.NEXT_QUALIFIER;
+                }
+            case NEW_TOKEN_FROM_UNMATCHED:
+                if (!isLineRule) {
+                    
+                    ActioneerInterface actioneer = ActioneerFactory.getActioneer(Action.TRIM_MATCH_ALL);
+                    if (actioneer != null) {
+                        
+                        String unmatchedString = actioneer.execute(working_word, actionSpec, matchedString, log);
+                        if (unmatchedString.isEmpty()) {
+                            log.add("      (no new token created because unmatchedString is empty)");
+                            return ActionResult.NEXT_ACTION;
+                        }
+                        current_node.getData().setValue(matchedString);
+                        tokenList.addAfter(current_node, new Token(unmatchedString));
+                        log.add("      (added new token after current token: " + unmatchedString + ")");
+                    } else {
+                        log.add("      (no executor found for Action.NEW_TOKEN_FROM_UNMATCHED)"); // (actually TRIM_MATCH_ALL)
+                    }
+                    return ActionResult.NEXT_ACTION;
+                } else {
+                    log.add("      (cannot use NEW_TOKEN_FROM_UNMATCHED in LineRules)");
+                    return ActionResult.NEXT_QUALIFIER;
+                }
             default:
                 // For any other action, attempt to execute it.
                 ActioneerInterface actioneer = ActioneerFactory.getActioneer(action);
                 if (actioneer != null) {
-                    working_word = actioneer.execute(working_word, actionSpec, matchedString);
+                    working_word = actioneer.execute(working_word, actionSpec, matchedString, log);
+                    working_word = working_word.replaceAll(java.util.regex.Pattern.quote("$original_input_line$"), original_input_line);
                     log.add("      (updated working word to: " + working_word + ")");
                 } else {
                     log.add("      (no executor found for Action." + actionSpec.getAction().name() + ")");
@@ -325,10 +466,12 @@ public class LineProcessor {
      * @return The token value to be used as the working word.
      */
     private String determineWorkingWord(String initialWord, Word qualifierWord) {
-        if (qualifierWord.equals(Word.WORKING_TOKEN)) {
+        if (qualifierWord.equals(Word.WORKING_TOKEN)||qualifierWord.equals(Word.WORKING_LINE)) {
             return working_word;
         } else if (qualifierWord.equals(Word.INITIAL_TOKEN_COPY)) {
             return initialWord;
+        } else if (qualifierWord.equals(Word.INITIAL_LINE_COPY)) {
+            return original_input_line;
         } else if (qualifierWord.equals(Word.LEFT_NEIGHBOR)) {
             return (current_node.getPrior() != null) ? current_node.getPrior().getData().getValue() : initialWord;
         } else if (qualifierWord.equals(Word.RIGHT_NEIGHBOR)) {
@@ -466,13 +609,13 @@ public class LineProcessor {
      * It then builds a formatted line by first appending attribute values (in the order specified by {@code attributeOutputOrder})
      * and then appending any leftover tokens, creating the final output string.</p>
      *
-     * @param tokenList      The doubly linked list of tokens representing the processed input line.
-     * @param attributeOutputOrder The list defining the order in which attribute values should appear.
      * @return A {@code String} representing the final formatted output line.
      */
-    private String buildOutputLine(DoublyLinkedList<Token> tokenList, List<String> attributeOutputOrder) {
+    private String buildOutputLine() {
+        List<String> attributeOutputOrder = component.getAttributeOrder();
         StringBuilder leftoverBuilder = new StringBuilder();
         Node<Token> current = tokenList.getHead();
+        String delimiter = component.getAttributeDelimiter();
         while (current != null) {
             Token token = current.getData();
             if (!token.isProcessed()) {
@@ -483,7 +626,7 @@ public class LineProcessor {
         StringBuilder formattedLine = new StringBuilder();
         for (String attrName : attributeOutputOrder) {
             String value = outputAttributes.getOrDefault(attrName, "");
-            formattedLine.append(value).append(",");
+            formattedLine.append(value).append(delimiter);
         }
         formattedLine.append(leftoverBuilder.toString().trim());
         return formattedLine.toString();

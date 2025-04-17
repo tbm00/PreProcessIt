@@ -4,19 +4,25 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Components hold attributes
+ * Components hold attributes & input line rules
  */
 public class Component {
     private int id;
     private String name;
     private ArrayList<Attribute> attributes;
     private List<String> attributeOutputOrder;
+    private String attributeOutputDelimiter;
+    private LineRule inputLineRule;
+    private LineRule outputLineRule;
 
-    public Component(int id, String name, ArrayList<Attribute> attributes, List<String> attributeOutputOrder) {
+    public Component(int id, String name, ArrayList<Attribute> attributes, List<String> attributeOutputOrder, String attributeOutputDelimiter, LineRule inputLineRule, LineRule outputLineRule) {
         this.id = id;
         this.name = name;
         this.attributes = attributes;
         this.attributeOutputOrder = attributeOutputOrder;
+        this.attributeOutputDelimiter = attributeOutputDelimiter;
+        this.inputLineRule = inputLineRule;
+        this.outputLineRule = outputLineRule;
         //StaticUtil.log("component: " + id + " " + name + " " + attributes);
     }
 
@@ -50,5 +56,29 @@ public class Component {
 
     public void setAttributeOrder(List<String> attributeOutputOrder) {
         this.attributeOutputOrder = attributeOutputOrder;
+    }
+
+    public String getAttributeDelimiter() {
+        return attributeOutputDelimiter;
+    }
+
+    public void setAttributeDelimiter(String attributeOutputDelimiter) {
+        this.attributeOutputDelimiter = attributeOutputDelimiter;
+    }
+
+    public LineRule getInputLineRule() {
+        return inputLineRule;
+    }
+
+    public void setInputLineRule(LineRule inputLineRule) {
+        this.inputLineRule = inputLineRule;
+    }
+
+    public LineRule getOutputLineRule() {
+        return outputLineRule;
+    }
+
+    public void setOututLineRule(LineRule outputLineRule) {
+        this.outputLineRule = outputLineRule;
     }
 }

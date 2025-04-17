@@ -2,6 +2,7 @@ package dev.tbm00.preprocessit.controller;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.swing.filechooser.FileFilter;
 
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
@@ -13,8 +14,10 @@ import java.awt.Desktop;
 import java.io.*;
 import java.net.URI;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 
+import dev.tbm00.preprocessit.StaticUtil;
 import dev.tbm00.preprocessit.model.Model;
 import dev.tbm00.preprocessit.model.data.Component;
 import dev.tbm00.preprocessit.view.View;
@@ -137,12 +140,18 @@ public class Controller {
     private void handleLoadComponents() {
         JFileChooser fc = new JFileChooser(model.getConfigHandler().getAppDirectory().toFile());
 
-        fc.setFileFilter(new FileNameExtensionFilter(".YML", "yml"));
+        fc.setFileFilter(new FileNameExtensionFilter("YAML files (*.yml)", "yml"));
         int fileChoice = fc.showOpenDialog(view);
         if (fileChoice == JFileChooser.APPROVE_OPTION) {
             File configFile = fc.getSelectedFile();
             String filename = configFile.getName().toLowerCase();
             if (!filename.endsWith(".yml")) return;
+
+            // Open terminal
+            try {
+                Path logFile = StaticUtil.initLogFile();
+                TerminalLauncher.openLogTailer(logFile);
+            } catch (Exception ex) {ex.printStackTrace();}
 
             // Read/load YAML file/config
             model.getConfigHandler().loadConfig(configFile);
@@ -170,7 +179,7 @@ public class Controller {
     private void handleLoadInputData() {
         JFileChooser fc = new JFileChooser(model.getConfigHandler().getAppDirectory().toFile());
 
-        fc.setFileFilter(new FileNameExtensionFilter(".CSV or .TXT", "csv","txt"));
+        fc.setFileFilter(new FileNameExtensionFilter("CSV (*.csv) or TXT (*.txt) files", "csv","txt"));
         int choice = fc.showOpenDialog(view);
         if(choice == JFileChooser.APPROVE_OPTION) {
             File dataFile = fc.getSelectedFile();
@@ -193,6 +202,11 @@ public class Controller {
 
     // Process the data in the Model
     private void handleProcessData() {
+        try {
+            Path logFile = StaticUtil.initLogFile();
+            TerminalLauncher.openLogTailer(logFile);
+        } catch (Exception ex) {ex.printStackTrace();}
+
         // Use selectedComponent in the model to process the data
         model.setOutputText(model.processData());
 
@@ -211,28 +225,43 @@ public class Controller {
     // Save output to CSV or TXT
     private void handleSaveOutput() {
         String output = view.getOutputTextArea().getText();
-
-        // Show a save dialog with CSV/TXT filters
+        
         JFileChooser fc = new JFileChooser(model.getConfigHandler().getAppDirectory().toFile());
-        fc.setFileFilter(new FileNameExtensionFilter(".CSV or .TXT", "csv","txt"));
+        // CSV and TXT filters
+        FileNameExtensionFilter csvFilter = new FileNameExtensionFilter("CSV files (*.csv)", "csv");
+        FileNameExtensionFilter txtFilter = new FileNameExtensionFilter("Text files (*.txt)", "txt");
+        fc.addChoosableFileFilter(csvFilter);
+        fc.addChoosableFileFilter(txtFilter);
+        
+        // Re-enable the “All Files” filter
+        fc.setAcceptAllFileFilterUsed(true);
+        
+        // Optionally set CSV as the default
+        fc.setFileFilter(csvFilter);
+        
         int choice = fc.showSaveDialog(view);
-
-        if (choice == JFileChooser.APPROVE_OPTION) {
-            File outFile = fc.getSelectedFile();
-            
-            // Optionally, auto-append .txt if no extension was provided, or prompt user.
-            // For simplicity, just check if it ends with csv or txt
-            String filename = outFile.getName().toLowerCase();
-            String type = "";
-            if (filename.endsWith(".csv")) type = "CSV";
-            else if (filename.endsWith(".txt")) type = "TXT";
-            else return;
-
-            try (BufferedWriter writer = new BufferedWriter(new FileWriter(outFile))) {
-                writer.write(output);
-            } catch (Exception e) {
-                JOptionPane.showMessageDialog(view, "Failed to save file " + e.getMessage());
-            }
+        if (choice != JFileChooser.APPROVE_OPTION) return;
+        
+        File selected = fc.getSelectedFile();
+        // Determine extension to append only if user picked CSV or TXT filter
+        FileFilter chosen = fc.getFileFilter();
+        String path = selected.getAbsolutePath();
+        
+        if (chosen == csvFilter) {
+            if (!path.toLowerCase().endsWith(".csv")) path += ".csv";
+        } else if (chosen == txtFilter) {
+            if (!path.toLowerCase().endsWith(".txt")) path += ".txt";
+        }
+        // if “All Files” is selected, we leave the exact filename the user typed
+        
+        File outFile = new File(path);
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(outFile))) {
+            writer.write(output);
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(view,
+                "Failed to save file:\n" + e.getMessage(),
+                "Save Error",
+                JOptionPane.ERROR_MESSAGE);
         }
     }
 

@@ -1,6 +1,5 @@
 package dev.tbm00.preprocessit.model.matcher;
 
-
 public class InBetweenInclusiveMatcher implements MatcherInterface {
     private double min;
     private double max;
@@ -16,7 +15,7 @@ public class InBetweenInclusiveMatcher implements MatcherInterface {
     public String match(String word) {
         try {
             double number = Double.parseDouble(word);
-            return (min <= number&&number <= max) ? word : "";
+            return (min <= number && number <= max) ? word : "";
         } catch (NumberFormatException e) {
             return "";
         }
