@@ -23,6 +23,7 @@ components:
         value: ""
         qualifiedActions:
           - PREPEND(",")
+          - PREPEND($original_input_line$)
           - SHIP
         unqualifiedActions:
           - SHIP

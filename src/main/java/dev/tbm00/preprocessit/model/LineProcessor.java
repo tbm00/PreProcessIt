@@ -29,6 +29,7 @@ public class LineProcessor {
     private DoublyLinkedList<Token> tokenList;
     private Map<String, String> outputAttributes = new HashMap<>();
 
+    private String original_input_line;
     private int skip_qualifier = 0;
     private MatcherInterface current_matcher = null;
     private Node<Token> current_node = null;
@@ -55,6 +56,7 @@ public class LineProcessor {
 
         // Process input LineRules
         working_word = inputLine;
+        original_input_line = inputLine;
         inputLine = processLineRules(inputLine, component, "input").trim();
 
         // Reset local variables after processing LineRules
@@ -426,6 +428,7 @@ public class LineProcessor {
                 ActioneerInterface actioneer = ActioneerFactory.getActioneer(action);
                 if (actioneer != null) {
                     working_word = actioneer.execute(working_word, actionSpec, matchedString, log);
+                    working_word = working_word.replaceAll(java.util.regex.Pattern.quote("$original_input_line$"), original_input_line);
                     log.add("      (updated working word to: " + working_word + ")");
                 } else {
                     log.add("      (no executor found for Action." + actionSpec.getAction().name() + ")");
@@ -465,8 +468,10 @@ public class LineProcessor {
     private String determineWorkingWord(String initialWord, Word qualifierWord) {
         if (qualifierWord.equals(Word.WORKING_TOKEN)||qualifierWord.equals(Word.WORKING_LINE)) {
             return working_word;
-        } else if (qualifierWord.equals(Word.INITIAL_TOKEN_COPY)||qualifierWord.equals(Word.INITIAL_LINE_COPY)) {
+        } else if (qualifierWord.equals(Word.INITIAL_TOKEN_COPY)) {
             return initialWord;
+        } else if (qualifierWord.equals(Word.INITIAL_LINE_COPY)) {
+            return original_input_line;
         } else if (qualifierWord.equals(Word.LEFT_NEIGHBOR)) {
             return (current_node.getPrior() != null) ? current_node.getPrior().getData().getValue() : initialWord;
         } else if (qualifierWord.equals(Word.RIGHT_NEIGHBOR)) {
