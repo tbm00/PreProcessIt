@@ -29,6 +29,7 @@ components:
         unqualifiedActions:
           - SHIP
     attributeOutputOrder: ["RESPONSE_TIME", "REFRESH_RATE"]
+    attributeOutputDelimiter: ","
     attributes:
       RESPONSE_TIME:
         "1":

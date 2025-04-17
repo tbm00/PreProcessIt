@@ -26,6 +26,7 @@ import dev.tbm00.preprocessit.model.matcher.MatcherInterface;
  * against component attributes' qualifiers and actioning as configured.
  */
 public class LineProcessor {
+    private Component component;
     private DoublyLinkedList<Token> tokenList;
     private Map<String, String> outputAttributes = new HashMap<>();
 
@@ -49,6 +50,7 @@ public class LineProcessor {
      * @return A {@code String} representing the processed output line.
      */
     public LineResult processLine(int index, String inputLine, Component component) {
+        this.component = component;
         log.add(" ");
         log.add(" ");
         log.add(" ");
@@ -57,7 +59,7 @@ public class LineProcessor {
         // Process input LineRules
         working_word = inputLine;
         original_input_line = inputLine;
-        inputLine = processLineRules(inputLine, component, "input").trim();
+        inputLine = processLineRules(inputLine, "input").trim();
 
         // Reset local variables after processing LineRules
         skip_qualifier = 0;
@@ -67,16 +69,16 @@ public class LineProcessor {
         // Process input Attributes
         tokenList = tokenizeLine(inputLine);
         outputAttributes.clear();
-        processAttributes(tokenList, component);
+        processAttributes();
         
         // Reset local variables after processing Attributes
         skip_qualifier = 0;
         current_matcher = null;
         
         // Process output LineRules
-        String outputLine = buildOutputLine(tokenList, component.getAttributeOrder());
+        String outputLine = buildOutputLine();
         working_word = outputLine;
-        outputLine = processLineRules(outputLine, component, "output");
+        outputLine = processLineRules(outputLine, "output");
 
         log.add("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-");
         return new LineResult(index, outputLine, log);
@@ -89,10 +91,9 @@ public class LineProcessor {
      * It calls {@link #processQualifiers(String, Component, Attribute)} to process the entire line using the qualifiers.</p>
      *
      * @param tokenList The list of tokens generated from a line of input text.
-     * @param component The component whose attributes are to be processed.
      * @param type      The type of line rules that are running (input/output)
      */
-    private String processLineRules(String line, Component component, String type) {
+    private String processLineRules(String line, String type) {
         LineRule lineRule;
         if (type.equals("input")) lineRule = component.getInputLineRule();
         else if (type.equals("output")) lineRule = component.getOutputLineRule();
@@ -116,9 +117,8 @@ public class LineProcessor {
      * to process individual tokens.</p>
      *
      * @param tokenList The list of tokens generated from a line of input text.
-     * @param component The component whose attributes are to be processed.
      */
-    private void processAttributes(DoublyLinkedList<Token> tokenList, Component component) {
+    private void processAttributes() {
         for (Attribute attribute : component.getAttributes()) {
             if (outputAttributes.containsKey(attribute.getName())) {
                 continue;
@@ -609,13 +609,13 @@ public class LineProcessor {
      * It then builds a formatted line by first appending attribute values (in the order specified by {@code attributeOutputOrder})
      * and then appending any leftover tokens, creating the final output string.</p>
      *
-     * @param tokenList      The doubly linked list of tokens representing the processed input line.
-     * @param attributeOutputOrder The list defining the order in which attribute values should appear.
      * @return A {@code String} representing the final formatted output line.
      */
-    private String buildOutputLine(DoublyLinkedList<Token> tokenList, List<String> attributeOutputOrder) {
+    private String buildOutputLine() {
+        List<String> attributeOutputOrder = component.getAttributeOrder();
         StringBuilder leftoverBuilder = new StringBuilder();
         Node<Token> current = tokenList.getHead();
+        String delimiter = component.getAttributeDelimiter();
         while (current != null) {
             Token token = current.getData();
             if (!token.isProcessed()) {
@@ -626,7 +626,7 @@ public class LineProcessor {
         StringBuilder formattedLine = new StringBuilder();
         for (String attrName : attributeOutputOrder) {
             String value = outputAttributes.getOrDefault(attrName, "");
-            formattedLine.append(value).append(",");
+            formattedLine.append(value).append(delimiter);
         }
         formattedLine.append(leftoverBuilder.toString().trim());
         return formattedLine.toString();

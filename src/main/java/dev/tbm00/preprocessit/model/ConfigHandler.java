@@ -291,6 +291,13 @@ public class ConfigHandler {
             }
         }
 
+        // Load attributeOutputDelimiter
+        String attributeOutputDelimiter = (String) componentMap.get(StaticUtil.KEY_ATTRIBUTE_OUTPUT_DELIMITER);
+        if (attributeOutputDelimiter == null) {
+            log("- - - - Component Not Loaded: " + componentName + " (no attributeOutputDelimiter found)");
+            return null;
+        }
+
         // Load attributeOutputOrder
         List<String> attributeOutputOrder = (List<String>) componentMap.get(StaticUtil.KEY_ATTRIBUTE_OUTPUT_ORDER);
         if (attributeOutputOrder == null) {
@@ -319,7 +326,7 @@ public class ConfigHandler {
             }
         }
         
-        return new Component(componentID, componentName, attributes, attributeOutputOrder, inputLineRule, outputLineRule);
+        return new Component(componentID, componentName, attributes, attributeOutputOrder, attributeOutputDelimiter, inputLineRule, outputLineRule);
     }
     
     /**
