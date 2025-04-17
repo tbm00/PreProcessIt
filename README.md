@@ -28,13 +28,19 @@ Correctly implemented qualifiers contain:
 
 Once a token has been "shipped" for a particular attribute, the program will search the line's remaining tokens for the next attribute, until all attributes have been processed. Any tokens that remain unprocessed are appended as leftovers at the end of the output line.
 
+You may also use qualifers on the entire input or output line by using LineRules:
+- Any defined inputLineRules will be processed on each input line before the attributes are processed.
+- Any defined outputLineRules will be processed on each newly created output line, and then the output line will be finalized.
+
 ## Configuration
 
 ### Available Words
- - `INITIAL_TOKEN_COPY` Initial copy of the working token (therefore, unmodified by prior qualifiers)
  - `WORKING_TOKEN` Current working token that may be modified by prior qualifiers
+ - `INITIAL_TOKEN_COPY` Copy of the initial working token (therefore, unmodified by prior qualifiers)
  - `LEFT_NEIGHBOR` The token preceeding the current token in the input line
  - `RIGHT_NEIGHBOR` The token following the current token in the input line
+ - `WORKING_LINE` Current working line that may be modified by prior qualifiers (only used by LineRules)
+ - `INITIAL_LINE_COPY` Copy of the initial input line (therefore, unmodified by prior qualifiers)
 
 ### Available Conditions
  - `GREATER_THAN` Numerical values only
@@ -43,11 +49,17 @@ Once a token has been "shipped" for a particular attribute, the program will sea
  - `LESS_THAN_EQUAL_TO` Numerical values only
  - `IN_BETWEEN_INCLUSIVE` Numerical values only
  - `IN_BETWEEN_EXCLUSIVE` Numerical values only
+ - `START_IN_BETWEEN_INCLUSIVE` Numerical values only
+ - `START_IN_BETWEEN_EXCLUSIVE` Numerical values only
+ - `END_IN_BETWEEN_INCLUSIVE` Numerical values only
+ - `END_IN_BETWEEN_EXCLUSIVE` Numerical values only
  - `EQUALS_VALUE` Numerical values only
  - `EQUALS_STRING` Case insensitive
  - `CONTAINS` Case insensitive
- - `START_CONTAINS` First character(s) match, Case insensitive
- - `END_CONTAINS` Last character(s) match, Case insensitive
+ - `STARTS_WITH` First character(s) match; Case insensitive
+ - `ENDS_WITH` Last character(s) match; Case insensitive
+ - `START_IS_TYPE` INTEGER, DOUBLE, NUMBER, or STRING
+ - `END_IS_TYPE` INTEGER, DOUBLE, NUMBER, or STRING
  - `IS_TYPE` INTEGER, DOUBLE, NUMBER, or STRING
  - `IS_EMPTY`
  - `NOT_IN_BETWEEN_INCLUSIVE`
@@ -55,26 +67,30 @@ Once a token has been "shipped" for a particular attribute, the program will sea
  - `NOT_EQUALS_VALUE`
  - `NOT_EQUALS_STRING`
  - `NOT_CONTAINS`
- - `NOT_START_CONTAINS`
- - `NOT_END_CONTAINS`
+ - `NOT_STARTS_WITH`
+ - `NOT_ENDS_WITH`
  - `NOT_IS_TYPE`
  - `NOT_IS_EMPTY`
 
 ### Available Actions
  - `SHIP` Ship current token as current attribute's final value, and go to next attribute iteration
+ - `DECLARE_TOKEN_PROCESSED` Mark the current token as processed, so that it doesn't get processed again later
  - `TRY_NEIGHBORS(max_characters)` Try appending neighbors' characters to see if it might qualify (with the same matcher)
  - `EXIT_TO_NEXT_ATTRIBUTE_ITERATION` Go to next attribute iteration
  - `EXIT_TO_NEXT_TOKEN_ITERATION` Go to next token iteration on current attribute iteration
  - `CONTINUE_AND_SKIP_NEXT_QUALIFIER(count)` Skip next qualifer(s) on current attribute iteration
  - `CONTINUE` Continue to the next, immediate qualifier on current attribute iteration
- - `REPLACE_ALL(fromString,toString)` Replace all occurences of fromString in the working token with toString, Case sensitive
- - `REPLACE_FIRST(fromString,toString)` Replace first occurence of fromString in the working token with toString, Case sensitive
+ - `REPLACE_ALL(fromString,toString)` Replace all occurences of fromString in the working token with toString; Case sensitive
+ - `REPLACE_FIRST(fromString,toString)` Replace first occurence of fromString in the working token with toString; Case sensitive
  - `INSERT_AT(index,String)` Insert a String at specifc index in working token
+ - `ROUND(type,amount)` Round working token to nearest <amount>; Applicable types: up, down, nearest
+ - `FORMAT_NUMBER(format,commaGroups)` Reformat working token number; Accepts format like "#.##" or "#"; If commaGroups is `true`, then number will have commas every 3 digits like "100,000"
+ - `SET_CASING(casing)` Set casing of the working token; Applicable casings: upper, lower
  - `APPEND(String)` Attach a String to end of working token
  - `PREPEND(String)` Attach a String to start of working token
  - `KEEP_MATCH` Set current working token to equal only the matched value
- - `REPLACE_MATCH_ALL(toString)` Replace all occurences of the matched value in the working token with toString, Case sensitive
- - `REPLACE_MATCH_FIRST(toString)` Replace first occurence of the matched value in the working token with toString, Case sensitive
+ - `REPLACE_MATCH_ALL(toString)` Replace all occurences of the matched value in the working token with toString; Case sensitive
+ - `REPLACE_MATCH_FIRST(toString)` Replace first occurence of the matched value in the working token with toString; Case sensitive
  - `TRIM_MATCH_ALL` Remove all occurences of the matched value from the working token
  - `TRIM_MATCH_FIRST` Remove first occurence of the matched value from the working token
  - `TRIM_MATCH_START` Remove matched value from working token if the token begins with the matched value
@@ -85,12 +101,12 @@ Once a token has been "shipped" for a particular attribute, the program will sea
  - `TRIM_UNMATCHED_FIRST` Remove first occurence of the unmatched value from the working token
  - `TRIM_UNMATCHED_START` Remove unmatched value from working token if the token begins with the matched value
  - `TRIM_UNMATCHED_END` Remove unmatched value from working token if the token ends with the matched value
- - `NEW_TOKEN_FROM_MATCH` Create new token with the matched value, placed at end of current line's token list
- - `NEW_TOKEN_FROM_UNMATCHED` Create new token with the unmatched value, placed at end of current line's token list
+ - `NEW_TOKEN_FROM_MATCH` Create new token with the matched value, placed after the current working token
+ - `NEW_TOKEN_FROM_UNMATCHED` Create new token with the unmatched value, placed after the current working token
 
 ### Default Config
 ```
-# PreProcessIt v0.1.3-beta by @tbm00
+# PreProcessIt v0.1.4-beta by @tbm00
 # https://github.com/tbm00/PreProcessIt
 
 concurrentThreading: true
@@ -98,7 +114,30 @@ threadPoolSizeOverride: -1
 
 components:
   MONITOR:
+    inputLineRules:
+      "1":
+        word: WORKING_LINE
+        condition: STARTS_WITH
+        value: "EXAMPLE"
+        qualifiedActions:
+          - TRIM_MATCH_FIRST
+          - SHIP
+        unqualifiedActions:
+          - SHIP
+    outputLineRules:
+      "1":
+        word: WORKING_LINE
+        condition: NOT_IS_EMPTY
+        value: ""
+        qualifiedActions:
+          - PREPEND(",")
+          - PREPEND($original_input_line$)
+          - SET_CASING(upper)
+          - SHIP
+        unqualifiedActions:
+          - SHIP
     attributeOutputOrder: ["RESPONSE_TIME", "REFRESH_RATE"]
+    attributeOutputDelimiter: ","
     attributes:
       RESPONSE_TIME:
         "1":
@@ -125,6 +164,7 @@ components:
           qualifiedActions:
             - TRIM_MATCH_FROM_LEFT_NEIGHBOR
             - APPEND("ms")
+            - DECLARE_TOKEN_PROCESSED
             - SHIP
           unqualifiedActions:
             - EXIT_TO_NEXT_TOKEN_ITERATION
@@ -134,6 +174,7 @@ components:
           value: "0,50"
           qualifiedActions:
             - APPEND("ms")
+            - DECLARE_TOKEN_PROCESSED
             - SHIP
           unqualifiedActions:
             - EXIT_TO_NEXT_TOKEN_ITERATION
@@ -162,6 +203,7 @@ components:
           qualifiedActions:
             - TRIM_MATCH_FROM_LEFT_NEIGHBOR
             - APPEND("hz")
+            - DECLARE_TOKEN_PROCESSED
             - SHIP
           unqualifiedActions:
             - EXIT_TO_NEXT_TOKEN_ITERATION
@@ -171,6 +213,7 @@ components:
           value: "59,361"
           qualifiedActions:
             - APPEND("hz")
+            - DECLARE_TOKEN_PROCESSED
             - SHIP
           unqualifiedActions:
             - EXIT_TO_NEXT_TOKEN_ITERATION
