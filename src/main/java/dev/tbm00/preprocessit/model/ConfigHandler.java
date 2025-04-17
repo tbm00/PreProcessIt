@@ -410,7 +410,7 @@ public class ConfigHandler {
         }
 
         // Process "condition"
-        String qualifierConditionStr = (String) qualMap.get("condition");
+        String qualifierConditionStr = (String) qualMap.get(StaticUtil.KEY_CONDITION);
         if (qualifierConditionStr == null) {
             log("- Condition Not Loaded: " + componentName + (isLineRule ? "" : "'s " + attributeName) + " (no condition found)");
             return null;
