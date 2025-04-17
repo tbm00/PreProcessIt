@@ -224,67 +224,72 @@ public class ConfigHandler {
         Map<String, Object> componentMap = (Map<String, Object>) componentEntry.getValue();
 
         // Load inputLineRules
-        Map<String, Object> inputLineRuleMap = (Map<String, Object>) componentMap.get(StaticUtil.KEY_INPUT_LINE_RULES);
-        LineRule inputLineRule = new LineRule(componentID, null);
-        if (inputLineRuleMap != null) {
-            ArrayList<Qualifier> lineRuleQualifiers = new ArrayList<>();
-
-            for (Map.Entry<String, Object> qualifierEntry : inputLineRuleMap.entrySet()) {
-                String key = qualifierEntry.getKey();
-                int qualifierIndex;
-                try {
-                    qualifierIndex = Integer.parseInt(key);
-                } catch (NumberFormatException e) {
-                    log("- Invalid inputLineRules key for component " + componentName + ": " + key);
-                    return null;
-                }
-
-                try {
-                    Map<String, Object> qualMap = (Map<String, Object>) qualifierEntry.getValue();
-                    Qualifier qualifier = loadQualifier(componentName, null, qualifierIndex, qualMap);
-                    if (qualifier != null) {
-                        lineRuleQualifiers.add(qualifier);
-                        log("- - - Input Line Rule Loaded: " + componentName + "'s " + qualifierEntry.getKey());
+        LineRule inputLineRule = null;
+        if (componentMap.get(StaticUtil.KEY_INPUT_LINE_RULES)!=null) {
+            Map<String, Object> inputLineRuleMap = (Map<String, Object>) componentMap.get(StaticUtil.KEY_INPUT_LINE_RULES);
+            inputLineRule = new LineRule(componentID, null);
+            if (inputLineRuleMap != null) {
+                ArrayList<Qualifier> lineRuleQualifiers = new ArrayList<>();
+    
+                for (Map.Entry<String, Object> qualifierEntry : inputLineRuleMap.entrySet()) {
+                    String key = qualifierEntry.getKey();
+                    int qualifierIndex;
+                    try {
+                        qualifierIndex = Integer.parseInt(key);
+                    } catch (NumberFormatException e) {
+                        log("- Invalid inputLineRules key for component " + componentName + ": " + key);
+                        return null;
                     }
-                } catch (Exception e) {
-                    log("– Error in inputLineRules[" + key + "] for " + componentName + ": " + e.getMessage());
-                    continue;
+    
+                    try {
+                        Map<String, Object> qualMap = (Map<String, Object>) qualifierEntry.getValue();
+                        Qualifier qualifier = loadQualifier(componentName, null, qualifierIndex, qualMap);
+                        if (qualifier != null) {
+                            lineRuleQualifiers.add(qualifier);
+                            log("- - - Input Line Rule Loaded: " + componentName + "'s " + qualifierEntry.getKey());
+                        }
+                    } catch (Exception e) {
+                        log("– Error in inputLineRules[" + key + "] for " + componentName + ": " + e.getMessage());
+                        continue;
+                    }
                 }
+                inputLineRule.setQualifiers(lineRuleQualifiers);
             }
-            inputLineRule.setQualifiers(lineRuleQualifiers);
         }
 
         // Load outputLineRules
-        Map<String, Object> outputLineRuleMap = (Map<String, Object>) componentMap.get(StaticUtil.KEY_OUTPUT_LINE_RULES);
-        LineRule outputLineRule = new LineRule(componentID, null);
-        if (outputLineRuleMap != null) {
-            ArrayList<Qualifier> lineRuleQualifiers = new ArrayList<>();
-
-            for (Map.Entry<String, Object> qualifierEntry : outputLineRuleMap.entrySet()) {
-                String key = qualifierEntry.getKey();
-                int qualifierIndex;
-                try {
-                    qualifierIndex = Integer.parseInt(key);
-                } catch (NumberFormatException e) {
-                    log("- Invalid outputLineRules key for component " + componentName + ": " + key);
-                    return null;
-                }
-
-                try {
-                    Map<String, Object> qualMap = (Map<String, Object>) qualifierEntry.getValue();
-                    Qualifier qualifier = loadQualifier(componentName, null, qualifierIndex, qualMap);
-                    if (qualifier != null) {
-                        lineRuleQualifiers.add(qualifier);
-                        log("- - - Output Line Rule Loaded: " + componentName + "'s " + qualifierEntry.getKey());
+        LineRule outputLineRule = null;
+        if (componentMap.get(StaticUtil.KEY_OUTPUT_LINE_RULES)!=null) {
+            Map<String, Object> outputLineRuleMap = (Map<String, Object>) componentMap.get(StaticUtil.KEY_OUTPUT_LINE_RULES);
+            outputLineRule = new LineRule(componentID, null);
+            if (outputLineRuleMap != null) {
+                ArrayList<Qualifier> lineRuleQualifiers = new ArrayList<>();
+    
+                for (Map.Entry<String, Object> qualifierEntry : outputLineRuleMap.entrySet()) {
+                    String key = qualifierEntry.getKey();
+                    int qualifierIndex;
+                    try {
+                        qualifierIndex = Integer.parseInt(key);
+                    } catch (NumberFormatException e) {
+                        log("- Invalid outputLineRules key for component " + componentName + ": " + key);
+                        return null;
                     }
-                } catch (Exception e) {
-                    log("– Error in outputLineRules[" + key + "] for " + componentName + ": " + e.getMessage());
-                    continue;
+    
+                    try {
+                        Map<String, Object> qualMap = (Map<String, Object>) qualifierEntry.getValue();
+                        Qualifier qualifier = loadQualifier(componentName, null, qualifierIndex, qualMap);
+                        if (qualifier != null) {
+                            lineRuleQualifiers.add(qualifier);
+                            log("- - - Output Line Rule Loaded: " + componentName + "'s " + qualifierEntry.getKey());
+                        }
+                    } catch (Exception e) {
+                        log("– Error in outputLineRules[" + key + "] for " + componentName + ": " + e.getMessage());
+                        continue;
+                    }
                 }
+                outputLineRule.setQualifiers(lineRuleQualifiers);
             }
-            outputLineRule.setQualifiers(lineRuleQualifiers);
         }
-        
 
         // Load attributeOutputOrder
         List<String> attributeOutputOrder = (List<String>) componentMap.get(StaticUtil.KEY_ATTRIBUTE_OUTPUT_ORDER);
