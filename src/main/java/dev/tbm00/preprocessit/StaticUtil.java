@@ -29,6 +29,7 @@ public class StaticUtil {
 
     private static BufferedWriter logWriter;
     private static Path logFile;
+    private static boolean consoleLogging = false;
 
     public static Path initLogFile() throws IOException {
         if (logFile == null) {
@@ -41,13 +42,17 @@ public class StaticUtil {
     }
 
     public static synchronized void log(String msg) {
-        try {
-            if (logWriter == null) initLogFile();
-            logWriter.write(msg);
-            logWriter.newLine();
-            logWriter.flush();
-        } catch (IOException e) {
-            e.printStackTrace();
+        if (consoleLogging) {
+            System.out.println(msg);
+        } else {
+            try {
+                if (logWriter == null) initLogFile();
+                logWriter.write(msg);
+                logWriter.newLine();
+                logWriter.flush();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -57,5 +62,9 @@ public class StaticUtil {
 
     public static void log() {
         log("");
+    }
+
+    public static void enableConsoleLogging() {
+        consoleLogging = true;
     }
 }

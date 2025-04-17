@@ -183,11 +183,6 @@ public class Controller {
         int choice = fc.showOpenDialog(view);
         if(choice == JFileChooser.APPROVE_OPTION) {
             File dataFile = fc.getSelectedFile();
-            String filename = dataFile.getName().toLowerCase();
-            String type = "";
-            if (filename.endsWith(".csv")) type = "CSV";
-            else if (filename.endsWith(".txt")) type = "TXT";
-            else return;
 
             try {
                 List<String> lines = Files.readAllLines(dataFile.toPath());
@@ -295,7 +290,7 @@ public class Controller {
         try {
             Desktop desktop = Desktop.getDesktop();
             desktop.browse(new URI(README_URL));
-            view.getTitleLabel().setText("<html><b>PreProcessIt</b> v0.1.4-beta, <br/>" +
+            view.getTitleLabel().setText("<html><b>PreProcessIt</b> v0.0.0-beta, <br/>" +
                                          "<a href='' style='color: purple; text-decoration: underline;'>README</a>, <i>made by @tbm00</i></html>");
         } catch (Exception e) {
             JOptionPane.showMessageDialog(view, "Failed to open README link: " + e.getMessage());
