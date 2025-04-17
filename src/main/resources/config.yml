@@ -24,6 +24,7 @@ components:
         qualifiedActions:
           - PREPEND(",")
           - PREPEND($original_input_line$)
+          - SET_CASING(upper)
           - SHIP
         unqualifiedActions:
           - SHIP

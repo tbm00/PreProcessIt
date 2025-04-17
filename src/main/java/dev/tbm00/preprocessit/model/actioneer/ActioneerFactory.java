@@ -30,6 +30,7 @@ public class ActioneerFactory {
         EXECUTOR_MAP.put(Action.REPLACE_FIRST, new ReplaceFirstActioneer());
         EXECUTOR_MAP.put(Action.ROUND, new RoundActioneer());
         EXECUTOR_MAP.put(Action.FORMAT_NUMBER, new FormatNumberActioneer());
+        EXECUTOR_MAP.put(Action.SET_CASING, new SetCasingActioneer());
     }
     
     public static ActioneerInterface getActioneer(Action action) {
