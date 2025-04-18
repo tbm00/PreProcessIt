@@ -1,7 +1,7 @@
 # PreProcessIt
-A robust Java application for parsing and standardizing raw input data. 
+A highly configurable, rule‑based text processor that parses and normalizes messy input data into structured output.
  
-Designed with flexibility and extensibility in mind, PreProcessIt transforms unstructured input into well-formatted, structured output. PreProcessIt leverages a configurable processing pipeline to handle complex tokenization and data transformation requirements, making it an effective tool for a range of data processing tasks.
+Using a user-defined algorithm, PreProcessIt transforms unstructured input (from CSVs, TXTs, and more) into well-formatted, standardized output. PreProcessIt leverages a configurable processing pipeline to handle complex tokenization and data transformation requirements, making it an effective tool for a range of data processing tasks.
 
 Created by tbm00.
 
@@ -9,239 +9,155 @@ Created by tbm00.
 PreProcessIt follows the Model-View-Controller (MVC) design pattern, ensuring clean separation of concerns and maintainability. The program processes input data line-by-line and token-by-token, dynamically matching tokens against a set of attributes defined in customizable component configurations. Depending on whether tokens satisfy specific conditions, the system applies a series of configurable actions to standardize the data.
 
 ## Key Features
-  - **Flexible Parsing Engine:** Define custom algorithms for different types of input data (components) and attributes with detailed qualifiers for high-precision data parsing.
-  - **Advanced Token Handling:** Process tokens using configurable rules that consider neighboring tokens, enabling complex pattern matching and data transformation.
-  - **Highly Configurable:** Use a YAML configuration file to control the behavior of the parser, ensuring it meets the needs of varied input data formats.
-  - **Robust Error Handling and Logging:** Detailed logging and error management provide transparency during data processing and facilitate troubleshooting and config creation.
-  - **User-friendly GUI & Headless Command:** Either use the GUI to import, process, and export data, or use the headless command to import, process and export data directly to a CSV.
+  - **Configurable Parsing Engine:** Define custom parsing algorithms and attribute‑matching rules via YAML, then locate and standardize those attributes in your input data using the qualifiers you've specified.
+  - **Advanced Token Handling:** After tokenizing the input line, PreProcessIt parses tokens using configurable rules that consider neighboring tokens, enabling complex pattern matching and data transformation.
+  - **Robust Error Handling and Logging:** Detailed logging and error management provide transparency during data processing, enabling quick troubleshooting and config creation.
+  - **User-friendly GUI & CLI:** Use the GUI to import, process, and export data, or use the CLI for headless processing!
 
 ## Dependencies
   - **Java 8+**: REQUIRED
 
+## Usage
+### GUI Mode
+<img align="center" src="media/PreProcessIt-Default-Config-Slightly-Modified-Run.PNG" alt="PreProcessIt-Default-Config-Slightly-Modified-Run-Screenshot" width="5000"/>
+
+With Java installed, double-click the program's JAR file (or run `java -jar PreProcessIt-0.1.6-beta.jar`) to launch the GUI. Then:
+- Load your alternative config *(defaults to: `/PreProcessIt/config.yml`)*
+- Select the component configuration to use *(if you have more than one defined)*
+- Paste or import your input data from a file
+- Click "Process Data"
+- Copy or export your output data to a file
+
+### Headless Command
+With Java installed, run:
+  - `java -jar PreProcessIt-0.1.6-beta.jar --config <config.yml> [--component <name>] --input <input.*> --output <output.*> [--log]`
+
 ## How It Works
-PreProcessIt reads input data one line at a time and splits each line into tokens. For every attribute in your selected component's configuration, the program checks if the current token applies-to/matches the current attribute using the attribute's qualifiers. If there is a match detected, the qualified actions will run. Else, the unqualified actions will run. 
+PreProcessIt reads input data one line at a time and splits each line into tokens. For every attribute in your selected component's configuration, the program checks if the current working word (normally the `WORKING_TOKEN`) matches the attribute using the attribute's qualifiers, starting with the first one. If there is a match, the qualified actions will run; otherwise, the unqualified actions will run. 
 
 Correctly implemented qualifiers contain:
-  - **Word Source:** Which token value to evaluate; e.g., the current working token, a copy of the initial token, or tokens from neighboring positions
+  - **Word Source:** Which String value to evaluate; e.g., the current working token, a copy of the initial token, or tokens from neighboring positions
   - **Condition:** The criteria a token must meet; e.g., containing a specific string, matching a specific data type, etc.
   - **Value:** The expected literal or range for validation
   - **Actions:** Procedures to execute when a token is deemed qualified or unqualified. These actions may modify the token, skip iterations, try neighboring tokens, and "ship" the token to the final output.
 
-Once a token has been "shipped" for a particular attribute, the program will search the line's remaining tokens for the next attribute, until all attributes have been processed. Any tokens that remain unprocessed are appended as leftovers at the end of the output line.
+Once a value has been "shipped" for a particular attribute, the program will continue to search the line's unprocessed tokens for the next attribute, until all attributes have run their checks. Any tokens that remain unprocessed are appended as leftovers at the end of the output line.
 
 You may also use qualifiers on the entire input or output line by using LineRules:
-  - All defined inputLineRules will be processed on each input line before the attributes are processed.
-  - After the attributes are processed, all defined outputLineRules will be processed on each newly created output line, and then the output line will be finalized.
+  - All defined InputLineRules will be processed on each input line before the attributes are processed.
+  - After attributes are processed, all defined OutputLineRules will be processed on each newly created output line, and then the output line will be finalized.
 
 ### Example
-Using the basic default configuration, PreProcessIt transforms the following messy input:
+Using the basic default config, PreProcessIt transforms messy input:
 ```
-120 hz 2 milliseCONds
-9ms    80hz
-1 ms  160 hz
-  60hz 5ms
-99hertz randomtext 20Ms
+120 hz 2. milliseCONDs
+9ms  rrrr  80hz
+example1 ms  160 hz
+  60hz 5.91ms
+EXAMPLE99hertz random text 20Ms
 ```
-
 into a standardized, CSV-like output:
 ```
 original_input,response_time,refresh_rate,leftovers
-120 HZ 2 MILLISECONDS,2MS,120HZ,
-9MS    80HZ,9MS,80HZ,
- 1 MS  160 HZ,1MS,160HZ,
-   60HZ 5MS,5MS,60HZ,
-99HERTZ RANDOMTEXT 20MS,20MS,99HZ,RANDOMTEXT
+120 hz 2. milliseCONDs,2.0MS,120HZ,
+9ms  rrrr  80hz,9.0MS,80HZ,RRRR
+example1 ms  160 hz,1.0MS,160HZ,
+  60hz 5.91ms,5.9MS,60HZ,
+EXAMPLE99hertz random text 20Ms,20.0MS,99HZ,RANDOM TEXT
 ```
-
-### Headless Command
-  - `java -jar PreProcessIt-0.1.5-beta.jar --config <config.yml> [--component <name>] --input <input.txt> --output <output.csv> [--log]`
+which still looks a bit messy, but that's only because there is an "OutputLineRule" to prepend the original input line to the output line.
 
 ## Configuration
 
+### Default Config
+Use the [PreProcessIt Default Config](src/main/resources/config.yml) to assist in creating your own algorithms.
+
 ### Available Words
-  - `WORKING_TOKEN` Current working token that may be modified by prior qualifiers
-  - `INITIAL_TOKEN_COPY` Copy of the initial working token (therefore, unmodified by prior qualifiers)
-  - `LEFT_NEIGHBOR` The token preceding the current token in the input line
-  - `RIGHT_NEIGHBOR` The token following the current token in the input line
-  - `WORKING_LINE` Current working line that may be modified by prior qualifiers (only used by LineRules)
-  - `INITIAL_LINE_COPY` Copy of the initial input line (therefore, unmodified by prior qualifiers)
+| Word | Description |
+|------|-------------|
+| `WORKING_TOKEN` | Current working token that may be modified by prior qualifiers |
+| `INITIAL_TOKEN_COPY` | Static copy of the initial working token (therefore, unmodified by prior qualifiers) |
+| `LEFT_NEIGHBOR` | The token preceding the current token in the input line |
+| `RIGHT_NEIGHBOR` | The token following the current token in the input line |
+| `WORKING_LINE` | Current working line that may be modified by prior qualifiers; Only used by LineRules |
+| `INITIAL_LINE_COPY` | Static copy of the initial input line (therefore, unmodified by prior qualifiers) |
+|
 
 ### Available Conditions
-  - `GREATER_THAN` Numerical values only
-  - `GREATER_THAN_EQUAL_TO` Numerical values only
-  - `LESS_THAN` Numerical values only
-  - `LESS_THAN_EQUAL_TO` Numerical values only
-  - `IN_BETWEEN_INCLUSIVE` Numerical values only
-  - `IN_BETWEEN_EXCLUSIVE` Numerical values only
-  - `START_IN_BETWEEN_INCLUSIVE` Numerical values only
-  - `START_IN_BETWEEN_EXCLUSIVE` Numerical values only
-  - `END_IN_BETWEEN_INCLUSIVE` Numerical values only
-  - `END_IN_BETWEEN_EXCLUSIVE` Numerical values only
-  - `EQUALS_VALUE` Numerical values only
-  - `EQUALS_STRING` Case insensitive
-  - `CONTAINS` Case insensitive
-  - `STARTS_WITH` First character(s) match; Case insensitive
-  - `ENDS_WITH` Last character(s) match; Case insensitive
-  - `START_IS_TYPE` INTEGER, DOUBLE, NUMBER, or STRING
-  - `END_IS_TYPE` INTEGER, DOUBLE, NUMBER, or STRING
-  - `IS_TYPE` INTEGER, DOUBLE, NUMBER, or STRING
-  - `IS_EMPTY`
-  - `NOT_IN_BETWEEN_INCLUSIVE`
-  - `NOT_IN_BETWEEN_EXCLUSIVE`
-  - `NOT_EQUALS_VALUE`
-  - `NOT_EQUALS_STRING`
-  - `NOT_CONTAINS`
-  - `NOT_STARTS_WITH`
-  - `NOT_ENDS_WITH`
-  - `NOT_IS_TYPE`
-  - `NOT_IS_EMPTY`
+| Condition | Value Clarification |
+|-----------|---------------------|
+| `GREATER_THAN` | Numerical values only |
+| `GREATER_THAN_EQUAL_TO` | Numerical values only |
+| `LESS_THAN` | Numerical values only |
+| `LESS_THAN_EQUAL_TO` | Numerical values only |
+| `IN_BETWEEN_INCLUSIVE` | Numerical values only; Format: `<min>,<max>` |
+| `IN_BETWEEN_EXCLUSIVE` | Numerical values only; Format: `<min>,<max>` |
+| `START_IN_BETWEEN_INCLUSIVE` | Numerical values only; Format: `<min>,<max>` |
+| `START_IN_BETWEEN_EXCLUSIVE` | Numerical values only; Format: `<min>,<max>` |
+| `END_IN_BETWEEN_INCLUSIVE` | Numerical values only; Format: `<min>,<max>` |
+| `END_IN_BETWEEN_EXCLUSIVE` | Numerical values only; Format: `<min>,<max>` |
+| `EQUALS_VALUE` | Numerical values only |
+| `EQUALS_STRING` | Case insensitive |
+| `CONTAINS` | Case insensitive |
+| `STARTS_WITH` | First character(s) match; Case insensitive |
+| `ENDS_WITH` | Last character(s) match; Case insensitive |
+| `START_IS_TYPE` | `INTEGER`, `DOUBLE`, `NUMBER`, or `STRING` |
+| `END_IS_TYPE` | `INTEGER`, `DOUBLE`, `NUMBER`, or `STRING` |
+| `IS_TYPE` | `INTEGER`, `DOUBLE`, `NUMBER`, or `STRING` |
+| `IS_EMPTY` | Configured 'value' doesn't matter |
+| `NOT_IN_BETWEEN_INCLUSIVE` | Numerical values only; Format: `<min>,<max>` |
+| `NOT_IN_BETWEEN_EXCLUSIVE` | Numerical values only; Format: `<min>,<max>` |
+| `NOT_EQUALS_VALUE` | Numerical values only |
+| `NOT_EQUALS_STRING` | Case insensitive |
+| `NOT_CONTAINS` | Case insensitive |
+| `NOT_STARTS_WITH` | First character(s) match; Case insensitive |
+| `NOT_ENDS_WITH` | Last character(s) match; Case insensitive |
+| `NOT_IS_TYPE` | `INTEGER`, `DOUBLE`, `NUMBER`, or `STRING` |
+| `NOT_IS_EMPTY` | Configured 'value' doesn't matter |
+|
 
 ### Available Actions
-  - `SHIP` Ship current token as current attribute's final value, and go to next attribute iteration
-  - `DECLARE_TOKEN_PROCESSED` Mark the current token as processed, so that it doesn't get processed again later
-  - `TRY_NEIGHBORS(max_characters)` Try appending neighbors' characters to see if it might qualify (with the same matcher)
-  - `EXIT_TO_NEXT_ATTRIBUTE_ITERATION` Go to next attribute iteration
-  - `EXIT_TO_NEXT_TOKEN_ITERATION` Go to next token iteration on current attribute iteration
-  - `CONTINUE_AND_SKIP_NEXT_QUALIFIER(count)` Skip next qualifer(s) on current attribute iteration
-  - `CONTINUE` Continue to the next, immediate qualifier on current attribute iteration
-  - `REPLACE_ALL(fromString,toString)` Replace all occurrences of `fromString` in the working token with `toString`; Case sensitive
-  - `REPLACE_FIRST(fromString,toString)` Replace first occurence of `fromString` in the working token with `toString`; Case sensitive
-  - `INSERT_AT(index,String)` Insert a String at specific index in working token
-  - `ROUND(type,amount)` Round working token to nearest `amount`; Applicable types: `up`, `down`, `nearest`
-  - `FORMAT_NUMBER(format,commaGroups)` Reformat working token number; Accepts format like `#.##` or `#`; If commaGroups is `true`, then number will have commas every 3 digits like "100,000"
-  - `SET_CASING(casing)` Set casing of the working token; Applicable casings: `upper`, `lower`
-  - `APPEND(String)` Attach a `String` to end of working token
-  - `PREPEND(String)` Attach a `String` to start of working token
-  - `KEEP_MATCH` Set current working token to equal only the matched value
-  - `REPLACE_MATCH_ALL(toString)` Replace all occurrences of the matched value in the working token with `toString`; Case sensitive
-  - `REPLACE_MATCH_FIRST(toString)` Replace first occurence of the matched value in the working token with `toString`; Case sensitive
-  - `TRIM_MATCH_ALL` Remove all occurrences of the matched value from the working token
-  - `TRIM_MATCH_FIRST` Remove first occurence of the matched value from the working token
-  - `TRIM_MATCH_START` Remove matched value from working token if the token begins with the matched value
-  - `TRIM_MATCH_END` Remove matched value from working token if the token ends with the matched value
-  - `TRIM_MATCH_FROM_LEFT_NEIGHBOR` Remove matched value from the back of the prior token, if its there
-  - `TRIM_MATCH_FROM_RIGHT_NEIGHBOR` Remove matched value from the front of the next token, if its there
-  - `TRIM_UNMATCHED_ALL` Remove all occurrences of the unmatched value from the working token
-  - `TRIM_UNMATCHED_FIRST` Remove first occurence of the unmatched value from the working token
-  - `TRIM_UNMATCHED_START` Remove unmatched value from working token if the token begins with the matched value
-  - `TRIM_UNMATCHED_END` Remove unmatched value from working token if the token ends with the matched value
-  - `NEW_TOKEN_FROM_MATCH` Create new token with the matched value, placed after the current working token
-  - `NEW_TOKEN_FROM_UNMATCHED` Create new token with the unmatched value, placed after the current working token
+  - The qualifiers get processed in order. Likewise, within each qualifier, the actions get processed in order until there are none left. If a qualifier's running action list doesn't end in an exit action, then the next qualifier will get processed once the current action list finishes running.
+  - Use the `CONTINUE`, `CONTINUE_AND_SKIP_NEXT_QUALIFIER`, `EXIT_TO_NEXT_TOKEN_ITERATION`, `EXIT_TO_NEXT_ATTRIBUTE_ITERATION`, and `EXIT_TO_NEXT_LINE_ITERATION` exit actions to control the exit flow of the qualifier's action commands.
+  - Use `DECLARE_TOKEN_PROCESSED` actions immediately before exit actions when the token no longer needs to be processed by other attributes' qualifiers.
+  - Anywhere you pass a String as an action parameter (except fromString parameters), you may use `$INITIAL_LINE_COPY$` or `$INITIAL_TOKEN_COPY$` as a placeholder.
 
-### Default Config
-```
-# PreProcessIt v0.1.5-beta by @tbm00
-# https://github.com/tbm00/PreProcessIt
-
-concurrentThreading: true
-threadPoolSizeOverride: -1
-
-components:
-  MONITOR:
-    inputLineRules:
-      "1":
-        word: WORKING_LINE
-        condition: STARTS_WITH
-        value: "EXAMPLE"
-        qualifiedActions:
-          - TRIM_MATCH_FIRST
-          - SHIP
-        unqualifiedActions:
-          - SHIP
-    outputLineRules:
-      "1":
-        word: WORKING_LINE
-        condition: NOT_IS_EMPTY
-        value: ""
-        qualifiedActions:
-          - PREPEND(",")
-          - PREPEND($original_input_line$)
-          - SET_CASING(upper)
-          - SHIP
-        unqualifiedActions:
-          - SHIP
-    attributeOutputOrder: ["RESPONSE_TIME", "REFRESH_RATE"]
-    attributeOutputDelimiter: ","
-    attributes:
-      RESPONSE_TIME:
-        "1":
-          word: WORKING_TOKEN
-          condition: CONTAINS
-          value: "MS|milliseconds"
-          qualifiedActions:
-            - TRIM_MATCH_ALL
-            - CONTINUE
-          unqualifiedActions:
-            - EXIT_TO_NEXT_TOKEN_ITERATION
-        "2": 
-          word: WORKING_TOKEN
-          condition: IS_EMPTY
-          value: ""
-          qualifiedActions:
-            - CONTINUE
-          unqualifiedActions:
-            - CONTINUE_AND_SKIP_NEXT_QUALIFIER
-        "3": 
-          word: LEFT_NEIGHBOR
-          condition: IN_BETWEEN_INCLUSIVE
-          value: "0,50"
-          qualifiedActions:
-            - TRIM_MATCH_FROM_LEFT_NEIGHBOR
-            - APPEND("ms")
-            - DECLARE_TOKEN_PROCESSED
-            - SHIP
-          unqualifiedActions:
-            - EXIT_TO_NEXT_TOKEN_ITERATION
-        "4": 
-          word: WORKING_TOKEN
-          condition: IN_BETWEEN_INCLUSIVE
-          value: "0,50"
-          qualifiedActions:
-            - APPEND("ms")
-            - DECLARE_TOKEN_PROCESSED
-            - SHIP
-          unqualifiedActions:
-            - EXIT_TO_NEXT_TOKEN_ITERATION
-      REFRESH_RATE:
-        "1":
-          word: WORKING_TOKEN
-          condition: CONTAINS
-          value: "HZ|hertz"
-          qualifiedActions:
-            - TRIM_MATCH_ALL
-            - CONTINUE
-          unqualifiedActions:
-            - EXIT_TO_NEXT_TOKEN_ITERATION
-        "2": 
-          word: WORKING_TOKEN
-          condition: IS_EMPTY
-          value: ""
-          qualifiedActions:
-            - CONTINUE
-          unqualifiedActions:
-            - CONTINUE_AND_SKIP_NEXT_QUALIFIER
-        "3": 
-          word: LEFT_NEIGHBOR
-          condition: IN_BETWEEN_INCLUSIVE
-          value: "59,361"
-          qualifiedActions:
-            - TRIM_MATCH_FROM_LEFT_NEIGHBOR
-            - APPEND("hz")
-            - DECLARE_TOKEN_PROCESSED
-            - SHIP
-          unqualifiedActions:
-            - EXIT_TO_NEXT_TOKEN_ITERATION
-        "4": 
-          word: WORKING_TOKEN
-          condition: IN_BETWEEN_INCLUSIVE
-          value: "59,361"
-          qualifiedActions:
-            - APPEND("hz")
-            - DECLARE_TOKEN_PROCESSED
-            - SHIP
-          unqualifiedActions:
-            - EXIT_TO_NEXT_TOKEN_ITERATION
-```
+| Action | Description |
+|--------|-------------|
+| `CONTINUE` | Continue to the next qualifier on current attribute iteration |
+| `CONTINUE_AND_SKIP_NEXT_QUALIFIER(count)` | Skip next qualifier(s) on current attribute iteration |
+| `TRY_NEIGHBORS(max_characters)` | Try appending/prepending neighbors' characters to the current working word to see if it might qualify with the same matcher, then continue to next actions after possibly updating the working word; **DOESN'T** modify the neighboring tokens in the token list |
+| `NEW_TOKEN_FROM_MATCH` | Create new token with the matched value, placed after the current working token; **DOESN'T** modify the current token in the token list |
+| `NEW_TOKEN_FROM_UNMATCHED` | Create new token with the unmatched value, placed after the current working token; **DOESN'T** modify the current token in the token list |
+| `DECLARE_TOKEN_PROCESSED` | Mark the current token as processed, so that it doesn't get processed by other attributes' qualifiers; The main way to declare tokens as processed |
+| `SHIP` | Ship current working word's value as the current attribute's final value; **DOESN'T** mark current token as processed |
+| `EXIT_TO_NEXT_TOKEN_ITERATION` | Go to next token iteration on current attribute iteration |
+| `EXIT_TO_NEXT_ATTRIBUTE_ITERATION` | Go to next attribute iteration on current line iteration |
+| `EXIT_TO_NEXT_LINE_ITERATION` | Go to next line iteration |
+| `TRIM_MATCH_FROM_LEFT_NEIGHBOR` | Remove matched value from the back of the prior token, if it's there; **DOES** modify the neighboring token in the token list, & afterwards, if the neighboring token is empty, it's marked as processed |
+| `TRIM_MATCH_FROM_RIGHT_NEIGHBOR` | Remove matched value from the front of the next token, if it's there; **DOES** modify the neighboring token in the token list, & afterwards, if the neighboring token is empty, it's marked as processed |
+| `TRIM_MATCH_FROM_TOKEN` | Remove all occurrences of the matched value from the current token; **DOES** modify the token in the token list, & afterwards, if the token is empty, it's marked as processed |
+| `TRIM_UNMATCHED_FROM_TOKEN` | Remove all occurrences of the unmatched value from the current token; **DOES** modify the token in the token list, & afterwards, if the token is empty, it's marked as processed |
+| `TRIM_MATCH_ALL` | Remove all occurrences of the matched value from the working word |
+| `TRIM_MATCH_FIRST` | Remove first occurrence of the matched value from the working word |
+| `TRIM_MATCH_START` | Remove matched value from working word if the token begins with the matched value |
+| `TRIM_MATCH_END` | Remove matched value from working word if the token ends with the matched value |
+| `TRIM_UNMATCHED_ALL` | Remove all occurrences of the unmatched value from the working word |
+| `TRIM_UNMATCHED_FIRST` | Remove first occurrence of the unmatched value from the working word |
+| `TRIM_UNMATCHED_START` | Remove the unmatched value from working word if it begins with the matched value |
+| `TRIM_UNMATCHED_END` | Remove the unmatched value from working word if it ends with the matched value |
+| `REPLACE_MATCH_ALL(toString)` | Replace all occurrences of the matched value in the working word with `toString`; Case sensitive |
+| `REPLACE_MATCH_FIRST(toString)` | Replace first occurrence of the matched value in the working word with `toString`; Case sensitive |
+| `KEEP_MATCH` | Set current working word to equal only the matched value |
+| `ROUND(type,amount)` | Round working word to nearest `amount`; Applicable types: `up`, `down`, `nearest` |
+| `FORMAT_NUMBER(format,commaGroups)` | Reformat working word; Accepts format like `#.##` or `#`; If commaGroups is `true`, then number will have commas every 3 digits like "100,000" |
+| `SET_CASING(casing)` | Set casing of the working word; Applicable casings: `upper`, `lower` |
+| `REPLACE_ALL(fromString,toString)` | Replace all occurrences of `fromString` in the working word with `toString`; Case sensitive |
+| `REPLACE_FIRST(fromString,toString)` | Replace first occurrence of `fromString` in the working word with `toString`; Case sensitive |
+| `INSERT_AT(index,String)` | Insert a String at specific index in working word |
+| `APPEND(String)` | Attach a `String` to end of working word |
+| `PREPEND(String)` | Attach a `String` to start of working word |
+|
 
 ## License
 PreProcessIt is released under the [PreProcessIt Non-Commercial License](LICENSE).
