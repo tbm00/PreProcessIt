@@ -22,6 +22,9 @@ public class ActioneerFactory {
         EXECUTOR_MAP.put(Action.REPLACE_MATCH_FIRST, new ReplaceMatchFirstActioneer());
         EXECUTOR_MAP.put(Action.TRIM_MATCH_FROM_LEFT_NEIGHBOR, new TrimMatchEndActioneer());
         EXECUTOR_MAP.put(Action.TRIM_MATCH_FROM_RIGHT_NEIGHBOR, new TrimMatchStartActioneer());
+        EXECUTOR_MAP.put(Action.TRIM_MATCH_FROM_TOKEN, new TrimMatchAllActioneer());
+        EXECUTOR_MAP.put(Action.TRIM_UNMATCHED_FROM_TOKEN, new TrimMatchAllActioneer());
+        EXECUTOR_MAP.put(Action.NEW_TOKEN_FROM_UNMATCHED, new TrimMatchAllActioneer());
         EXECUTOR_MAP.put(Action.KEEP_MATCH, new KeepMatchActioneer());
         EXECUTOR_MAP.put(Action.APPEND, new AppendActioneer());
         EXECUTOR_MAP.put(Action.PREPEND, new PrependActioneer());
