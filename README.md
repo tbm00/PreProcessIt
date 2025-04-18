@@ -8,6 +8,8 @@ Created by tbm00.
 ## Overview
 PreProcessIt follows the Model-View-Controller (MVC) design pattern, ensuring clean separation of concerns and maintainability. The program processes input data line-by-line and token-by-token, dynamically matching tokens against a set of attributes defined in customizable component configurations. Depending on whether tokens satisfy specific conditions, the system applies a series of configurable actions to standardize the data.
 
+<img align="center" src="media/PreProcessIt-Default-Config-Slightly-Modified-Run.png" alt="PreProcessIt-Default-Config-Slightly-Modified-Run" width="5000"/>
+
 ## Key Features
   - **Configurable Parsing Engine:** Define custom parsing algorithms and attribute‑matching rules via YAML, then locate and standardize those attributes in your input data using the qualifiers you've specified.
   - **Advanced Token Handling:** After tokenizing the input line, PreProcessIt parses tokens using configurable rules that consider neighboring tokens, enabling complex pattern matching and data transformation.
@@ -18,19 +20,17 @@ PreProcessIt follows the Model-View-Controller (MVC) design pattern, ensuring cl
   - **Java 8+**: REQUIRED
 
 ## Usage
-### GUI Mode
-<img align="center" src="media/PreProcessIt-Default-Config-Slightly-Modified-Run.PNG" alt="PreProcessIt-Default-Config-Slightly-Modified-Run-Screenshot" width="5000"/>
+  - #### GUI Mode
+    With Java installed, double-click the program's JAR file (or run `java -jar PreProcessIt-0.1.6-beta.jar`) to launch the GUI. Then:
+    - Load your alternative config *(defaults to: `/PreProcessIt/config.yml`)*
+    - Select the component configuration to use *(if you have more than one defined)*
+    - Paste or import your input data from a file
+    - Click "Process Data"
+    - Copy or export your output data to a file
 
-With Java installed, double-click the program's JAR file (or run `java -jar PreProcessIt-0.1.6-beta.jar`) to launch the GUI. Then:
-- Load your alternative config *(defaults to: `/PreProcessIt/config.yml`)*
-- Select the component configuration to use *(if you have more than one defined)*
-- Paste or import your input data from a file
-- Click "Process Data"
-- Copy or export your output data to a file
-
-### Headless Command
-With Java installed, run:
-  - `java -jar PreProcessIt-0.1.6-beta.jar --config <config.yml> [--component <name>] --input <input.*> --output <output.*> [--log]`
+  - #### Headless Command
+    With Java installed, run:
+      - `java -jar PreProcessIt-0.1.6-beta.jar --config <config.yml> [--component <name>] --input <input.*> --output <output.*> [--log]`
 
 ## How It Works
 PreProcessIt reads input data one line at a time and splits each line into tokens. For every attribute in your selected component's configuration, the program checks if the current working word (normally the `WORKING_TOKEN`) matches the attribute using the attribute's qualifiers, starting with the first one. If there is a match, the qualified actions will run; otherwise, the unqualified actions will run. 
@@ -81,7 +81,6 @@ Use the [PreProcessIt Default Config](src/main/resources/config.yml) to assist i
 | `RIGHT_NEIGHBOR` | The token following the current token in the input line |
 | `WORKING_LINE` | Current working line that may be modified by prior qualifiers; Only used by LineRules |
 | `INITIAL_LINE_COPY` | Static copy of the initial input line (therefore, unmodified by prior qualifiers) |
-|
 
 ### Available Conditions
 | Condition | Value Clarification |
@@ -114,11 +113,10 @@ Use the [PreProcessIt Default Config](src/main/resources/config.yml) to assist i
 | `NOT_ENDS_WITH` | Last character(s) match; Case insensitive |
 | `NOT_IS_TYPE` | `INTEGER`, `DOUBLE`, `NUMBER`, or `STRING` |
 | `NOT_IS_EMPTY` | Configured 'value' doesn't matter |
-|
 
 ### Available Actions
   - The qualifiers get processed in order. Likewise, within each qualifier, the actions get processed in order until there are none left. If a qualifier's running action list doesn't end in an exit action, then the next qualifier will get processed once the current action list finishes running.
-  - Use the `CONTINUE`, `CONTINUE_AND_SKIP_NEXT_QUALIFIER`, `EXIT_TO_NEXT_TOKEN_ITERATION`, `EXIT_TO_NEXT_ATTRIBUTE_ITERATION`, and `EXIT_TO_NEXT_LINE_ITERATION` exit actions to control the exit flow of the qualifier's action commands.
+  - Use the `CONTINUE`, `CONTINUE_AND_SKIP_NEXT_QUALIFIER`, `EXIT_TO_NEXT_TOKEN_ITERATION`, `EXIT_TO_NEXT_ATTRIBUTE_ITERATION`, and `EXIT_TO_NEXT_LINE_ITERATION` exit actions to control the exit flow of the qualifier's action lists.
   - Use `DECLARE_TOKEN_PROCESSED` actions immediately before exit actions when the token no longer needs to be processed by other attributes' qualifiers.
   - Anywhere you pass a String as an action parameter (except fromString parameters), you may use `$INITIAL_LINE_COPY$` or `$INITIAL_TOKEN_COPY$` as a placeholder.
 
@@ -126,7 +124,7 @@ Use the [PreProcessIt Default Config](src/main/resources/config.yml) to assist i
 |--------|-------------|
 | `CONTINUE` | Continue to the next qualifier on current attribute iteration |
 | `CONTINUE_AND_SKIP_NEXT_QUALIFIER(count)` | Skip next qualifier(s) on current attribute iteration |
-| `TRY_NEIGHBORS(max_characters)` | Try appending/prepending neighbors' characters to the current working word to see if it might qualify with the same matcher, then continue to next actions after possibly updating the working word; **DOESN'T** modify the neighboring tokens in the token list |
+| `TRY_NEIGHBORS(max_characters)` | Try appending/prepending neighbors' characters to the current working word's value to see if it might qualify with the same matcher, then continue to next actions after possibly updating the working word's value; **DOESN'T** modify the neighboring tokens in the token list |
 | `NEW_TOKEN_FROM_MATCH` | Create new token with the matched value, placed after the current working token; **DOESN'T** modify the current token in the token list |
 | `NEW_TOKEN_FROM_UNMATCHED` | Create new token with the unmatched value, placed after the current working token; **DOESN'T** modify the current token in the token list |
 | `DECLARE_TOKEN_PROCESSED` | Mark the current token as processed, so that it doesn't get processed by other attributes' qualifiers; The main way to declare tokens as processed |
@@ -138,26 +136,25 @@ Use the [PreProcessIt Default Config](src/main/resources/config.yml) to assist i
 | `TRIM_MATCH_FROM_RIGHT_NEIGHBOR` | Remove matched value from the front of the next token, if it's there; **DOES** modify the neighboring token in the token list, & afterwards, if the neighboring token is empty, it's marked as processed |
 | `TRIM_MATCH_FROM_TOKEN` | Remove all occurrences of the matched value from the current token; **DOES** modify the token in the token list, & afterwards, if the token is empty, it's marked as processed |
 | `TRIM_UNMATCHED_FROM_TOKEN` | Remove all occurrences of the unmatched value from the current token; **DOES** modify the token in the token list, & afterwards, if the token is empty, it's marked as processed |
-| `TRIM_MATCH_ALL` | Remove all occurrences of the matched value from the working word |
-| `TRIM_MATCH_FIRST` | Remove first occurrence of the matched value from the working word |
-| `TRIM_MATCH_START` | Remove matched value from working word if the token begins with the matched value |
-| `TRIM_MATCH_END` | Remove matched value from working word if the token ends with the matched value |
-| `TRIM_UNMATCHED_ALL` | Remove all occurrences of the unmatched value from the working word |
-| `TRIM_UNMATCHED_FIRST` | Remove first occurrence of the unmatched value from the working word |
-| `TRIM_UNMATCHED_START` | Remove the unmatched value from working word if it begins with the matched value |
-| `TRIM_UNMATCHED_END` | Remove the unmatched value from working word if it ends with the matched value |
-| `REPLACE_MATCH_ALL(toString)` | Replace all occurrences of the matched value in the working word with `toString`; Case sensitive |
-| `REPLACE_MATCH_FIRST(toString)` | Replace first occurrence of the matched value in the working word with `toString`; Case sensitive |
-| `KEEP_MATCH` | Set current working word to equal only the matched value |
-| `ROUND(type,amount)` | Round working word to nearest `amount`; Applicable types: `up`, `down`, `nearest` |
-| `FORMAT_NUMBER(format,commaGroups)` | Reformat working word; Accepts format like `#.##` or `#`; If commaGroups is `true`, then number will have commas every 3 digits like "100,000" |
-| `SET_CASING(casing)` | Set casing of the working word; Applicable casings: `upper`, `lower` |
-| `REPLACE_ALL(fromString,toString)` | Replace all occurrences of `fromString` in the working word with `toString`; Case sensitive |
-| `REPLACE_FIRST(fromString,toString)` | Replace first occurrence of `fromString` in the working word with `toString`; Case sensitive |
-| `INSERT_AT(index,String)` | Insert a String at specific index in working word |
-| `APPEND(String)` | Attach a `String` to end of working word |
-| `PREPEND(String)` | Attach a `String` to start of working word |
-|
+| `TRIM_MATCH_ALL` | Remove all occurrences of the matched value from the working word's value |
+| `TRIM_MATCH_FIRST` | Remove first occurrence of the matched value from the working word's value |
+| `TRIM_MATCH_START` | Remove matched value from working word's value if the token begins with the matched value |
+| `TRIM_MATCH_END` | Remove matched value from working word's value if the token ends with the matched value |
+| `TRIM_UNMATCHED_ALL` | Remove all occurrences of the unmatched value from the working word's value |
+| `TRIM_UNMATCHED_FIRST` | Remove first occurrence of the unmatched value from the working word's value |
+| `TRIM_UNMATCHED_START` | Remove the unmatched value from working word's value if it begins with the unmatched value |
+| `TRIM_UNMATCHED_END` | Remove the unmatched value from working word's value if it ends with the unmatched value |
+| `REPLACE_MATCH_ALL(toString)` | Replace all occurrences of the matched value in the working word's value with `toString`; Case sensitive |
+| `REPLACE_MATCH_FIRST(toString)` | Replace first occurrence of the matched value in the working word's value with `toString`; Case sensitive |
+| `KEEP_MATCH` | Set current working word's value to equal only the matched value |
+| `ROUND(type,amount)` | Round working word's value to nearest `amount`; Applicable types: `up`, `down`, `nearest` |
+| `FORMAT_NUMBER(format,commaGroups)` | Reformat working word's value; Accepts format like `#.##` or `#`; If commaGroups is `true`, then number will have commas every 3 digits like "100,000" |
+| `SET_CASING(casing)` | Set casing of the working word's value; Applicable casings: `upper`, `lower` |
+| `REPLACE_ALL(fromString,toString)` | Replace all occurrences of `fromString` in the working word's value with `toString`; Case sensitive |
+| `REPLACE_FIRST(fromString,toString)` | Replace first occurrence of `fromString` in the working word's value with `toString`; Case sensitive |
+| `INSERT_AT(index,String)` | Insert a `String` at a specific index in working word's value |
+| `APPEND(String)` | Attach a `String` to the end of working word's value |
+| `PREPEND(String)` | Attach a `String` to the start of working word's value |
 
 ## License
 PreProcessIt is released under the [PreProcessIt Non-Commercial License](LICENSE).
