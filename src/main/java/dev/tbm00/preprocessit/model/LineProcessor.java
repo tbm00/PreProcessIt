@@ -37,6 +37,7 @@ public class LineProcessor {
     private Node<Token> current_node = null;
     private String working_word = null;
 
+    private StringBuilder leftoverBuilder = new StringBuilder();
     private List<String> log = new ArrayList<String>();
 
     /**
@@ -499,6 +500,8 @@ public class LineProcessor {
                     working_word = actioneer.execute(working_word, actionSpec, matchedString, log);
                     working_word = working_word.replaceAll(java.util.regex.Pattern.quote("$INITIAL_LINE_COPY$"), INITIAL_LINE_COPY);
                     working_word = working_word.replaceAll(java.util.regex.Pattern.quote("$INITIAL_TOKEN_COPY$"), INITIAL_TOKEN_COPY);
+                    working_word = working_word.replaceAll(java.util.regex.Pattern.quote("$LEFTOVERS$"), leftoverBuilder.toString().trim());
+                    
                     log.add("      (updated working word to: " + working_word + ")");
                 } else {
                     log.add("      (no executor found for Action." + actionSpec.getAction().name() + ")");
@@ -656,15 +659,14 @@ public class LineProcessor {
     /**
      * Builds the final output line from the tokens and attribute order.
      *
-     * <p>This method traverses the token list to concatenate any tokens that were not processed.
+     * <p>This method traverses the token list to build leftovers from any tokens that were not processed.
      * It then builds a formatted line by first appending attribute values (in the order specified by {@code attributeOutputOrder})
-     * and then appending any leftover tokens, creating the final output string.</p>
+     * then it returns the final output string.</p>
      *
      * @return A {@code String} representing the final formatted output line.
      */
     private String buildOutputLine() {
         List<String> attributeOutputOrder = component.getAttributeOrder();
-        StringBuilder leftoverBuilder = new StringBuilder();
         Node<Token> current = tokenList.getHead();
         String delimiter = component.getAttributeDelimiter();
         while (current != null) {
@@ -687,9 +689,6 @@ public class LineProcessor {
             }
         }
 
-        if (component.getAppendLeftovers()) {
-            formattedLine.append(delimiter).append(leftoverBuilder.toString().trim());
-        } 
         return formattedLine.toString();
     }
 }

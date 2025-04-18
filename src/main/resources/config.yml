@@ -26,11 +26,12 @@ components:
           - SET_CASING(upper)
           - PREPEND(",")
           - PREPEND($INITIAL_LINE_COPY$)
+          - APPEND(",")
+          - APPEND($LEFTOVERS$)
           - SHIP
           - EXIT_TO_NEXT_LINE_ITERATION
         unqualifiedActions:
           - EXIT_TO_NEXT_LINE_ITERATION
-    appendLeftovers: true
     attributeOutputOrder: ["RESPONSE_TIME", "REFRESH_RATE"]
     attributeOutputDelimiter: ","
     attributes:
