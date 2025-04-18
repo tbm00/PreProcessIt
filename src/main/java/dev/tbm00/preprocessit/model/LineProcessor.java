@@ -292,16 +292,11 @@ public class LineProcessor {
 
         switch (action) {
             case EXIT_TO_NEXT_LINE_ITERATION:
-                if (!isLineRule) {
-                    // Exit evaluation for this line.
-                    return ActionResult.NEXT_LINE;
-                } else {
-                    log.add("      (cannot use EXIT_TO_NEXT_LINE_ITERATION in LineRules)");
-                    return ActionResult.NEXT_ACTION;
-                }
+                // Exit evaluation for this line
+                return ActionResult.NEXT_LINE;
             case EXIT_TO_NEXT_ATTRIBUTE_ITERATION:
                 if (!isLineRule) {
-                    // Exit evaluation for this attribute.
+                    // Exit evaluation for this attribute
                     return ActionResult.NEXT_ATTRIBUTE;
                 } else {
                     log.add("      (cannot use EXIT_TO_NEXT_ATTRIBUTE_ITERATION in LineRules)");
@@ -309,14 +304,14 @@ public class LineProcessor {
                 }
             case EXIT_TO_NEXT_TOKEN_ITERATION:
                 if (!isLineRule) {
-                    // The calling loop will get the next token.
+                    // The calling loop will get the next token
                     return ActionResult.NEXT_TOKEN;
                 } else {
                     log.add("      (cannot use EXIT_TO_NEXT_TOKEN_ITERATION in LineRules)");
                     return ActionResult.NEXT_ACTION;
                 }
             case CONTINUE:
-                // Just continue processing qualifiers.
+                // Just continue processing qualifiers
                 return ActionResult.NEXT_QUALIFIER;
             case CONTINUE_AND_SKIP_NEXT_QUALIFIER:
                 int skipAmount = parsePositiveIntOrDefault(actionSpec.getParameter(), 1);
@@ -478,7 +473,7 @@ public class LineProcessor {
                     return ActionResult.NEXT_ACTION;
                 }
             default:
-                // For any other action, attempt to execute it.
+                // For any other action, attempt to execute it
                 ActioneerInterface actioneer = ActioneerFactory.getActioneer(action);
                 if (actioneer != null) {
                     working_word = actioneer.execute(working_word, actionSpec, matchedString, log);
