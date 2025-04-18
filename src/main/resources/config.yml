@@ -30,6 +30,7 @@ components:
           - EXIT_TO_NEXT_LINE_ITERATION
         unqualifiedActions:
           - EXIT_TO_NEXT_LINE_ITERATION
+    appendLeftovers: true
     attributeOutputOrder: ["RESPONSE_TIME", "REFRESH_RATE"]
     attributeOutputDelimiter: ","
     attributes:
