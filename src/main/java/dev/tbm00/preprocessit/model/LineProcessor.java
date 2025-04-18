@@ -61,6 +61,9 @@ public class LineProcessor {
         working_word = inputLine;
         INITIAL_LINE_COPY = inputLine;
         inputLine = processLineRules(inputLine, "input").trim();
+        if (inputLine.equals("$DELETE_ME$")) {
+            return new LineResult(index, "", log);
+        }
 
         // Reset local variables after processing LineRules
         skip_qualifier = 0;
@@ -80,6 +83,9 @@ public class LineProcessor {
         String outputLine = buildOutputLine();
         working_word = outputLine;
         outputLine = processLineRules(outputLine, "output");
+        if (outputLine.equals("$DELETE_ME$")) {
+            outputLine = "";
+        }
 
         log.add("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-");
         return new LineResult(index, outputLine, log);
@@ -101,11 +107,18 @@ public class LineProcessor {
         else lineRule = null;
 
         if (lineRule!=null) {
-            processQualifiers(line, component, null, lineRule.getQualifiers());
-            log.add("[-] "+type+" line rules processed");
-            return working_word;
+            ActionResult result = processQualifiers(line, component, null, lineRule.getQualifiers());
+            switch (result) {
+                case REMOVE_LINE:
+                    log.add("[-] "+type+" line rule(s) processed and is deleting the line");
+                    return "$DELETE_ME$";
+                default:
+                    log.add("[-] "+type+" line rule(s) processed");
+                    return working_word;
+            }
+            
         } else {
-            log.add("[-] no "+type+" line rules found");
+            log.add("[-] no "+type+" line rule(s) found");
             return line;
         }
     }
@@ -291,6 +304,13 @@ public class LineProcessor {
         log.add("[-] executing action " + action.name() + "...");
 
         switch (action) {
+            case DELETE_LINE:
+                if (isLineRule) {
+                    return ActionResult.REMOVE_LINE;
+                } else {
+                    log.add("      (can only use DELETE_LINE in LineRules)");
+                    return ActionResult.NEXT_ACTION;
+                }
             case EXIT_TO_NEXT_LINE_ITERATION:
                 // Exit evaluation for this line
                 return ActionResult.NEXT_LINE;
@@ -654,12 +674,22 @@ public class LineProcessor {
             }
             current = current.getNext();
         }
+
         StringBuilder formattedLine = new StringBuilder();
+        int commasToAdd = attributeOutputOrder.size()-1;
+        int commaCount = 0;
         for (String attrName : attributeOutputOrder) {
             String value = outputAttributes.getOrDefault(attrName, "");
-            formattedLine.append(value).append(delimiter);
+            formattedLine.append(value);
+            if (commaCount<commasToAdd) {
+                formattedLine.append(delimiter);
+                ++commaCount;
+            }
         }
-        formattedLine.append(leftoverBuilder.toString().trim());
+
+        if (component.getAppendLeftovers()) {
+            formattedLine.append(delimiter).append(leftoverBuilder.toString().trim());
+        } 
         return formattedLine.toString();
     }
 }
