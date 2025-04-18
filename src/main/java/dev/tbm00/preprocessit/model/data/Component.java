@@ -14,8 +14,9 @@ public class Component {
     private String attributeOutputDelimiter;
     private LineRule inputLineRule;
     private LineRule outputLineRule;
+    private boolean appendLeftovers;
 
-    public Component(int id, String name, ArrayList<Attribute> attributes, List<String> attributeOutputOrder, String attributeOutputDelimiter, LineRule inputLineRule, LineRule outputLineRule) {
+    public Component(int id, String name, ArrayList<Attribute> attributes, List<String> attributeOutputOrder, String attributeOutputDelimiter, LineRule inputLineRule, LineRule outputLineRule, boolean appendLeftovers) {
         this.id = id;
         this.name = name;
         this.attributes = attributes;
@@ -23,6 +24,7 @@ public class Component {
         this.attributeOutputDelimiter = attributeOutputDelimiter;
         this.inputLineRule = inputLineRule;
         this.outputLineRule = outputLineRule;
+        this.appendLeftovers = appendLeftovers;
         //StaticUtil.log("component: " + id + " " + name + " " + attributes);
     }
 
@@ -80,5 +82,13 @@ public class Component {
 
     public void setOututLineRule(LineRule outputLineRule) {
         this.outputLineRule = outputLineRule;
+    }
+
+    public boolean getAppendLeftovers() {
+        return appendLeftovers;
+    }
+
+    public void setAppendLeftovers(boolean appendLeftovers) {
+        this.appendLeftovers = appendLeftovers;
     }
 }

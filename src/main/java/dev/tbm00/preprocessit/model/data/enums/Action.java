@@ -33,5 +33,6 @@ public enum Action {
     REPLACE_FIRST,
     INSERT_AT,
     APPEND,
-    PREPEND
+    PREPEND,
+    DELETE_LINE
 }

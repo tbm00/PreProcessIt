@@ -301,6 +301,12 @@ public class ConfigHandler {
             } catch (Exception e) {}
         }
 
+        // Load appendLeftovers
+        log("Loading appendLeftovers...");
+        Object leftoverObj = componentMap.get(StaticUtil.KEY_APPEND_LEFTOVERS);
+        boolean appendLeftovers = Boolean.TRUE.equals(leftoverObj);
+        log("- Appending Leftovers: " + (appendLeftovers ? "enabled" : "disabled"));
+
         // Load attributeOutputOrder
         log("Loading attributeOutputOrder...");
         List<String> attributeOutputOrder = (List<String>) componentMap.get(StaticUtil.KEY_ATTRIBUTE_OUTPUT_ORDER);
@@ -346,7 +352,7 @@ public class ConfigHandler {
             i++;
         }
         
-        return new Component(componentID, componentName, attributes, attributeOutputOrder, attributeOutputDelimiter, inputLineRule, outputLineRule);
+        return new Component(componentID, componentName, attributes, attributeOutputOrder, attributeOutputDelimiter, inputLineRule, outputLineRule, appendLeftovers);
     }
     
     /**

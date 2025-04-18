@@ -71,7 +71,10 @@ public class Model {
         // Process each line
         for (int i = 0; i < lines.length; i++) {
             LineResult result = lineProcessor.processLine(i+1, lines[i], component);
-            newOutput.append(result.output).append("\n");
+            if (result.output!=null) {
+                if (!result.output.equals("") && !result.output.isEmpty() && !result.output.equals("null"))
+                    newOutput.append(result.output).append("\n");
+            }
             for (String line : result.log) {
                 StaticUtil.log(line);
             }
@@ -123,7 +126,9 @@ public class Model {
         try {
             for (Future<LineResult> future : futureList) {
                 LineResult result = future.get();
-                outputs[result.lineNumber - 1] = result.output;
+                if (result.output!=null) {
+                    outputs[result.lineNumber - 1] = result.output;
+                }
                 for (String line : result.log) {
                     StaticUtil.log(line);
                 }
@@ -139,7 +144,17 @@ public class Model {
         // Build and return final string
         StringBuilder newOutput = new StringBuilder();
         for (String outputLine : outputs) {
-            newOutput.append(outputLine).append("\n");
+            if (outputLine.equals(null)) {
+                StaticUtil.log("outputLine.equals(null)");
+            } else if (outputLine.equals("null")) {
+                StaticUtil.log("outputLine.equals(\"null\")");
+            } else if (outputLine.isEmpty()) {
+                StaticUtil.log("outputLine.isEmpty()");
+            } else if (outputLine.equals("")) {
+                StaticUtil.log("outputLine.equals(\"\")");
+            } else {
+                newOutput.append(outputLine).append("\n");
+            }
         }
         return newOutput.toString().trim();
     }

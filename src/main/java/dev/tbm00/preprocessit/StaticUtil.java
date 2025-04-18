@@ -15,6 +15,7 @@ public class StaticUtil {
     public static final String KEY_COMPONENTS = "components";
     public static final String KEY_INPUT_LINE_RULES = "inputLineRules";
     public static final String KEY_OUTPUT_LINE_RULES = "outputLineRules";
+    public static final String KEY_APPEND_LEFTOVERS = "appendLeftovers";
     public static final String KEY_ATTRIBUTE_OUTPUT_ORDER = "attributeOutputOrder";
     public static final String KEY_ATTRIBUTE_OUTPUT_DELIMITER = "attributeOutputDelimiter";
     public static final String KEY_ATTRIBUTES = "attributes";
