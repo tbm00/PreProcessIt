@@ -144,15 +144,7 @@ public class Model {
         // Build and return final string
         StringBuilder newOutput = new StringBuilder();
         for (String outputLine : outputs) {
-            if (outputLine.equals(null)) {
-                StaticUtil.log("outputLine.equals(null)");
-            } else if (outputLine.equals("null")) {
-                StaticUtil.log("outputLine.equals(\"null\")");
-            } else if (outputLine.isEmpty()) {
-                StaticUtil.log("outputLine.isEmpty()");
-            } else if (outputLine.equals("")) {
-                StaticUtil.log("outputLine.equals(\"\")");
-            } else {
+            if (!outputLine.equals(null) && !outputLine.equals("null") && !outputLine.isEmpty() && !outputLine.equals("")) {
                 newOutput.append(outputLine).append("\n");
             }
         }
