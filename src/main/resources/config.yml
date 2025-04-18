@@ -14,20 +14,22 @@ components:
         qualifiedActions:
           - TRIM_MATCH_FIRST
           - SHIP
+          - EXIT_TO_NEXT_LINE_ITERATION
         unqualifiedActions:
-          - SHIP
+          - EXIT_TO_NEXT_LINE_ITERATION
     outputLineRules:
       "1":
         word: WORKING_LINE
         condition: NOT_IS_EMPTY
         value: ""
         qualifiedActions:
+          - SET_CASING(upper)
           - PREPEND(",")
           - PREPEND($INITIAL_LINE_COPY$)
-          - SET_CASING(upper)
           - SHIP
+          - EXIT_TO_NEXT_LINE_ITERATION
         unqualifiedActions:
-          - SHIP
+          - EXIT_TO_NEXT_LINE_ITERATION
     attributeOutputOrder: ["RESPONSE_TIME", "REFRESH_RATE"]
     attributeOutputDelimiter: ","
     attributes:
@@ -55,9 +57,11 @@ components:
           value: "0,50"
           qualifiedActions:
             - TRIM_MATCH_FROM_LEFT_NEIGHBOR
+            - FORMAT_NUMBER(#.#,false)
             - APPEND("ms")
             - DECLARE_TOKEN_PROCESSED
             - SHIP
+            - EXIT_TO_NEXT_ATTRIBUTE_ITERATION
           unqualifiedActions:
             - EXIT_TO_NEXT_TOKEN_ITERATION
         "4": 
@@ -65,9 +69,11 @@ components:
           condition: IN_BETWEEN_INCLUSIVE
           value: "0,50"
           qualifiedActions:
+            - FORMAT_NUMBER(#.#,false)
             - APPEND("ms")
             - DECLARE_TOKEN_PROCESSED
             - SHIP
+            - EXIT_TO_NEXT_ATTRIBUTE_ITERATION
           unqualifiedActions:
             - EXIT_TO_NEXT_TOKEN_ITERATION
       REFRESH_RATE:
@@ -97,6 +103,7 @@ components:
             - APPEND("hz")
             - DECLARE_TOKEN_PROCESSED
             - SHIP
+            - EXIT_TO_NEXT_ATTRIBUTE_ITERATION
           unqualifiedActions:
             - EXIT_TO_NEXT_TOKEN_ITERATION
         "4": 
@@ -107,5 +114,6 @@ components:
             - APPEND("hz")
             - DECLARE_TOKEN_PROCESSED
             - SHIP
+            - EXIT_TO_NEXT_ATTRIBUTE_ITERATION
           unqualifiedActions:
             - EXIT_TO_NEXT_TOKEN_ITERATION
