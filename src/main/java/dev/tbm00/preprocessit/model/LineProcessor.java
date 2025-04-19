@@ -68,10 +68,10 @@ public class LineProcessor {
             return new LineResult(index, "", log);
         }
 
-        // Reset local variables after processing LineRules
+        // Reset local variables after processing InputLineRules
         skip_qualifier = 0;
         current_matcher = null;
-        prior_working_word = working_word;
+        prior_working_word = null;
         working_word = null; 
 
         // Process input Attributes
@@ -85,7 +85,7 @@ public class LineProcessor {
         
         // Process output LineRules
         String outputLine = buildOutputLine();
-        prior_working_word = working_word;
+        prior_working_word = outputLine;
         working_word = outputLine;
         outputLine = processLineRules(outputLine, "output");
         if (outputLine.equals("$DELETE_ME$")) {
@@ -118,7 +118,7 @@ public class LineProcessor {
                     log.add("[-] "+type+" line rule(s) processed and is deleting the line");
                     return "$DELETE_ME$";
                 default:
-                    log.add("[-] "+type+" line rule(s) processed");
+                    log.add("[-] "+type+" line rule(s) processed, returning: "+ working_word);
                     return working_word;
             }
             
@@ -171,14 +171,15 @@ public class LineProcessor {
         current_node = tokenList.getHead();
 
         log.add(" ");
-        log.add("  --==[ Processing Attribute "+attribute.getName()+" ]==--");
+        log.add(" ");
+        log.add("------======||[ Starting Attribute "+attribute.getName()+" Processing ]||======------");
         
         tokenLoop:
         while (current_node != null) {
             Token token = current_node.getData();
             if (!token.isProcessed() && !token.getValue().isEmpty()) {
                 INITIAL_TOKEN_COPY = token.getValue();
-                prior_working_word = working_word;
+                prior_working_word = null;
                 working_word = INITIAL_TOKEN_COPY;
 
                 // Process each qualifier for the attribute.
@@ -238,6 +239,8 @@ public class LineProcessor {
             String matchedString = current_matcher.match(working_word);
 
             log.add(" ");
+            if (tokenList!=null) log.add("Current token list: " + tokenList.getForwards());
+            log.add("Starting qualifier...");
             if (isLineRule) log.add(component.getName()+"'s LineRule's "+qualifier.getWord().name()+" "+qualifier.getCondition().name()+" '"+qualifier.getValues() +"'  ::  '"+ working_word + "' -> '" + matchedString + "'");
             else log.add(attribute.getName()+"'s "+qualifier.getWord().name()+" "+qualifier.getCondition().name()+" '"+qualifier.getValues() +"'  ::  '"+ working_word + "' -> '" + matchedString + "'");
 
@@ -360,10 +363,18 @@ public class LineProcessor {
                     log.add("      (cannot use DECLARE_TOKEN_PROCESSED in LineRules)");
                     return ActionResult.NEXT_ACTION;
                 }
-            case SET_WORKING_WORD:
+            case SET_WORKING_WORD: {
                 working_word = actionSpec.getParameter();
+
+                String leftovers = leftoverBuilder.toString().trim();
+                if (INITIAL_TOKEN_COPY!=null) working_word = working_word.replace("$INITIAL_TOKEN_COPY$", INITIAL_TOKEN_COPY);
+                if (INITIAL_LINE_COPY!=null) working_word = working_word.replace("$INITIAL_LINE_COPY$", INITIAL_LINE_COPY);
+                if (leftovers!=null) working_word = working_word.replace("$LEFTOVERS$", leftovers);
+                if (prior_working_word!=null) working_word = working_word.replace("$PRIOR_WORKING_WORD$", prior_working_word);
+
                 log.add("      (set working word to: "+working_word+")");
                 return ActionResult.NEXT_ACTION;
+            }
             case TRY_NEIGHBORS:
                 if (!isLineRule) {
                     int distance = parsePositiveIntOrDefault(actionSpec.getParameter(), 1);
@@ -507,13 +518,14 @@ public class LineProcessor {
                 // For any other action, attempt to execute it
                 ActioneerInterface actioneer = ActioneerFactory.getActioneer(action);
                 if (actioneer != null) {
-                    prior_working_word = working_word;
                     working_word = actioneer.execute(working_word, actionSpec, matchedString, log);
-                    working_word = working_word.replaceAll(java.util.regex.Pattern.quote("$INITIAL_LINE_COPY$"), INITIAL_LINE_COPY);
-                    working_word = working_word.replaceAll(java.util.regex.Pattern.quote("$INITIAL_TOKEN_COPY$"), INITIAL_TOKEN_COPY);
-                    working_word = working_word.replaceAll(java.util.regex.Pattern.quote("$LEFTOVERS$"), leftoverBuilder.toString().trim());
-                    working_word = working_word.replaceAll(java.util.regex.Pattern.quote("$PRIOR_WORKING_WORD$"), prior_working_word);
-                    
+
+                    String leftovers = leftoverBuilder.toString().trim();
+                    if (INITIAL_TOKEN_COPY!=null) working_word = working_word.replace("$INITIAL_TOKEN_COPY$", INITIAL_TOKEN_COPY);
+                    if (INITIAL_LINE_COPY!=null) working_word = working_word.replace("$INITIAL_LINE_COPY$", INITIAL_LINE_COPY);
+                    if (leftovers!=null) working_word = working_word.replace("$LEFTOVERS$", leftovers);
+                    if (prior_working_word!=null) working_word = working_word.replace("$PRIOR_WORKING_WORD$", prior_working_word);
+
                     log.add("      (updated working word to: " + working_word + ")");
                 } else {
                     log.add("      (no executor found for Action." + actionSpec.getAction().name() + ")");
@@ -557,9 +569,9 @@ public class LineProcessor {
         } else if (qualifierWord.equals(Word.INITIAL_LINE_COPY)) {
             return INITIAL_LINE_COPY;
         } else if (qualifierWord.equals(Word.LEFT_NEIGHBOR)) {
-            return (current_node.getPrior() != null) ? current_node.getPrior().getData().getValue() : INITIAL_TOKEN_COPY;
+            return (current_node.getPrior() != null) ? current_node.getPrior().getData().getValue() : "";
         } else if (qualifierWord.equals(Word.RIGHT_NEIGHBOR)) {
-            return (current_node.getNext() != null) ? current_node.getNext().getData().getValue() : INITIAL_TOKEN_COPY;
+            return (current_node.getNext() != null) ? current_node.getNext().getData().getValue() : "";
         }
         return INITIAL_TOKEN_COPY;
     }
@@ -630,7 +642,6 @@ public class LineProcessor {
             String candidate = neighborPart + working_word;
             String matchResult = current_matcher.match(candidate);
             if (!matchResult.isEmpty()) {
-                prior_working_word = working_word;
                 working_word = candidate;
                 return true;
             }
@@ -662,7 +673,6 @@ public class LineProcessor {
             String candidate = working_word + neighborPart;
             String matchResult = current_matcher.match(candidate);
             if (!matchResult.isEmpty()) {
-                prior_working_word = working_word;
                 working_word = candidate;
                 return true;
             }
