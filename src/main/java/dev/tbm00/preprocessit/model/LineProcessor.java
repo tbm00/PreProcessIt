@@ -290,7 +290,7 @@ public class LineProcessor {
      * Executes a single action for the current qualifier.
      *
      * <p>This method performs the specific action as defined by the given action specification.
-     * It handles various action types (such as SHIP, EXIT, CONTINUE, or neighbor-based actions) using a switch statement.
+     * It handles various action types (such as SHIP, EXITs, CONTINUEs, & more actions) using a switch statement.
      * Based on the action executed, the working token is updated, tokens may be marked as processed, and the appropriate
      * {@code ActionResult} is returned.</p>
      *
@@ -331,7 +331,7 @@ public class LineProcessor {
                     log.add("      (cannot use EXIT_TO_NEXT_TOKEN_ITERATION in LineRules)");
                     return ActionResult.NEXT_ACTION;
                 }
-            case CONTINUE:
+            case CONTINUE_TO_NEXT_QUALIFIER:
                 // Just continue processing qualifiers
                 return ActionResult.NEXT_QUALIFIER;
             case CONTINUE_AND_SKIP_NEXT_QUALIFIER:
