@@ -20,8 +20,9 @@ public class ReplaceFirstActioneer implements ActioneerInterface {
             return word;
         }
         try {
-            word.replaceFirst(parts[0], parts[1]);
+            word = word.replaceFirst(java.util.regex.Pattern.quote(parts[0]), parts[1]);
             log.add("      (ReplaceFirstActioneer: " + word + ")");
+            log.add("      (" + parts[0] + " -> "+parts[1]+")");
         } catch (Exception e) {
             log.add("      (ReplaceFirstActioneer: error replacing strng)");
         } return word;

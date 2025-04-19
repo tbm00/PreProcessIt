@@ -20,8 +20,9 @@ public class ReplaceAllActioneer implements ActioneerInterface {
             return word;
         }
         try {
-            word.replace(parts[0], parts[1]);
+            word = word.replaceAll(java.util.regex.Pattern.quote(parts[0]), parts[1]);
             log.add("      (ReplaceAllActioneer: " + word + ")");
+            log.add("      (" + parts[0] + " -> "+parts[1]+")");
         } catch (Exception e) {
             log.add("      (ReplaceAllActioneer: error replacing strng)");
         } return word;
