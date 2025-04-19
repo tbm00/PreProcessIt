@@ -2,7 +2,7 @@ package dev.tbm00.preprocessit.model.data;
 
 import dev.tbm00.preprocessit.model.data.enums.ActionSpec;
 import dev.tbm00.preprocessit.model.data.enums.Condition;
-import dev.tbm00.preprocessit.model.data.enums.Word;
+import dev.tbm00.preprocessit.model.data.enums.WordSpec;
 import dev.tbm00.preprocessit.model.matcher.MatcherInterface;
 import dev.tbm00.preprocessit.model.matcher.MatcherFactory;
 
@@ -13,17 +13,17 @@ import dev.tbm00.preprocessit.model.matcher.MatcherFactory;
  */
 public class Qualifier {
     private int id;
-    private Word word;
+    private WordSpec wordSpec;
     private Condition condition;
     private String values;
     private ActionSpec[] qualifiedActions;
     private ActionSpec[] unqualifiedActions;
     private MatcherInterface matcher; 
 
-    public Qualifier(int id, Word word, Condition condition, String values,
+    public Qualifier(int id, WordSpec wordSpec, Condition condition, String values,
                     ActionSpec[] qualifiedActions, ActionSpec[] unqualifiedActions) {
         this.id = id;
-        this.word = word;
+        this.wordSpec = wordSpec;
         this.condition = condition;
         this.values = values;
         this.qualifiedActions = qualifiedActions;
@@ -41,12 +41,12 @@ public class Qualifier {
         this.id = id;
     }
 
-    public Word getWord() {
-        return word;
+    public WordSpec getWordSpec() {
+        return wordSpec;
     }
 
-    public void setWord(Word word) {
-        this.word = word;
+    public void setWordSpec(WordSpec wordSpec) {
+        this.wordSpec = wordSpec;
     }
 
     public Condition getCondition() {

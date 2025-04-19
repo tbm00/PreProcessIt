@@ -35,5 +35,6 @@ public enum Action {
     APPEND,
     PREPEND,
     SET_WORKING_WORD,
+    SET_TOKEN_VALUE,
     DELETE_LINE
 }

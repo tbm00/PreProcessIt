@@ -54,11 +54,11 @@ components:
           unqualifiedActions:
             - CONTINUE_AND_SKIP_NEXT_QUALIFIER
         "3": 
-          word: LEFT_NEIGHBOR
+          word: LEFT_NEIGHBOR(1)
           condition: IN_BETWEEN_INCLUSIVE
           value: "0,50"
           qualifiedActions:
-            - TRIM_MATCH_FROM_LEFT_NEIGHBOR
+            - TRIM_MATCH_FROM_LEFT_NEIGHBOR(1)
             - FORMAT_NUMBER(#.#,false)
             - APPEND("ms")
             - SHIP
@@ -97,11 +97,11 @@ components:
           unqualifiedActions:
             - CONTINUE_AND_SKIP_NEXT_QUALIFIER
         "3": 
-          word: LEFT_NEIGHBOR
+          word: LEFT_NEIGHBOR(1)
           condition: IN_BETWEEN_INCLUSIVE
           value: "59,361"
           qualifiedActions:
-            - TRIM_MATCH_FROM_LEFT_NEIGHBOR
+            - TRIM_MATCH_FROM_LEFT_NEIGHBOR(1)
             - APPEND("hz")
             - SHIP
             - DECLARE_TOKEN_PROCESSED
