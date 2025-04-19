@@ -360,6 +360,10 @@ public class LineProcessor {
                     log.add("      (cannot use DECLARE_TOKEN_PROCESSED in LineRules)");
                     return ActionResult.NEXT_ACTION;
                 }
+            case SET_WORKING_WORD:
+                working_word = actionSpec.getParameter();
+                log.add("      (set working word to: "+working_word+")");
+                return ActionResult.NEXT_ACTION;
             case TRY_NEIGHBORS:
                 if (!isLineRule) {
                     int distance = parsePositiveIntOrDefault(actionSpec.getParameter(), 1);
@@ -508,7 +512,7 @@ public class LineProcessor {
                     working_word = working_word.replaceAll(java.util.regex.Pattern.quote("$INITIAL_LINE_COPY$"), INITIAL_LINE_COPY);
                     working_word = working_word.replaceAll(java.util.regex.Pattern.quote("$INITIAL_TOKEN_COPY$"), INITIAL_TOKEN_COPY);
                     working_word = working_word.replaceAll(java.util.regex.Pattern.quote("$LEFTOVERS$"), leftoverBuilder.toString().trim());
-                    working_word = working_word.replaceAll(java.util.regex.Pattern.quote("$PRIOR_WORKING_WORD$"), leftoverBuilder.toString().trim());
+                    working_word = working_word.replaceAll(java.util.regex.Pattern.quote("$PRIOR_WORKING_WORD$"), prior_working_word);
                     
                     log.add("      (updated working word to: " + working_word + ")");
                 } else {
