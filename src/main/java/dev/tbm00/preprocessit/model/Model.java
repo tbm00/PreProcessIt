@@ -144,7 +144,7 @@ public class Model {
         // Build and return final string
         StringBuilder newOutput = new StringBuilder();
         for (String outputLine : outputs) {
-            if (!outputLine.equals(null) && !outputLine.equals("null") && !outputLine.isEmpty() && !outputLine.equals("")) {
+            if (outputLine != null && !outputLine.equals(null) && !outputLine.equals("null") && !outputLine.isEmpty() && !outputLine.equals("")) {
                 newOutput.append(outputLine).append("\n");
             }
         }

@@ -34,5 +34,7 @@ public enum Action {
     INSERT_AT,
     APPEND,
     PREPEND,
+    SET_WORKING_WORD,
+    SET_TOKEN_VALUE,
     DELETE_LINE
 }

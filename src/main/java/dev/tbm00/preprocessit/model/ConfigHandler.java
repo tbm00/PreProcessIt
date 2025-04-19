@@ -27,6 +27,7 @@ import dev.tbm00.preprocessit.model.data.enums.Action;
 import dev.tbm00.preprocessit.model.data.enums.ActionSpec;
 import dev.tbm00.preprocessit.model.data.enums.Condition;
 import dev.tbm00.preprocessit.model.data.enums.Word;
+import dev.tbm00.preprocessit.model.data.enums.WordSpec;
 
 /**
  * Handles configuration file operations such as loading, validating, and creating configurations.
@@ -435,9 +436,10 @@ public class ConfigHandler {
             log("- Word Not Loaded: " + componentName + (isLineRule ? "" : "'s " + attributeName) + " (no words found)");
             return null;
         }
-        Word word;
+        WordSpec wordSpec; 
         try {
-            word = Word.valueOf(qualifierWordStr.trim().replace("-", "_").toUpperCase());
+            qualifierWordStr = qualifierWordStr.trim().replace("-", "_").toUpperCase();
+            wordSpec = parseWord(qualifierWordStr);
             log("- Word Loaded: " + componentName + (isLineRule ? "" : "'s " + attributeName) + "'s " + qualifierWordStr);
         } catch (IllegalArgumentException ex) {
             log("- Word Not Loaded: " + componentName + (isLineRule ? "" : "'s " + attributeName) + "'s " + qualifierWordStr + " (no applicable ENUM)");
@@ -475,10 +477,10 @@ public class ConfigHandler {
         }
         List<ActionSpec> qualifiedActionsList = new ArrayList<>();
         for (String actionStr : qualifiedActionList) {
-            ActionSpec spec = parseAction(actionStr);
-            if (spec != null) {
-                qualifiedActionsList.add(spec);
-                log("- Qualified Action Loaded: " + spec);
+            ActionSpec actionSpec = parseAction(actionStr);
+            if (actionSpec != null) {
+                qualifiedActionsList.add(actionSpec);
+                log("- Qualified Action Loaded: " + actionSpec);
             } else {
                 log("- Qualified Action Not Loaded: " + actionStr + " for qualifier key: " + qualifierKey);
                 return null;
@@ -494,10 +496,10 @@ public class ConfigHandler {
         }
         List<ActionSpec> unqualifiedActionsList = new ArrayList<>();
         for (String actionStr : unqualifiedActionList) {
-            ActionSpec spec = parseAction(actionStr);
-            if (spec != null) {
-                unqualifiedActionsList.add(spec);
-                log("- Unqualified Action Loaded: " + spec);
+            ActionSpec actionSpec = parseAction(actionStr);
+            if (actionSpec != null) {
+                unqualifiedActionsList.add(actionSpec);
+                log("- Unqualified Action Loaded: " + actionSpec);
             } else {
                 log("- Unqualified Action Not Loaded: " + actionStr + " for qualifier key: " + qualifierKey);
                 return null;
@@ -505,9 +507,49 @@ public class ConfigHandler {
         }
         ActionSpec[] unqualifiedActions = unqualifiedActionsList.toArray(new ActionSpec[0]);
 
-        return new Qualifier(qualifierKey, word, condition, qualifierValue, qualifiedActions, unqualifiedActions);
+        return new Qualifier(qualifierKey, wordSpec, condition, qualifierValue, qualifiedActions, unqualifiedActions);
     }
 
+    /**
+     * Parses a word specification string to create an WordSpec instance.
+     *
+     * <p>The method handles word strings with or without parameters. Word names are transformed to uppercase and
+     * formatted appropriately before matching them to their corresponding enum constants. If parsing fails, it logs
+     * an error and returns {@code null}.</p>
+     *
+     * @param actionStr The word specification string (e.g., "WORD_NAME(param)").
+     * @return An {@code WordSpec} representing the parsed action, or {@code null} if parsing fails.
+     */
+    private WordSpec parseWord(String wordStr) {
+        wordStr = wordStr.trim();
+
+        if (wordStr.contains("(") && wordStr.endsWith(")")) {
+            int startIndex = wordStr.indexOf('(');
+            String wordName = wordStr.substring(0, startIndex).trim().replace("-", "_").toUpperCase();
+            String param = wordStr.substring(startIndex + 1, wordStr.length() - 1).trim();
+
+            if ((param.startsWith("\"") && param.endsWith("\"")) || (param.startsWith("'") && param.endsWith("'"))) {
+                param = param.substring(1, param.length() - 1);
+            }
+
+            try {
+                Word word = Word.valueOf(wordName);
+                return new WordSpec(word, param);
+            } catch (IllegalArgumentException e) {
+                log(" Invalid Action Enum: " + wordStr);
+                return null;
+            }
+        } else {
+            try {
+                Word word = Word.valueOf(wordStr.replace("-", "_").toUpperCase());
+                return new WordSpec(word, "1");
+            } catch (IllegalArgumentException e) {
+                log(" Invalid Action Enum: " + wordStr);
+                return null;
+            }
+        }
+    }
+    
     /**
      * Parses an action specification string to create an ActionSpec instance.
      *

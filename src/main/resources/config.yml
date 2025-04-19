@@ -54,15 +54,15 @@ components:
           unqualifiedActions:
             - CONTINUE_AND_SKIP_NEXT_QUALIFIER
         "3": 
-          word: LEFT_NEIGHBOR
+          word: LEFT_NEIGHBOR(1)
           condition: IN_BETWEEN_INCLUSIVE
           value: "0,50"
           qualifiedActions:
-            - TRIM_MATCH_FROM_LEFT_NEIGHBOR
+            - TRIM_MATCH_FROM_LEFT_NEIGHBOR(1)
             - FORMAT_NUMBER(#.#,false)
             - APPEND("ms")
-            - DECLARE_TOKEN_PROCESSED
             - SHIP
+            - DECLARE_TOKEN_PROCESSED
             - EXIT_TO_NEXT_ATTRIBUTE_ITERATION
           unqualifiedActions:
             - EXIT_TO_NEXT_TOKEN_ITERATION
@@ -73,8 +73,8 @@ components:
           qualifiedActions:
             - FORMAT_NUMBER(#.#,false)
             - APPEND("ms")
-            - DECLARE_TOKEN_PROCESSED
             - SHIP
+            - DECLARE_TOKEN_PROCESSED
             - EXIT_TO_NEXT_ATTRIBUTE_ITERATION
           unqualifiedActions:
             - EXIT_TO_NEXT_TOKEN_ITERATION
@@ -97,14 +97,14 @@ components:
           unqualifiedActions:
             - CONTINUE_AND_SKIP_NEXT_QUALIFIER
         "3": 
-          word: LEFT_NEIGHBOR
+          word: LEFT_NEIGHBOR(1)
           condition: IN_BETWEEN_INCLUSIVE
           value: "59,361"
           qualifiedActions:
-            - TRIM_MATCH_FROM_LEFT_NEIGHBOR
+            - TRIM_MATCH_FROM_LEFT_NEIGHBOR(1)
             - APPEND("hz")
-            - DECLARE_TOKEN_PROCESSED
             - SHIP
+            - DECLARE_TOKEN_PROCESSED
             - EXIT_TO_NEXT_ATTRIBUTE_ITERATION
           unqualifiedActions:
             - EXIT_TO_NEXT_TOKEN_ITERATION
@@ -114,8 +114,8 @@ components:
           value: "59,361"
           qualifiedActions:
             - APPEND("hz")
-            - DECLARE_TOKEN_PROCESSED
             - SHIP
+            - DECLARE_TOKEN_PROCESSED
             - EXIT_TO_NEXT_ATTRIBUTE_ITERATION
           unqualifiedActions:
             - EXIT_TO_NEXT_TOKEN_ITERATION
