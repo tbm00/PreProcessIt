@@ -36,6 +36,7 @@ public class LineProcessor {
     private int skip_qualifier = 0;
     private MatcherInterface current_matcher = null;
     private Node<Token> current_node = null;
+    private String prior_token_value = null;
     private String prior_working_word = null;
     private String working_word = null;
 
@@ -177,6 +178,7 @@ public class LineProcessor {
      */
     private ActionResult processAttribute(DoublyLinkedList<Token> tokenList, Component component, Attribute attribute) {
         current_node = tokenList.getHead();
+        prior_token_value = current_node.getData().getValue();
 
         log.add(" ");
         log.add(" ");
@@ -193,10 +195,12 @@ public class LineProcessor {
                 // Process each qualifier for the attribute.
                 ActionResult result = processQualifiers(INITIAL_TOKEN_COPY, component, attribute, attribute.getQualifiers());
                 if (result.equals(ActionResult.NEXT_TOKEN)) {
+                    prior_token_value = current_node.getData().getValue();
                     current_node = current_node.getNext();
                     log.add("[-] attribute continuing tokenLoop");
                     continue tokenLoop;
                 } else {
+                    prior_token_value = current_node.getData().getValue();
                     current_node = current_node.getNext();
                     log.add("[-] attribute bumped the current token to the next neighbor!");
                     if (current_node != null) log.add("      (bumped to token: "+current_node.getData().getValue()+")");
@@ -205,6 +209,7 @@ public class LineProcessor {
                 }
             } else {
                 // If token is processed or empty, skip it.
+                prior_token_value = current_node.getData().getValue();
                 current_node = current_node.getNext();
                 if (token.isProcessed()) {
                     log.add("[-] attribute bumped the current token to the next neighbor because the current token was already processed!");
@@ -383,6 +388,7 @@ public class LineProcessor {
                 if (INITIAL_LINE_COPY!=null) working_word = working_word.replace("$INITIAL_LINE_COPY$", INITIAL_LINE_COPY);
                 if (leftovers!=null) working_word = working_word.replace("$LEFTOVERS$", leftovers);
                 if (prior_working_word!=null) working_word = working_word.replace("$PRIOR_WORKING_WORD$", prior_working_word);
+                if (prior_token_value!=null) working_word = working_word.replace("$PRIOR_TOKEN_VALUE$", prior_token_value);
 
                 log.add("      (set working word to: "+working_word+")");
                 return ActionResult.NEXT_ACTION;
@@ -488,6 +494,7 @@ public class LineProcessor {
                     if (current_node != null) {
                         ActioneerInterface actioneer = ActioneerFactory.getActioneer(action);
                         if (actioneer != null) {
+                            prior_token_value = current_node.getData().getValue();
                             String newValue = actioneer.execute(current_node.getData().getValue(), actionSpec, matchedString, log);
                             current_node.getData().setValue(newValue);
                             if (newValue==null || newValue.isEmpty() || newValue.equals("")) {
@@ -516,6 +523,7 @@ public class LineProcessor {
                                 return ActionResult.NEXT_ACTION;
                             }
 
+                            prior_token_value = current_node.getData().getValue();
                             String newValue = actioneer.execute(current_node.getData().getValue(), actionSpec, unmatchedString, log);
                             current_node.getData().setValue(newValue);
                             if (newValue==null || newValue.isEmpty() || newValue.equals("")) {
@@ -576,6 +584,7 @@ public class LineProcessor {
                     if (INITIAL_LINE_COPY!=null) working_word = working_word.replace("$INITIAL_LINE_COPY$", INITIAL_LINE_COPY);
                     if (leftovers!=null) working_word = working_word.replace("$LEFTOVERS$", leftovers);
                     if (prior_working_word!=null) working_word = working_word.replace("$PRIOR_WORKING_WORD$", prior_working_word);
+                    if (prior_token_value!=null) working_word = working_word.replace("$PRIOR_TOKEN_VALUE$", prior_token_value);
 
                     log.add("      (updated working word to: " + working_word + ")");
                 } else {
@@ -710,6 +719,7 @@ public class LineProcessor {
             String matchResult = current_matcher.match(candidate);
             if (!matchResult.isEmpty()) {
                 working_word = candidate;
+                prior_token_value = current_node.getData().getValue();
                 current_node.getData().setValue(candidate);
 
                 String newValue = leftValue.substring(0, (leftValue.length() - effectiveDistance)-1);
@@ -755,6 +765,7 @@ public class LineProcessor {
             String matchResult = current_matcher.match(candidate);
             if (!matchResult.isEmpty()) {
                 working_word = candidate;
+                prior_token_value = current_node.getData().getValue();
                 current_node.getData().setValue(candidate);
 
                 String newValue = rightValue.substring(effectiveDistance, rightValue.length()-1);
