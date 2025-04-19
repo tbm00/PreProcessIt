@@ -1,5 +1,5 @@
 # PreProcessIt
-A highly configurable, rule‑based text processor that parses and normalizes messy input data into structured output.
+A highly configurable, rule-based text processor that parses and normalizes messy input data into structured output.
  
 Using a user-defined algorithm, PreProcessIt transforms unstructured input (from CSVs, TXTs, and more) into well-formatted, standardized output. PreProcessIt leverages a configurable processing pipeline to handle complex tokenization and data transformation requirements, making it an effective tool for a range of data processing tasks.
 
@@ -89,7 +89,7 @@ Use the [PreProcessIt Default Config](src/main/resources/config.yml) to assist i
 | `RIGHT_NEIGHBOR(neighborDistance)` | The token following the current token in the input line |
 
   <ul> 
-  * <em><code>neighborDistance</code> is an integer representing which neighbor to use, e.g., 1 is the first neighbor, 2 is the second neigbor, etc..</em>
+  * <em><code>neighborDistance</code> is an integer representing which neighbor to use, e.g., 1 is the first neighbor, 2 is the second neighbor, etc..</em>
   </ul> 
 
 ### Available Conditions
@@ -132,7 +132,7 @@ Use the [PreProcessIt Default Config](src/main/resources/config.yml) to assist i
 
 | Action | Description |
 |--------|-------------|
-| `TRY_NEIGHBORS(neighborDistance,maxCharacters)` | Try appending/prepending left and right neighbors' characters to the current working word's value to see if it might qualify with the same matcher, then continue to next actions after possibly updating the working word's value; **DOES** modify the neighboring token and current token when a match is detected with appened/prepended neighboring characters |
+| `TRY_NEIGHBORS(neighborDistance,maxCharacters)` | Try appending/prepending left and right neighbors' characters to the current working word's value to see if it might qualify with the same matcher, then continue to next actions after possibly updating the working word's value; **DOES** modify the neighboring token and current token when a match is detected with appeneded/prepended neighboring characters |
 | `SHIP` | Ship current working word's value as the current attribute's final value; **DOESN'T** mark current token as processed |
 | `DECLARE_TOKEN_PROCESSED` | Mark the current token as processed, so that it doesn't get processed by other attributes' qualifiers; The main way to declare tokens as processed |
 | `CONTINUE_TO_NEXT_QUALIFIER` | Continue to the next qualifier on current attribute iteration |
