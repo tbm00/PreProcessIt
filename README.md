@@ -13,7 +13,7 @@ PreProcessIt follows the Model-View-Controller (MVC) design pattern, ensuring cl
 ## Key Features
   - **Configurable Parsing Engine:** Define custom parsing algorithms and attribute‑matching rules via YAML, then locate and standardize those attributes in your input data using the qualifiers you've specified.
   - **Advanced Token Handling:** After tokenizing the input line, PreProcessIt parses tokens using configurable rules that consider neighboring tokens, enabling complex pattern matching and data transformation.
-  - **Robust Error Handling and Logging:** Detailed logging and error management provide transparency during data processing, enabling quick troubleshooting and config creation.
+  - **Robust Error Handling & Logging:** Detailed logging and error management provide transparency during data processing, enabling quick troubleshooting and config creation.
   - **User-friendly GUI & CLI:** Use the GUI to import, process, and export data, or use the CLI for headless processing!
 
 ## Dependencies
@@ -21,7 +21,7 @@ PreProcessIt follows the Model-View-Controller (MVC) design pattern, ensuring cl
 
 ## Usage
   - #### GUI Mode
-    With Java installed, double-click the program's JAR file (or run `java -jar PreProcessIt-0.1.6-beta.jar`) to launch the GUI. Then:
+    With Java installed, double-click the program's JAR file (or run `java -jar PreProcessIt-0.1.7-beta.jar`) to launch the GUI. Then:
     - Load your alternative config *(defaults to: `/PreProcessIt/config.yml`)*
     - Select the component configuration to use *(if you have more than one defined)*
     - Paste or import your input data from a file
@@ -30,25 +30,31 @@ PreProcessIt follows the Model-View-Controller (MVC) design pattern, ensuring cl
 
   - #### Headless Command
     With Java installed, run:
-      - `java -jar PreProcessIt-0.1.6-beta.jar --config <config.yml> [--component <name>] --input <input.*> --output <output.*> [--log]`
+      - `java -jar PreProcessIt-0.1.7-beta.jar --config <config.yml> [--component <name>] --input <input.*> --output <output.*> [--log]`
 
 ## How It Works
-PreProcessIt reads input data one line at a time and splits each line into tokens. For every attribute in your selected component's configuration, the program checks if the current working word (normally the `WORKING_TOKEN`) matches the attribute using the attribute's qualifiers, starting with the first one. If there is a match, the qualified actions will run; otherwise, the unqualified actions will run. 
+PreProcessIt reads input data one line at a time and splits each line into tokens. For every attribute in your selected component's configuration, the program checks if the current working word (normally the `WORKING_TOKEN`) matches the attribute using the attribute's qualifiers. If there is a match, the qualified actions will run; otherwise, the unqualified actions will run. 
 
 Correctly implemented qualifiers contain:
   - **Word Source:** Which String value to evaluate; e.g., the current working token, a copy of the initial token, or tokens from neighboring positions
   - **Condition:** The criteria a token must meet; e.g., containing a specific string, matching a specific data type, etc.
   - **Value:** The expected literal or range for validation
-  - **Actions:** Procedures to execute when a token is deemed qualified or unqualified. These actions may modify the token, skip iterations, try neighboring tokens, and "ship" the token to the final output.
+  - **Actions:** Procedures to execute when a token is deemed qualified or unqualified. These actions may modify the token, skip iterations, try neighboring tokens, and "ship" the token to the attribute's final output.
 
-Once a value has been "shipped" for a particular attribute, the program will continue to search the line's unprocessed tokens for the next attribute, until all attributes have run their checks. Any tokens that remain unprocessed are appended as leftovers at the end of the output line.
+You may also use qualifiers on the entire input or output line by using LineRules!
 
-You may also use qualifiers on the entire input or output line by using LineRules:
-  - All defined InputLineRules will be processed on each input line before the attributes are processed.
-  - After attributes are processed, all defined OutputLineRules will be processed on each newly created output line, and then the output line will be finalized.
+### Line Processing Algorithm
+  - **1st:** Prior to beginning the attribute processing for the current input line, the line will be transformed by the InputLineRules, if any are defined.
+  - **2nd:** After the InputLineRules rules finish processing, the attributes' qualifiers will get processed in order as defined, on each token. Once a value has been "shipped" for a particular attribute, the program will continue to search the line's unprocessed tokens for the next attribute, until all attributes have run their checks. * 
+  <ul> <ul>
+  * <em>After shipping an attribute with a <code>SHIP</code> action, call the <code>DECLARE_TOKEN_PROCESSED</code> action to mark the token as processed so it isn't processed by later attributes, then call the <code>EXIT_TO_NEXT_ATTRIBUTE_ITERATION</code> exit action to exit the current attribute's iteration. In some rare cases, you may not want to call them, so to support that behaviour these actions are not automatically called when shipping.</em>
+</ul> </ul>  
+
+  - **3rd:** After all attributes have run their qualifiers' checks, the output line will be built from the shipped attributes, and then transformed by all defined OutputLineRules (this is where you can append the leftovers and/or original line).
+  - **4th:** After the OutputLineRules rules finish processing, the newly transformed output line is finalized.
 
 ### Example
-Using the basic default config, PreProcessIt transforms messy input:
+Using the [basic default config](#default-config), PreProcessIt transforms messy input:
 ```
 120 hz 2. milliseCONDs
 9ms  rrrr  80hz
@@ -65,7 +71,7 @@ example1 ms  160 hz,1.0MS,160HZ,
   60hz 5.91ms,5.9MS,60HZ,
 EXAMPLE99hertz random text 20Ms,20.0MS,99HZ,RANDOM TEXT
 ```
-which still looks a bit messy, but that's only because there is an "OutputLineRule" to prepend the original input line to the output line.
+which still looks a bit messy, but that's only because there is an OutputLineRule to prepend the original input line to the output line, and the leftovers are appended.
 
 ## Configuration
 
@@ -79,12 +85,12 @@ Use the [PreProcessIt Default Config](src/main/resources/config.yml) to assist i
 | `INITIAL_TOKEN_COPY` | Static copy of the initial working token (therefore, unmodified by prior qualifiers) |
 | `LEFT_NEIGHBOR` | The token preceding the current token in the input line |
 | `RIGHT_NEIGHBOR` | The token following the current token in the input line |
-| `WORKING_LINE` | Current working line that may be modified by prior qualifiers; Only used by LineRules |
+| `WORKING_LINE` | Current working line that may be modified by prior qualifiers; **Only used by LineRules** |
 | `INITIAL_LINE_COPY` | Static copy of the initial input line (therefore, unmodified by prior qualifiers) |
 
 ### Available Conditions
-| Condition | Value Clarification |
-|-----------|---------------------|
+| Condition | Clarification |
+|-----------|---------------|
 | `GREATER_THAN` | Numerical values only |
 | `GREATER_THAN_EQUAL_TO` | Numerical values only |
 | `LESS_THAN` | Numerical values only |
@@ -115,14 +121,14 @@ Use the [PreProcessIt Default Config](src/main/resources/config.yml) to assist i
 | `NOT_IS_EMPTY` | Configured 'value' doesn't matter |
 
 ### Available Actions
-  - The qualifiers get processed in order. Likewise, within each qualifier, the actions get processed in order until there are none left. If a qualifier's running action list doesn't end in an exit action, then the next qualifier will get processed once the current action list finishes running.
-  - Use the `CONTINUE`, `CONTINUE_AND_SKIP_NEXT_QUALIFIER`, `EXIT_TO_NEXT_TOKEN_ITERATION`, `EXIT_TO_NEXT_ATTRIBUTE_ITERATION`, and `EXIT_TO_NEXT_LINE_ITERATION` exit actions to control the exit flow of the qualifier's action lists.
-  - Use `DECLARE_TOKEN_PROCESSED` actions immediately before exit actions when the token no longer needs to be processed by other attributes' qualifiers.
-  - Anywhere you pass a String as an action parameter (except fromString parameters), you may use `$INITIAL_LINE_COPY$` or `$INITIAL_TOKEN_COPY$` as a placeholder.
+  - The qualifiers get processed in order. Likewise, within each qualifier, the actions get processed in order until there are none left. If a qualifier's running action list doesn't end with an exit action, then the next qualifier will get processed once the current action list finishes running.
+  - Use the `CONTINUE_TO_NEXT_QUALIFIER`, `CONTINUE_AND_SKIP_NEXT_QUALIFIER`, `EXIT_TO_NEXT_TOKEN_ITERATION`, `EXIT_TO_NEXT_ATTRIBUTE_ITERATION`, and `EXIT_TO_NEXT_LINE_ITERATION` exit actions to control the exit flow of the qualifier's action list processing.
+  - Be sure to use `DECLARE_TOKEN_PROCESSED` actions before exit actions when the token no longer needs to be processed by other attributes' qualifiers.
+  - Anywhere you pass a String as an action parameter (except fromString parameters), you may use `$INITIAL_LINE_COPY$` or `$INITIAL_TOKEN_COPY$` as a placeholder. Similarly, in the OutputLineRules, you may pass in `$LEFTOVERS$`.
 
 | Action | Description |
 |--------|-------------|
-| `CONTINUE` | Continue to the next qualifier on current attribute iteration |
+| `CONTINUE_TO_NEXT_QUALIFIER` | Continue to the next qualifier on current attribute iteration |
 | `CONTINUE_AND_SKIP_NEXT_QUALIFIER(count)` | Skip next qualifier(s) on current attribute iteration |
 | `TRY_NEIGHBORS(max_characters)` | Try appending/prepending neighbors' characters to the current working word's value to see if it might qualify with the same matcher, then continue to next actions after possibly updating the working word's value; **DOESN'T** modify the neighboring tokens in the token list |
 | `NEW_TOKEN_FROM_MATCH` | Create new token with the matched value, placed after the current working token; **DOESN'T** modify the current token in the token list |
@@ -132,6 +138,7 @@ Use the [PreProcessIt Default Config](src/main/resources/config.yml) to assist i
 | `EXIT_TO_NEXT_TOKEN_ITERATION` | Go to next token iteration on current attribute iteration |
 | `EXIT_TO_NEXT_ATTRIBUTE_ITERATION` | Go to next attribute iteration on current line iteration |
 | `EXIT_TO_NEXT_LINE_ITERATION` | Go to next line iteration |
+| `DELETE_LINE` | Completely remove current line from getting processed and outputted, then go to next line iteration; **Only used by LineRules** |
 | `TRIM_MATCH_FROM_LEFT_NEIGHBOR` | Remove matched value from the back of the prior token, if it's there; **DOES** modify the neighboring token in the token list, & afterwards, if the neighboring token is empty, it's marked as processed |
 | `TRIM_MATCH_FROM_RIGHT_NEIGHBOR` | Remove matched value from the front of the next token, if it's there; **DOES** modify the neighboring token in the token list, & afterwards, if the neighboring token is empty, it's marked as processed |
 | `TRIM_MATCH_FROM_TOKEN` | Remove all occurrences of the matched value from the current token; **DOES** modify the token in the token list, & afterwards, if the token is empty, it's marked as processed |
@@ -159,4 +166,4 @@ Use the [PreProcessIt Default Config](src/main/resources/config.yml) to assist i
 ## License
 PreProcessIt is released under the [PreProcessIt Non-Commercial License](LICENSE).
 
-This license permits non-commercial use, but any commercial usage, modification, copying, or redistribution is prohibited without explicit permission.
+This license permits non-commercial use, but any commercial use, modification, copying, or redistribution is prohibited without explicit permission.
