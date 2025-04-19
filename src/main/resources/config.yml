@@ -42,7 +42,7 @@ components:
           value: "MS|milliseconds"
           qualifiedActions:
             - TRIM_MATCH_ALL
-            - CONTINUE
+            - CONTINUE_TO_NEXT_QUALIFIER
           unqualifiedActions:
             - EXIT_TO_NEXT_TOKEN_ITERATION
         "2": 
@@ -50,7 +50,7 @@ components:
           condition: IS_EMPTY
           value: ""
           qualifiedActions:
-            - CONTINUE
+            - CONTINUE_TO_NEXT_QUALIFIER
           unqualifiedActions:
             - CONTINUE_AND_SKIP_NEXT_QUALIFIER
         "3": 
@@ -85,7 +85,7 @@ components:
           value: "HZ|hertz"
           qualifiedActions:
             - TRIM_MATCH_ALL
-            - CONTINUE
+            - CONTINUE_TO_NEXT_QUALIFIER
           unqualifiedActions:
             - EXIT_TO_NEXT_TOKEN_ITERATION
         "2": 
@@ -93,7 +93,7 @@ components:
           condition: IS_EMPTY
           value: ""
           qualifiedActions:
-            - CONTINUE
+            - CONTINUE_TO_NEXT_QUALIFIER
           unqualifiedActions:
             - CONTINUE_AND_SKIP_NEXT_QUALIFIER
         "3": 

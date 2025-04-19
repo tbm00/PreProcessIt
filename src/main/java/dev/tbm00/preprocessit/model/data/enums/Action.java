@@ -1,7 +1,7 @@
 package dev.tbm00.preprocessit.model.data.enums;
 
 public enum Action {
-    CONTINUE,
+    CONTINUE_TO_NEXT_QUALIFIER,
     CONTINUE_AND_SKIP_NEXT_QUALIFIER,
     TRY_NEIGHBORS,
     NEW_TOKEN_FROM_MATCH,
