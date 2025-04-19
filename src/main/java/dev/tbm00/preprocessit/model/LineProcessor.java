@@ -35,6 +35,7 @@ public class LineProcessor {
     private int skip_qualifier = 0;
     private MatcherInterface current_matcher = null;
     private Node<Token> current_node = null;
+    private String prior_working_word = null;
     private String working_word = null;
 
     private StringBuilder leftoverBuilder = new StringBuilder();
@@ -59,6 +60,7 @@ public class LineProcessor {
         log.add("-=-=-=-=-=-=-=- Line "+index+" -=-=-=-=-=-=-=-");
 
         // Process input LineRules
+        prior_working_word = inputLine;
         working_word = inputLine;
         INITIAL_LINE_COPY = inputLine;
         inputLine = processLineRules(inputLine, "input").trim();
@@ -69,6 +71,7 @@ public class LineProcessor {
         // Reset local variables after processing LineRules
         skip_qualifier = 0;
         current_matcher = null;
+        prior_working_word = working_word;
         working_word = null; 
 
         // Process input Attributes
@@ -82,6 +85,7 @@ public class LineProcessor {
         
         // Process output LineRules
         String outputLine = buildOutputLine();
+        prior_working_word = working_word;
         working_word = outputLine;
         outputLine = processLineRules(outputLine, "output");
         if (outputLine.equals("$DELETE_ME$")) {
@@ -174,6 +178,7 @@ public class LineProcessor {
             Token token = current_node.getData();
             if (!token.isProcessed() && !token.getValue().isEmpty()) {
                 INITIAL_TOKEN_COPY = token.getValue();
+                prior_working_word = working_word;
                 working_word = INITIAL_TOKEN_COPY;
 
                 // Process each qualifier for the attribute.
@@ -227,6 +232,7 @@ public class LineProcessor {
             }
 
             // Determine which word to use based on the qualifier type.
+            prior_working_word = working_word;
             working_word = determineWorkingWord(qualifier.getWord());
             current_matcher = qualifier.getMatcher();
             String matchedString = current_matcher.match(working_word);
@@ -497,10 +503,12 @@ public class LineProcessor {
                 // For any other action, attempt to execute it
                 ActioneerInterface actioneer = ActioneerFactory.getActioneer(action);
                 if (actioneer != null) {
+                    prior_working_word = working_word;
                     working_word = actioneer.execute(working_word, actionSpec, matchedString, log);
                     working_word = working_word.replaceAll(java.util.regex.Pattern.quote("$INITIAL_LINE_COPY$"), INITIAL_LINE_COPY);
                     working_word = working_word.replaceAll(java.util.regex.Pattern.quote("$INITIAL_TOKEN_COPY$"), INITIAL_TOKEN_COPY);
                     working_word = working_word.replaceAll(java.util.regex.Pattern.quote("$LEFTOVERS$"), leftoverBuilder.toString().trim());
+                    working_word = working_word.replaceAll(java.util.regex.Pattern.quote("$PRIOR_WORKING_WORD$"), leftoverBuilder.toString().trim());
                     
                     log.add("      (updated working word to: " + working_word + ")");
                 } else {
@@ -618,6 +626,7 @@ public class LineProcessor {
             String candidate = neighborPart + working_word;
             String matchResult = current_matcher.match(candidate);
             if (!matchResult.isEmpty()) {
+                prior_working_word = working_word;
                 working_word = candidate;
                 return true;
             }
@@ -649,6 +658,7 @@ public class LineProcessor {
             String candidate = working_word + neighborPart;
             String matchResult = current_matcher.match(candidate);
             if (!matchResult.isEmpty()) {
+                prior_working_word = working_word;
                 working_word = candidate;
                 return true;
             }
