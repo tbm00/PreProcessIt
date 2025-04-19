@@ -394,8 +394,14 @@ public class LineProcessor {
                 return ActionResult.NEXT_ACTION;
             }
             case SET_TOKEN_VALUE: {
-                current_node.getData().setValue(actionSpec.getParameter());
-                log.add("      (set token value to: "+actionSpec.getParameter()+")");
+                String newValue = actionSpec.getParameter();
+                current_node.getData().setValue(newValue);
+                if (newValue==null || newValue.isEmpty() || newValue.equals("")) {
+                    current_node.getData().setProcessed(true);
+                    log.add("      (set token value to: "+actionSpec.getParameter()+" (value is empty, therefore marked as processed))");
+                } else {
+                    log.add("      (set token value to: "+actionSpec.getParameter()+")");
+                }
                 return ActionResult.NEXT_ACTION;
             }
             case TRY_NEIGHBORS:
