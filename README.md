@@ -21,7 +21,7 @@ PreProcessIt follows the Model-View-Controller (MVC) design pattern, ensuring cl
 
 ## Usage
   - #### GUI Mode
-    With Java installed, double-click the program's JAR file (or run `java -jar PreProcessIt-0.1.8.1-beta.jar`) to launch the GUI. Then:
+    With Java installed, double-click the program's JAR file (or run `java -jar PreProcessIt-0.1.9-beta.jar`) to launch the GUI. Then:
     - Load your alternative config *(defaults to: `/PreProcessIt/config.yml`)*
     - Select the component configuration to use *(if you have more than one defined)*
     - Paste or import your input data from a file
@@ -30,7 +30,7 @@ PreProcessIt follows the Model-View-Controller (MVC) design pattern, ensuring cl
 
   - #### Headless Command
     With Java installed, run:
-      - `java -jar PreProcessIt-0.1.8.1-beta.jar --config <config.yml> [--component <name>] --input <input.*> --output <output.*> [--log]`
+      - `java -jar PreProcessIt-0.1.9-beta.jar --config <config.yml> [--component <name>] --input <input.*> --output <output.*> [--log]`
 
 ## How It Works
 PreProcessIt reads input data one line at a time and splits each line into tokens. For every attribute in your selected component's configuration, the program checks if the current working word (normally the `WORKING_TOKEN`) matches the attribute using the attribute's qualifiers. If there is a match, the qualified actions will run; otherwise, the unqualified actions will run. 
@@ -110,9 +110,9 @@ Use the [PreProcessIt Default Config](src/main/resources/config.yml) to assist i
 | `CONTAINS` | Case insensitive |
 | `STARTS_WITH` | First character(s) match; Case insensitive |
 | `ENDS_WITH` | Last character(s) match; Case insensitive |
-| `START_IS_TYPE` | `INTEGER`, `DOUBLE`, `NUMBER`, or `STRING` |
-| `END_IS_TYPE` | `INTEGER`, `DOUBLE`, `NUMBER`, or `STRING` |
-| `IS_TYPE` | `INTEGER`, `DOUBLE`, `NUMBER`, or `STRING` |
+| `START_IS_TYPE` | `INTEGER`, `DOUBLE`, `NUMBER`, `UUID`, or `STRING` |
+| `END_IS_TYPE` | `INTEGER`, `DOUBLE`, `NUMBER`, `UUID`, or `STRING` |
+| `IS_TYPE` | `INTEGER`, `DOUBLE`, `NUMBER`, `UUID`, or `STRING` |
 | `IS_EMPTY` | Configured 'value' doesn't matter |
 | `NOT_IN_BETWEEN_INCLUSIVE` | Numerical values only; Format: `<min>,<max>` |
 | `NOT_IN_BETWEEN_EXCLUSIVE` | Numerical values only; Format: `<min>,<max>` |
@@ -121,7 +121,7 @@ Use the [PreProcessIt Default Config](src/main/resources/config.yml) to assist i
 | `NOT_CONTAINS` | Case insensitive |
 | `NOT_STARTS_WITH` | First character(s) match; Case insensitive |
 | `NOT_ENDS_WITH` | Last character(s) match; Case insensitive |
-| `NOT_IS_TYPE` | `INTEGER`, `DOUBLE`, `NUMBER`, or `STRING` |
+| `NOT_IS_TYPE` | `INTEGER`, `DOUBLE`, `NUMBER`, `UUID`, or `STRING` |
 | `NOT_IS_EMPTY` | Configured 'value' doesn't matter |
 
 ### Available Actions
