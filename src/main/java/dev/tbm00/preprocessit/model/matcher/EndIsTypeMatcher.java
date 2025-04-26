@@ -1,5 +1,7 @@
 package dev.tbm00.preprocessit.model.matcher;
 
+import java.util.UUID;
+
 public class EndIsTypeMatcher implements MatcherInterface {
     private String type;
     
@@ -32,6 +34,12 @@ public class EndIsTypeMatcher implements MatcherInterface {
                         if (Character.isDigit(subWord.charAt(subWord.length() - 1))) {
                             return subWord;
                         }
+                    } catch (NumberFormatException e) {}
+                    break;
+                case "UUID":
+                    try {
+                        UUID.fromString(subWord);
+                        return subWord;
                     } catch (NumberFormatException e) {}
                     break;
                 case "STRING":
