@@ -1,5 +1,7 @@
 package dev.tbm00.preprocessit.model.matcher;
 
+import java.util.UUID;
+
 public class NotIsTypeMatcher implements MatcherInterface {
     private String type;
     
@@ -37,6 +39,13 @@ public class NotIsTypeMatcher implements MatcherInterface {
                 } catch (NumberFormatException e) {
                     return word;
                 }
+            case "UUID":
+                    try {
+                        UUID.fromString(word);
+                        return "";
+                    } catch (NumberFormatException e) {
+                        return word;
+                    }
             case "STRING":
                 if (word.matches("^[+-]?\\d*(\\.\\d+)?$")) {
                     return word;
