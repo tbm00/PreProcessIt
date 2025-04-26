@@ -290,7 +290,7 @@ public class Controller {
         try {
             Desktop desktop = Desktop.getDesktop();
             desktop.browse(new URI(README_URL));
-            view.getTitleLabel().setText("<html><b>PreProcessIt</b> v0.1.9-beta, <br/>" +
+            view.getTitleLabel().setText("<html><b>PreProcessIt</b> v0.1.9.1-beta, <br/>" +
                                          "<a href='' style='color: purple; text-decoration: underline;'>README</a>, <i>made by @tbm00</i></html>");
         } catch (Exception e) {
             JOptionPane.showMessageDialog(view, "Failed to open README link: " + e.getMessage());
