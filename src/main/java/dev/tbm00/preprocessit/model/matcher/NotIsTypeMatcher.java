@@ -40,12 +40,12 @@ public class NotIsTypeMatcher implements MatcherInterface {
                     return word;
                 }
             case "UUID":
-                    try {
-                        UUID.fromString(word);
-                        return "";
-                    } catch (NumberFormatException e) {
-                        return word;
-                    }
+                try {
+                    UUID.fromString(word);
+                    return "";
+                } catch (IllegalArgumentException e) {
+                    return word;
+                }
             case "STRING":
                 if (word.matches("^[+-]?\\d*(\\.\\d+)?$")) {
                     return word;

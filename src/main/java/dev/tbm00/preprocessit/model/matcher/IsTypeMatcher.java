@@ -39,13 +39,13 @@ public class IsTypeMatcher implements MatcherInterface {
                 } catch (NumberFormatException e) {
                     return "";
                 }
-                case "UUID":
-                    try {
-                        UUID.fromString(word);
-                        return word;
-                    } catch (NumberFormatException e) {
-                        return "";
-                    }
+            case "UUID":
+                try {
+                    UUID.fromString(word);
+                    return word;
+                } catch (IllegalArgumentException e) {
+                    return "";
+                }
             case "STRING":
                 if (word.matches("^[+-]?\\d*(\\.\\d+)?$")) {
                     return "";

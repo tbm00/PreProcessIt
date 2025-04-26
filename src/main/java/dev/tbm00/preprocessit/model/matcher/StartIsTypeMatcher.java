@@ -40,7 +40,7 @@ public class StartIsTypeMatcher implements MatcherInterface {
                     try {
                         UUID.fromString(subWord);
                         return subWord;
-                    } catch (NumberFormatException e) {}
+                    } catch (IllegalArgumentException e) {}
                     break;
                 case "STRING":
                     if (!subWord.matches("^[+-]?\\d*(\\.\\d+)?$")) {
